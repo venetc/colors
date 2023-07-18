@@ -1,0 +1,78 @@
+{
+  "extends": [
+    "@antfu"
+  ],
+  "rules": {
+    "semi": "off",
+    "no-console": "off",
+    "antfu/if-newline": "off",
+    "@typescript-eslint/brace-style": "off",
+    "curly": [
+      "off",
+      "multi",
+      "consistent"
+    ],
+    "vue/max-attributes-per-line": [
+      "error",
+      {
+        "singleline": {
+          "max": 1
+        },
+        "multiline": {
+          "max": 1
+        }
+      }
+    ],
+    "@typescript-eslint/semi": [
+      "warn",
+      "always"
+    ]
+  }
+}
+/* "@typescript-eslint/eslint-plugin": "^5.59.8",
+"@vue/eslint-config-typescript": "^11.0.3",
+"@typescript-eslint/parser": "^5.59.8",
+"eslint-plugin-vue": "^9.14.1", */
+/* {
+  "root": true,
+  "env": {
+    "browser": true,
+    "es2021": true,
+    "node": true
+  },
+  "extends": [
+    "plugin:vue/vue3-recommended",
+    "eslint:recommended",
+    "@vue/typescript/recommended"
+  ],
+  "parserOptions": {
+    "ecmaVersion": 2021
+  },
+  "plugins": [],
+  "rules": {
+    "semi": [
+      "warn",
+      "always"
+    ],
+    "vue/attribute-hyphenation": [
+      "warn",
+      "never",
+      {
+        "ignore": []
+      }
+    ],
+    "vue/v-on-event-hyphenation": [
+      "warn",
+      "never",
+      {
+        "ignore": []
+      }
+    ],
+    "vue/first-attribute-linebreak": [
+      "warn",
+      {
+        "multiline": "beside"
+      }
+    ]
+  }
+} */
