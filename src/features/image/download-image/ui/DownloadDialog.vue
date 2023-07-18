@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
 import { computed, ref } from 'vue';
-import { type NumberAnimationInst, useThemeVars } from 'naive-ui';
-import { useImageDownlaoderStore } from '../model';
+import { NButton, NCard, NModal, NNumberAnimation, NProgress, NSpace, NStatistic, NTooltip, type NumberAnimationInst, useThemeVars } from 'naive-ui';
+import { ExternalLink, Sparkles, Trash2 } from 'lucide-vue-next';
+import { useImageDownloaderStore } from '../model';
 import { valueToPercent } from '@/shared/lib/number';
 import { ellipsisString } from '@/shared/lib/string';
 
-const imageDownlaoderStore = useImageDownlaoderStore();
+const imageDownlaoderStore = useImageDownloaderStore();
 const { useImageDownloader, clearLinksList, updateImagesListFromLinks } = imageDownlaoderStore;
 const { amountOflinks, imagesFailedToFetch, loadedWithoutError, totalFetchedImages } = storeToRefs(imageDownlaoderStore);
 
@@ -36,10 +37,10 @@ const { isLoading, loadImages } = useImageDownloader({ onSuccess: completeLinksU
 <template>
   <NModal
     :show="showModal"
-    :block-scroll="false"
-    :close-on-esc="false"
-    :mask-closable="false"
-    :on-after-enter="playTotalLinksAnimation"
+    :blockScroll="false"
+    :closeOnEsc="false"
+    :maskClosable="false"
+    :onAfterEnter="playTotalLinksAnimation"
   >
     <NCard
       style="width: 600px"
@@ -77,7 +78,7 @@ const { isLoading, loadImages } = useImageDownloader({ onSuccess: completeLinksU
         <NProgress
           v-if="isLoading"
           type="line"
-          :show-indicator="false"
+          :showIndicator="false"
           :percentage="percentage"
           status="default"
           :color="trackColor"

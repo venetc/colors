@@ -1,29 +1,12 @@
 import { defineStore } from 'pinia';
-import { generateUUID } from '@/shared/lib/string';
+import { ref } from 'vue';
 
-export const usePaletteGeneratorStore = defineStore('PaletteGenerator', {
-  state: (): State => ({
-    images: new Map(),
-  }),
-  getters: {},
-  actions: {
-    generateImagesData(srcArray: string[]) {
-      const map = new Map<string, Image>();
+export const usePaletteGeneratorStore = defineStore('PaletteGenerator', () => {
+  const hello = ref('???');
 
-      srcArray.forEach((src) => {
-        const uuid = generateUUID();
-
-        map.set(uuid, { src, palette: [] });
-      });
-
-      this.$patch((store) => {
-        store.images = map;
-      });
-    },
-  },
+  return { hello };
 });
 
-interface State { images: Map<string, Image> }
 export interface Image { src: string; palette: Color[] }
 type Hex = string;
 interface RGB { r: number; g: number; b: number }

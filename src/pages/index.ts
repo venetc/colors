@@ -1,7 +1,7 @@
 import type { RouteRecordRaw } from 'vue-router';
-import { storeToRefs } from 'pinia';
 import { defineAsyncComponent } from 'vue';
-import { useDataLoaderStore } from '@/widgets/data-loader';
+import { storeToRefs } from 'pinia';
+import { useImagesStore } from '@/entities/image';
 
 export const routes: Array<RouteRecordRaw> = [
   {
@@ -18,10 +18,10 @@ export const routes: Array<RouteRecordRaw> = [
       default: () => import(/* webpackChunkName: "ColorsPage" */'./colors'),
     },
     beforeEnter: () => {
-      const store = useDataLoaderStore();
-      const { parsedImagesCount } = storeToRefs(store);
+      const store = useImagesStore();
+      const { images } = storeToRefs(store);
 
-      if (parsedImagesCount.value < 1)
+      if (images.value.size < 1)
         return { path: '/' };
     },
   },

@@ -12,8 +12,8 @@ const themeOverrides = {
 
 <template>
   <NConfigProvider
-    :theme-overrides="themeOverrides"
-    inline-theme-disabled
+    :themeOverrides="themeOverrides"
+    inlineThemeDisabled
     abstract
   >
     <NMessageProvider

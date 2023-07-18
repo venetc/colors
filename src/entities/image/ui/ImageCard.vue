@@ -3,12 +3,12 @@ import { NCard } from 'naive-ui';
 import { ref, toRefs, watch } from 'vue';
 import { useElementVisibility, useImage } from '@vueuse/core';
 import { getPalette } from '../lib';
-import { type Image } from '@/widgets/palette-generator/model';
+import { type Img } from '../model';
 import { rgbToHex } from '@/shared/lib/color';
 
-const props = defineProps<{ imageObject: Image }>();
+const props = defineProps<{ image: Img }>();
 
-const { imageObject } = toRefs(props);
+const { image } = toRefs(props);
 
 const card = ref<HTMLElement>();
 const imageRef = ref<HTMLImageElement>();
@@ -23,7 +23,7 @@ const isError = ref<unknown>();
 const unwatchVisibility = watch(targetIsVisible, (isVisible) => {
   if (!isVisible)
     return;
-  _imageSrc.value = imageObject.value.src;
+  _imageSrc.value = image.value.src;
   unwatchVisibility();
 });
 

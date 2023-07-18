@@ -38,9 +38,9 @@ const ctx = ref<CanvasRenderingContext2D | null>();
 const redoMarks = ref<number[]>([]);
 const undoMarks = ref<number[]>([]);
 const currentMarks = ref<number[]>([]);
-const redoList = ref([]);
+const redoList = ref<string[]>([]);
 const undoList = ref<string[]>([]);
-const redoPointer = ref([]);
+const redoPointer = ref<Pointer[]>([]);
 const undoPointer = ref<Pointer[]>([]);
 const currentPointer = ref<Pointer[]>([]);
 const resultImage = ref<string | null>(null);
@@ -133,8 +133,8 @@ function restorePointer(pointersToPop: Pointer[], pointersToPush: Pointer[], isU
       }
       else {
         if (redoPointer.value.length > 0) {
-          oldPositionX.value = redoPointer.value[redoPointer.value.length - 1].positionX;
-          oldPositionY.value = redoPointer.value[redoPointer.value.length - 1].positionY;
+          oldPositionX.value = redoPointer.value[redoPointer.value.length - 1].positionX.toString();
+          oldPositionY.value = redoPointer.value[redoPointer.value.length - 1].positionY.toString();
         }
         currentPointer.value.push(item);
       }

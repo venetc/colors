@@ -17,6 +17,8 @@ const cropper = ref<InstanceType<typeof CanvasCropper> & CropperMethods>();
 
 const colors = ref<string[]>([]);
 
+const isEdit = ref(false);
+
 function reset() {
   if (cropper.value)
     cropper.value.reset();
@@ -40,8 +42,6 @@ function edit() {
   cropper.value.edit();
   isEdit.value = cropper.value.isEdit;
 }
-
-const isEdit = ref(false);
 
 function setColors(c: string[]) {
   colors.value = [...new Set(c)];
@@ -112,7 +112,7 @@ async function xxx(e: Event) {
     >
     <NInput
       class="my-4"
-      :on-input="setImage"
+      :onInput="setImage"
     />
     <div class="flex flex-wrap gap-2 py-2">
       <button
@@ -150,8 +150,8 @@ async function xxx(e: Event) {
     <div class="w-full h-80">
       <CanvasCropper
         ref="cropper"
-        :image-source="src"
-        @on-colors-send="setColors"
+        :imageSource="src"
+        @onColorsSend="setColors"
       />
     </div>
     <div class="flex items-center justify-center flex-wrap gap-6 py-4 px-3">

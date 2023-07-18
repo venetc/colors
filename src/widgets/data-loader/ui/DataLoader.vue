@@ -8,56 +8,40 @@ import {
   NTabPane,
   NTabs,
 } from 'naive-ui';
-
 import { storeToRefs } from 'pinia';
+import { ref } from 'vue';
+import { ClipboardList, FileImage, FileText, Search, Sparkles, X, XOctagon } from 'lucide-vue-next';
+import { useElementSize } from '@vueuse/core';
 
-import { ref /* watch */ } from 'vue';
-import { ClipboardList, FileImage, FileText, X, XOctagon } from 'lucide-vue-next';
-
-import { useDebounceFn, useElementSize /* useFileSystemAccess */ } from '@vueuse/core';
-
-import { /* useRouter */ } from 'vue-router';
-import { useDataLoaderStore } from '../model';
+import { useRouter } from 'vue-router';
 import { FilesLoader, useFileLoaderStore } from '@/features/image/upload-image';
+import { DownloadDialog, useImageDownloaderStore } from '@/features/image/download-image';
 import { useImagesStore } from '@/entities/image';
+import { formatStringToLinks } from '@/shared/lib/string';
+import { NoValidLinksError, useNotificationManager } from '@/shared/ui/notification';
 
-const dataLoaderStore = useDataLoaderStore();
 const fileLoaderStore = useFileLoaderStore();
-
+const imageDownlaoderStore = useImageDownloaderStore();
 const imagesStore = useImagesStore();
 
-const { splitStringToLinks } = dataLoaderStore;
-const { inputValue } = storeToRefs(dataLoaderStore);
-
-const { clearUploader, clearBlobCache, clearFileList } = fileLoaderStore;
+const { clearUploader, clearFileList } = fileLoaderStore;
 const { filesList } = storeToRefs(fileLoaderStore);
 
+const { clearBlobCache } = imagesStore;
 const { images } = storeToRefs(imagesStore);
 
-const debouncedSplit = useDebounceFn(splitStringToLinks, 100, { maxWait: 1000 });
+const { updateLinksList } = imageDownlaoderStore;
 
-// const imagesListVisible = ref(false);
+const { callNotification: popInvalidLinksNotification } = useNotificationManager({ type: 'error', title: 'No valid links found!', content: NoValidLinksError });
 
-/* const { isSupported, data, open } = useFileSystemAccess({
-  dataType: 'Text',
-  types: [
-    { accept: { 'text/plain': ['.txt'] }, }
-  ],
-  excludeAcceptAllOption: true
-});
+const { push } = useRouter();
 
-watch(data, (value) => {
-  if (!value) return;
+const inputValue = ref('');
 
-  dataLoaderStore.$patch((store) => {
-    store.inputValue = value;
-  });
-
-  data.value = undefined;
-  debouncedSplit();
-}); */
-
-// const { push } = useRouter();
+function parseInputValue() {
+  const links = formatStringToLinks(inputValue.value);
+  links.length > 0 ? updateLinksList(links) : popInvalidLinksNotification();
+}
 
 const imagesContainer = ref<HTMLElement>();
 const { width: containerWidth } = useElementSize(imagesContainer);
@@ -65,6 +49,23 @@ const { width: containerWidth } = useElementSize(imagesContainer);
 function removeImage(token: string) {
   images.value.delete(token);
   filesList.value.delete(token);
+}
+const activeTab = ref('images');
+
+function resetInput() {
+  inputValue.value = '';
+}
+
+function clearImages() {
+  clearUploader();
+  clearFileList();
+  images.value.clear();
+}
+
+function resetAll() {
+  clearBlobCache();
+  clearImages();
+  resetInput();
 }
 </script>
 
@@ -83,8 +84,8 @@ function removeImage(token: string) {
           >
             <NImage
               :src="image.src"
-              object-fit="cover"
-              :img-props="{ style: { marginInline: 'auto', position: 'absolute', width: '100%', height: '100%' } }"
+              objectFit="cover"
+              :imgProps="{ style: { marginInline: 'auto', position: 'absolute', width: '100%', height: '100%' } }"
               class="aspect-square select-none"
             />
             <i
@@ -105,11 +106,12 @@ function removeImage(token: string) {
       :class="{ '-translate-x-[calc(100%_+_1.25rem)]': images.size > 0 }"
     >
       <NTabs
+        v-model:value="activeTab"
         type="segment"
-        justify-content="center"
+        justifyContent="center"
         animated
-        :tabs-padding="5"
-        @update-value="clearBlobCache(); clearUploader(); clearFileList()"
+        :tabsPadding="5"
+        @updateValue="resetAll"
       >
         <NTabPane
           name="images"
@@ -125,7 +127,7 @@ function removeImage(token: string) {
             </div>
           </template>
           <template #default>
-            <FilesLoader allowed-files="image/png,image/jpeg">
+            <FilesLoader allowedFiles="image/png,image/jpeg">
               <div class="flex flex-col items-center gap-4 py-4">
                 <FileImage
                   :size="32"
@@ -152,7 +154,11 @@ function removeImage(token: string) {
             </div>
           </template>
           <template #default>
-            <FilesLoader allowed-files=".txt">
+            <FilesLoader
+              allowedFiles=".txt"
+              @onLinksParseSuccess="updateLinksList"
+              @onLinksParseFail="popInvalidLinksNotification"
+            >
               <div class="flex flex-col items-center gap-4 py-4">
                 <FileText
                   :size="32"
@@ -184,37 +190,76 @@ function removeImage(token: string) {
               v-model:value="inputValue"
               type="textarea"
               :resizable="false"
-              size="large"
               placeholder="Paste images URL"
-              :on-input="debouncedSplit"
             />
           </template>
         </NTabPane>
       </NTabs>
-      <NSpace justify="center">
-        <NButton
-          size="medium"
-          type="warning"
-          class="!font-mono"
+
+      <Transition
+        mode="out-in"
+        name="fade"
+        appear
+      >
+        <NSpace
+          v-if="activeTab === 'links' && inputValue.length && images.size < 1"
+          justify="end"
         >
-          <template #icon>
-            <XOctagon />
-          </template>
-          Warning
-        </NButton>
-        <NButton
-          size="medium"
-          type="error"
-          class="!font-mono"
-          @click="images.clear(); clearUploader(); clearFileList()"
+          <NButton
+            size="medium"
+            type="error"
+            class="!font-mono"
+            @click="resetInput"
+          >
+            <template #icon>
+              <XOctagon :size="16" />
+            </template>
+            Delete links
+          </NButton>
+          <NButton
+            size="medium"
+            type="success"
+            class="!font-mono"
+            @click="parseInputValue"
+          >
+            <template #icon>
+              <Search :size="16" />
+            </template>
+            Read links
+          </NButton>
+        </NSpace>
+
+        <NSpace
+          v-else-if="images.size > 0"
+          justify="end"
         >
-          <template #icon>
-            <XOctagon />
-          </template>
-          Clear data
-        </NButton>
-      </NSpace>
+          <NButton
+            size="medium"
+            type="error"
+            class="!font-mono"
+            @click="clearImages"
+          >
+            <template #icon>
+              <XOctagon :size="16" />
+            </template>
+            Delete images
+          </NButton>
+          <NButton
+            size="medium"
+            type="success"
+            class="!font-mono"
+            @click="push({ name: 'Colors' })"
+          >
+            <template #icon>
+              <Sparkles :size="16" />
+            </template>
+            Get colors
+          </NButton>
+        </NSpace>
+      </Transition>
     </div>
+
+    <DownloadDialog />
   </section>
 </template>
 

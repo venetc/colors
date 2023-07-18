@@ -1,12 +1,12 @@
 import { useFetch } from '@vueuse/core';
-import { defineStore } from 'pinia';
+import { defineStore, storeToRefs } from 'pinia';
 import { computed, ref } from 'vue';
 import { createImageFromLink } from '../lib';
 import { useImagesStore } from '@/entities/image';
 
 export type LinksList = Set<string>;
 
-export const useImageDownlaoderStore = defineStore('ImagesDownloaderStore', () => {
+export const useImageDownloaderStore = defineStore('ImagesDownloaderStore', () => {
   const linksList = ref<LinksList>(new Set());
   const totalFetchedImages = ref(0);
   const imagesFailedToFetch = ref(new Set<string>());
@@ -27,19 +27,26 @@ export const useImageDownlaoderStore = defineStore('ImagesDownloaderStore', () =
 
     const loadImages = async () => {
       isLoading.value = true;
+      const imagesStore = useImagesStore();
+      const { blobCache } = storeToRefs(imagesStore);
 
       for await (const link of linksList.value) {
         currentLink.value = link;
 
-        await execute();
-        totalFetchedImages.value++;
+        const alreadyInCache = blobCache.value.get(link);
 
-        if (data.value) {
-          if (!imagesFailedToFetch.value.has(link)) {
-            const blobFromLink = URL.createObjectURL(data.value);
-            console.log(blobFromLink);
+        if (alreadyInCache) {
+          totalFetchedImages.value++;
+        } else {
+          await execute();
+          totalFetchedImages.value++;
 
-            // addBlobToCache({ originSrc: link, blobSrc: blobFromLink });
+          if (data.value) {
+            if (!imagesFailedToFetch.value.has(link)) {
+              const blobFromLink = URL.createObjectURL(data.value);
+
+              imagesStore.addBlobToCache({ originSrc: link, blobSrc: blobFromLink });
+            }
           }
         }
       }
@@ -60,9 +67,10 @@ export const useImageDownlaoderStore = defineStore('ImagesDownloaderStore', () =
     linksList.value.clear();
   };
   const updateImagesListFromLinks = () => {
+    const imagesStore = useImagesStore();
+    const { blobCache } = storeToRefs(imagesStore);
     linksList.value.forEach((originalSrc) => {
-      // const src = blobCache.value.get(originalSrc);
-      const src = undefined;
+      const src = blobCache.value.get(originalSrc);
 
       if (!src) return;
 
@@ -72,6 +80,9 @@ export const useImageDownlaoderStore = defineStore('ImagesDownloaderStore', () =
       imagesStore.addImageToList(originalSrc, image);
     });
   };
+  const updateLinksList = (links: string[]) => {
+    links.forEach(link => linksList.value.add(link));
+  };
 
-  return { linksList, imagesFailedToFetch, amountOflinks, totalFetchedImages, loadedWithoutError, useImageDownloader, clearLinksList, updateImagesListFromLinks };
+  return { linksList, imagesFailedToFetch, amountOflinks, totalFetchedImages, loadedWithoutError, useImageDownloader, clearLinksList, updateImagesListFromLinks, updateLinksList };
 });

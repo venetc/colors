@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
-import { usePaletteGeneratorStore } from '../model';
-import { ImageCard } from '@/entities/image';
 
-const paletteGeneratorStore = usePaletteGeneratorStore();
-const { images } = storeToRefs(paletteGeneratorStore);
+// import { usePaletteGeneratorStore } from '../model';
+import { ImageCard, useImagesStore } from '@/entities/image';
+
+const imagesStore = useImagesStore();
+const { images } = storeToRefs(imagesStore);
 </script>
 
 <template>
@@ -12,7 +13,7 @@ const { images } = storeToRefs(paletteGeneratorStore);
     <ImageCard
       v-for="[imageKey, image] in images"
       :key="imageKey"
-      :image-object="image"
+      :image="image"
       class="col-span-4"
     />
   </section>
