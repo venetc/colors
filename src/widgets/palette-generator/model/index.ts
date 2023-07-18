@@ -2,7 +2,7 @@ import { defineStore } from 'pinia';
 import { ref } from 'vue';
 
 export const usePaletteGeneratorStore = defineStore('PaletteGenerator', () => {
-  const hello = ref('???');
+  const hello = ref('????');
 
   return { hello };
 });
