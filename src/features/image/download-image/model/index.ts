@@ -4,12 +4,12 @@ import { computed, ref } from 'vue';
 import { createImageFromLink } from '../lib';
 import { useImagesStore } from '@/entities/image';
 
-export type LinksList = Set<string>;
+export type LinksSet = Set<string>;
 
 export const useImageDownloaderStore = defineStore('ImagesDownloaderStore', () => {
-  const linksList = ref<LinksList>(new Set());
+  const linksList = ref<LinksSet>(new Set());
   const totalFetchedImages = ref(0);
-  const imagesFailedToFetch = ref(new Set<string>());
+  const imagesFailedToFetch = ref<LinksSet>(new Set());
 
   const amountOflinks = computed(() => (linksList.value.size));
   const loadedWithoutError = computed(() => (totalFetchedImages.value - imagesFailedToFetch.value.size));
@@ -41,12 +41,10 @@ export const useImageDownloaderStore = defineStore('ImagesDownloaderStore', () =
           await execute();
           totalFetchedImages.value++;
 
-          if (data.value) {
-            if (!imagesFailedToFetch.value.has(link)) {
-              const blobFromLink = URL.createObjectURL(data.value);
+          if (data.value && !imagesFailedToFetch.value.has(link)) {
+            const blobFromLink = URL.createObjectURL(data.value);
 
-              imagesStore.addBlobToCache({ originSrc: link, blobSrc: blobFromLink });
-            }
+            imagesStore.addBlobToCache({ originSrc: link, blobSrc: blobFromLink });
           }
         }
       }

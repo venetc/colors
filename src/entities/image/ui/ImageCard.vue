@@ -28,8 +28,7 @@ const unwatchVisibility = watch(targetIsVisible, (isVisible) => {
 });
 
 const unwatchImageSrc = watch(_imageSrc, async (src) => {
-  if (!src)
-    return;
+  if (!src) return;
 
   const loadImage = useImage({ crossorigin: 'anonymous', src });
 
@@ -43,8 +42,8 @@ const unwatchImageSrc = watch(_imageSrc, async (src) => {
 const imagePalette = ref<string[]>();
 
 function onLoad() {
-  if (!imageRef.value)
-    return;
+  if (!imageRef.value) return;
+
   const palette = getPalette({ img: imageRef.value, colorCount: 5, quality: 2 });
 
   imagePalette.value = palette.map(rgbToHex);

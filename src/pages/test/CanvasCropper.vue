@@ -17,11 +17,11 @@ const emit = defineEmits<{
 
 const { imageSource } = toRefs(props);
 
-interface Pointer {
-  x: string
-  y: string
-  positionX: number
-  positionY: number
+const SCALE_FACTOR = 2;
+
+interface Coordinates {
+  x: number
+  y: number
 }
 
 const isEditing = ref(false);
@@ -30,39 +30,36 @@ const isCropped = ref(false);
 const canvasRef = ref<HTMLCanvasElement>();
 
 const imageObj = ref<HTMLImageElement | null>();
-const positionX = ref('');
-const positionY = ref('');
-const oldPositionX = ref('');
-const oldPositionY = ref('');
+const position = ref<Coordinates | null>(null);
+const positionOld = ref<Coordinates | null>(null);
 const ctx = ref<CanvasRenderingContext2D | null>();
-const redoMarks = ref<number[]>([]);
-const undoMarks = ref<number[]>([]);
-const currentMarks = ref<number[]>([]);
-const redoList = ref<string[]>([]);
-const undoList = ref<string[]>([]);
-const redoPointer = ref<Pointer[]>([]);
-const undoPointer = ref<Pointer[]>([]);
-const currentPointer = ref<Pointer[]>([]);
+const redoMarks = ref<Coordinates[]>([]);
+const undoMarks = ref<Coordinates[]>([]);
+const redoSnapshots = ref<string[]>([]);
+const undoSnapshots = ref<string[]>([]);
+const redoPointers = ref<Coordinates[]>([]);
+const undoPointers = ref<Coordinates[]>([]);
+const currentPointers = ref<Coordinates[]>([]);
 const resultImage = ref<string | null>(null);
+
 const imgWidth = ref(0);
 const imgHeight = ref(0);
 
 const parentEl = useParentElement();
 
 function init() {
-  if (!canvasRef.value)
-    return;
+  if (!canvasRef.value) return;
 
   ctx.value = canvasRef.value.getContext('2d', { willReadFrequently: true });
+  if (ctx.value) ctx.value.imageSmoothingEnabled = false;
 
   const img = new Image();
 
-  img.crossOrigin = 'Anonymous';
+  img.crossOrigin = 'anonymous';
   img.src = imageSource.value;
 
   img.onload = () => {
-    if (!ctx.value)
-      return;
+    if (!ctx.value) return;
 
     sendColors(img);
 
@@ -70,21 +67,20 @@ function init() {
 
     imgWidth.value = parentWidth.value > 0 ? parentWidth.value : img.width;
     imgHeight.value = parentHeight.value > 0 ? parentHeight.value : img.height;
-    ctx.value.canvas.width = parentWidth.value;
-    ctx.value.canvas.height = parentHeight.value;
+    ctx.value.canvas.width = parentWidth.value * SCALE_FACTOR;
+    ctx.value.canvas.height = parentHeight.value * SCALE_FACTOR;
 
     const {
       offsetX,
       offsetY,
       width: _width,
       height: _height,
-    } = cover(parentWidth.value, parentHeight.value, img.naturalWidth, img.naturalHeight);
+    } = cover(parentWidth.value, parentHeight.value, img.naturalWidth * SCALE_FACTOR, img.naturalHeight * SCALE_FACTOR);
 
-    ctx.value.drawImage(img, offsetX, offsetY, _width, _height);
+    ctx.value.drawImage(img, offsetX * SCALE_FACTOR, offsetY * SCALE_FACTOR, _width * SCALE_FACTOR, _height * SCALE_FACTOR);
 
     const canvasImg = new Image();
-    if (!canvasRef.value)
-      return;
+    if (!canvasRef.value) return;
 
     canvasImg.crossOrigin = 'Anonymous';
     canvasImg.src = canvasRef.value.toDataURL();
@@ -95,14 +91,13 @@ function init() {
 }
 
 function empty() {
-  redoList.value = [];
-  undoList.value = [];
-  redoPointer.value = [];
-  undoPointer.value = [];
-  currentPointer.value = [];
+  redoSnapshots.value = [];
+  undoSnapshots.value = [];
+  redoPointers.value = [];
+  undoPointers.value = [];
+  currentPointers.value = [];
   redoMarks.value = [];
   undoMarks.value = [];
-  currentMarks.value = [];
 }
 
 function reset() {
@@ -110,79 +105,79 @@ function reset() {
   imageObj.value = null;
   resultImage.value = null;
   isCropped.value = false;
-  oldPositionX.value = oldPositionY.value = positionX.value = positionY.value = '';
+  positionOld.value = position.value = null;
   init();
 }
 
-function savePointer(point: Pointer) {
-  redoPointer.value = [];
-  currentPointer.value.push(point);
-  undoPointer.value.push(point);
+function savePointer(point: Coordinates) {
+  redoPointers.value = [];
+  currentPointers.value.push(point);
+  undoPointers.value.push(point);
 }
 
-function restorePointer(pointersToPop: Pointer[], pointersToPush: Pointer[], isUndo: boolean) {
-  if (pointersToPop.length > 0) {
-    const item = pointersToPop.pop();
-    if (item) {
-      pointersToPush.push(item);
+function restorePointer(pointersToPop: Coordinates[], pointersToPush: Coordinates[], isUndo: boolean) {
+  if (pointersToPop.length === 0) return;
 
-      if (isUndo) {
-        oldPositionX.value = item.positionX.toString();
-        oldPositionY.value = item.positionY.toString();
-        currentPointer.value.pop();
-      }
-      else {
-        if (redoPointer.value.length > 0) {
-          oldPositionX.value = redoPointer.value[redoPointer.value.length - 1].positionX.toString();
-          oldPositionY.value = redoPointer.value[redoPointer.value.length - 1].positionY.toString();
-        }
-        currentPointer.value.push(item);
-      }
+  const item = pointersToPop.pop();
+  if (!item) return;
+
+  pointersToPush.push(item);
+
+  if (isUndo) {
+    currentPointers.value.pop();
+
+    if (pointersToPop.length > 0) {
+      const { x, y } = pointersToPop[pointersToPop.length - 1];
+
+      positionOld.value = { x, y };
+    } else {
+      positionOld.value = null;
+    }
+  } else {
+    currentPointers.value.push(item);
+
+    if (pointersToPush.length > 0) {
+      const { x, y } = pointersToPush[pointersToPush.length - 1];
+
+      positionOld.value = { x, y };
     }
   }
 }
 
-function restoreMarks(marksToPop: number[], marksToPush: number[], isUndo: boolean) {
-  if (marksToPop.length > 1) {
-    const item = marksToPop.splice(marksToPop.length - 2, 2);
+function restoreMarks(marksToPop: Coordinates[], marksToPush: Coordinates[], isUndo: boolean) {
+  const item = marksToPop.pop();
 
-    marksToPush.push(...item);
+  if (!item) return;
 
-    if (isUndo)
-      currentMarks.value.splice(marksToPop.length, 2);
-    else
-      currentMarks.value.push(...item);
-  }
+  marksToPush.push(item);
+
+  isUndo
+    ? currentPointers.value.pop()
+    : currentPointers.value.push(item);
 }
 
-function saveState(canvas: HTMLCanvasElement, list?: string[], keepRedo?: boolean) {
-  keepRedo = keepRedo || false;
-  if (!keepRedo)
-    redoList.value = [];
+function saveState(canvas: HTMLCanvasElement, list = undoSnapshots.value, keepRedo = false) {
+  if (!keepRedo) redoSnapshots.value = [];
 
   const data = canvas.toDataURL();
-  const target = list || undoList.value;
-
-  target.push(data);
+  list.push(data);
 }
 
 function restoreState(marksToPop: string[], marksToPush: string[]) {
   if (marksToPop.length) {
-    if (!canvasRef.value)
-      return;
+    if (!canvasRef.value) return;
 
     saveState(canvasRef.value, marksToPush, true);
-    const restoreState = marksToPop.pop();
-    if (!restoreState)
-      return;
+
+    const restoredState = marksToPop.pop();
+    if (!restoredState) return;
 
     const img = new Image();
-    img.src = restoreState;
+    img.src = restoredState;
     img.onload = () => {
-      if (!ctx.value)
-        return;
-      ctx.value.clearRect(0, 0, imgWidth.value, imgHeight.value);
+      if (!ctx.value) return;
 
+      ctx.value.clearRect(0, 0, imgWidth.value, imgHeight.value);
       ctx.value.drawImage(img, 0, 0);
     };
   }
@@ -191,8 +186,8 @@ function restoreState(marksToPop: string[], marksToPush: string[]) {
 function undo() {
   if (isEditing.value) {
     isEditing.value = false;
-    restoreState(undoList.value, redoList.value);
-    restorePointer(undoPointer.value, redoPointer.value, true);
+    restoreState(undoSnapshots.value, redoSnapshots.value);
+    restorePointer(undoPointers.value, redoPointers.value, true);
     restoreMarks(undoMarks.value, redoMarks.value, true);
     isEditing.value = true;
   }
@@ -201,8 +196,8 @@ function undo() {
 function redo() {
   if (isEditing.value) {
     isEditing.value = false;
-    restoreState(redoList.value, undoList.value);
-    restorePointer(redoPointer.value, undoPointer.value, false);
+    restoreState(redoSnapshots.value, undoSnapshots.value);
+    restorePointer(redoPointers.value, undoPointers.value, false);
     restoreMarks(redoMarks.value, undoMarks.value, false);
     isEditing.value = true;
   }
@@ -217,6 +212,7 @@ function trimEmptyPixel(canvasElement: HTMLCanvasElement, ctx: CanvasRenderingCo
   }
 
   const pixels = ctx.getImageData(0, 0, canvasElement.width, canvasElement.height);
+
   const amountOfPixels = pixels.data.length;
 
   const bound: Bound = {};
@@ -230,19 +226,14 @@ function trimEmptyPixel(canvasElement: HTMLCanvasElement, ctx: CanvasRenderingCo
       x = (i / 4) % canvasElement.width;
       y = ~~((i / 4) / canvasElement.width);
 
-      if (!bound.top)
-        bound.top = y;
-      if (!bound.left || x < bound.left)
-        bound.left = x;
-      if (!bound.right || bound.right < x)
-        bound.right = x;
-      if (!bound.bottom || bound.bottom < y)
-        bound.bottom = y;
+      if (!bound.top) bound.top = y;
+      if (!bound.left || x < bound.left) bound.left = x;
+      if (!bound.right || bound.right < x) bound.right = x;
+      if (!bound.bottom || bound.bottom < y) bound.bottom = y;
     }
   }
 
-  if (!bound.bottom || !bound.top || !bound.right || !bound.left)
-    return;
+  if (!bound.bottom || !bound.top || !bound.right || !bound.left) return;
 
   const trimHeight = bound.bottom - bound.top;
   const trimWidth = bound.right - bound.left;
@@ -256,31 +247,27 @@ function trimEmptyPixel(canvasElement: HTMLCanvasElement, ctx: CanvasRenderingCo
 }
 
 function crop() {
-  if (!isEditing.value || isCropped.value)
-    return;
-  if (!ctx.value || !canvasRef.value || !imageObj.value)
-    return;
-  if (!currentMarks.value.length)
-    return;
+  if (!isEditing.value || isCropped.value) return;
+  if (!ctx.value || !canvasRef.value || !imageObj.value) return;
+  if (currentPointers.value.length < 1) return;
 
-  currentPointer.value = [];
-  ctx.value.clearRect(0, 0, imgWidth.value, imgHeight.value);
+  ctx.value.clearRect(0, 0, imgWidth.value * SCALE_FACTOR, imgHeight.value * SCALE_FACTOR);
   ctx.value.beginPath();
   ctx.value.globalCompositeOperation = 'destination-over';
   const left = canvasRef.value.offsetLeft;
   const top = canvasRef.value.offsetTop;
 
-  for (let i = 0; i < currentMarks.value.length; i += 2) {
-    const x = currentMarks.value[i];
-    const y = currentMarks.value[i + 1];
-    if (i === 0)
-      ctx.value.moveTo(x - left, y - top);
-    else
-      ctx.value.lineTo(x - left, y - top);
+  for (let i = 0; i < currentPointers.value.length; i++) {
+    const { x, y } = currentPointers.value[i];
+
+    i === 0
+      ? ctx.value.moveTo(x * SCALE_FACTOR - left, y * SCALE_FACTOR - top)
+      : ctx.value.lineTo(x * SCALE_FACTOR - left, y * SCALE_FACTOR - top);
   }
+
   const pattern = ctx.value.createPattern(imageObj.value, 'repeat');
-  if (!pattern)
-    return;
+  if (!pattern) return;
+
   ctx.value.fillStyle = pattern;
   ctx.value.fill();
 
@@ -297,62 +284,55 @@ function crop() {
 }
 
 function sendColors(img: HTMLImageElement) {
-  const palette = getPalette({ img, colorCount: 10, quality: 2 });
+  const palette = getPalette({ img, colorCount: 5, quality: 2 });
 
   const colors = palette ? palette.map(rgbToHex) : [];
 
   emit('onColorsSend', colors);
 }
 
-function mouseDown(e: MouseEvent) {
-  if (!isEditing.value)
-    return;
-  if (isCropped.value)
-    return;
+function mouseUp(e: MouseEvent) {
+  if (!isEditing.value) return;
+  if (isCropped.value) return;
+  if (!ctx.value || !canvasRef.value) return;
 
-  if (e.button === 0) {
-    if (!ctx.value || !canvasRef.value)
-      return;
-    saveState(canvasRef.value);
-    if (oldPositionX.value !== '' && undoList.value.length > 0) {
-      ctx.value.beginPath();
-      ctx.value.moveTo(Number(oldPositionX.value), Number(oldPositionY.value));
-      ctx.value.lineTo(Number(positionX.value), Number(positionY.value));
-      ctx.value.strokeStyle = '#F63E02';
-      ctx.value.lineWidth = 1;
-      ctx.value.stroke();
-    }
+  saveState(canvasRef.value);
 
-    redoMarks.value = [];
-    currentMarks.value.push(e.offsetX, e.offsetY);
-    undoMarks.value.push(e.offsetX, e.offsetY);
+  if (positionOld.value && position.value && undoSnapshots.value.length > 0) {
+    const { x: oldX, y: oldY } = positionOld.value;
+    const { x, y } = position.value;
 
-    savePointer({
-      x: `${e.offsetX}px`,
-      y: `${e.offsetY}px`,
-      positionX: e.offsetX,
-      positionY: e.offsetY,
-    });
-
-    oldPositionX.value = e.offsetX.toString();
-    oldPositionY.value = e.offsetY.toString();
+    ctx.value.beginPath();
+    ctx.value.moveTo(oldX * SCALE_FACTOR, oldY * SCALE_FACTOR);
+    ctx.value.lineTo(x * SCALE_FACTOR, y * SCALE_FACTOR);
+    ctx.value.strokeStyle = '#F63E02';
+    ctx.value.lineWidth = 1 * SCALE_FACTOR;
+    ctx.value.stroke();
   }
 
-  positionX.value = e.offsetX.toString();
-  positionY.value = e.offsetY.toString();
+  redoMarks.value = [];
+  currentPointers.value.push({ x: e.offsetX, y: e.offsetY });
+  undoMarks.value.push({ x: e.offsetX, y: e.offsetY });
+
+  savePointer({ x: e.offsetX, y: e.offsetY });
+
+  positionOld.value = position.value = {
+    x: e.offsetX,
+    y: e.offsetY,
+  };
 }
 
 function mouseMove(e: MouseEvent) {
-  if (!isEditing.value)
-    return;
+  if (!isEditing.value) return;
 
-  positionX.value = e.offsetX.toString();
-  positionY.value = e.offsetY.toString();
+  position.value = {
+    x: e.offsetX,
+    y: e.offsetY,
+  };
 }
 
 function edit() {
-  if (!isCropped.value)
-    reset();
+  if (!isCropped.value) reset();
   isEditing.value = !isEditing.value;
 }
 
@@ -377,14 +357,14 @@ defineExpose({ reset, crop, undo, redo, edit, isEdit: readonly(isEditing) });
       ref="canvasRef"
       :style="{ pointerEvents: isCropped || isEditing ? 'auto' : 'none' }"
       class="absolute w-full h-full object-cover block"
-      @mousedown="mouseDown"
+      @mouseup="mouseUp"
       @mousemove="mouseMove"
     />
     <span
-      v-for="point in currentPointer"
+      v-for="point in currentPointers"
       :key="`${point.x},${point.y}`"
       class="vue-crop-pointer "
-      :style="{ top: point.y, left: point.x }"
+      :style="{ top: `${point.y}px`, left: `${point.x}px` }"
     />
   </div>
 </template>

@@ -6,7 +6,6 @@ import { useImagesStore } from '@/entities/image';
 import { formatStringToLinks } from '@/shared/lib/string';
 
 export type FileList = Map<string, UploadFileInfo>;
-export type LinksList = Set<string>;
 
 export const useFileLoaderStore = defineStore('ImagesUploaderStore', () => {
   const cleanUploaderMethod = ref<InstanceType<typeof NUpload>['clear']>();
@@ -52,7 +51,7 @@ export const useFileLoaderStore = defineStore('ImagesUploaderStore', () => {
       const text = await file.text();
       return formatStringToLinks(text);
     } catch (exception) {
-      console.log(exception);
+      console.warn(exception);
       return [];
     }
   };
