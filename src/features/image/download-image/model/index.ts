@@ -11,7 +11,7 @@ export const useImageDownloaderStore = defineStore('ImagesDownloaderStore', () =
   const totalFetchedImages = ref(0);
   const imagesFailedToFetch = ref<LinksSet>(new Set());
 
-  const amountOflinks = computed(() => (linksList.value.size));
+  const amountOfLinks = computed(() => (linksList.value.size));
   const loadedWithoutError = computed(() => (totalFetchedImages.value - imagesFailedToFetch.value.size));
 
   const useImageDownloader = ({ onSuccess }: { onSuccess: () => void }) => {
@@ -23,7 +23,13 @@ export const useImageDownloaderStore = defineStore('ImagesDownloaderStore', () =
       return ctx;
     };
 
-    const { data, execute } = useFetch(currentLink, { immediate: false, onFetchError: onFetchErrorHandler }).blob();
+    const {
+      data,
+      execute,
+    } = useFetch(currentLink, {
+      immediate: false,
+      onFetchError: onFetchErrorHandler,
+    }).blob();
 
     const loadImages = async () => {
       isLoading.value = true;
@@ -44,7 +50,10 @@ export const useImageDownloaderStore = defineStore('ImagesDownloaderStore', () =
           if (data.value && !imagesFailedToFetch.value.has(link)) {
             const blobFromLink = URL.createObjectURL(data.value);
 
-            imagesStore.addBlobToCache({ originSrc: link, blobSrc: blobFromLink });
+            imagesStore.addBlobToCache({
+              originSrc: link,
+              blobSrc: blobFromLink,
+            });
           }
         }
       }
@@ -59,7 +68,10 @@ export const useImageDownloaderStore = defineStore('ImagesDownloaderStore', () =
       }
     };
 
-    return { isLoading, loadImages };
+    return {
+      isLoading,
+      loadImages,
+    };
   };
   const clearLinksList = () => {
     linksList.value.clear();
@@ -74,7 +86,10 @@ export const useImageDownloaderStore = defineStore('ImagesDownloaderStore', () =
 
       const imagesStore = useImagesStore();
 
-      const image = createImageFromLink({ originalSrc, src });
+      const image = createImageFromLink({
+        originalSrc,
+        src,
+      });
       imagesStore.addImageToList(originalSrc, image);
     });
   };
@@ -82,5 +97,15 @@ export const useImageDownloaderStore = defineStore('ImagesDownloaderStore', () =
     links.forEach(link => linksList.value.add(link));
   };
 
-  return { linksList, imagesFailedToFetch, amountOflinks, totalFetchedImages, loadedWithoutError, useImageDownloader, clearLinksList, updateImagesListFromLinks, updateLinksList };
+  return {
+    linksList,
+    imagesFailedToFetch,
+    amountOfLinks,
+    totalFetchedImages,
+    loadedWithoutError,
+    useImageDownloader,
+    clearLinksList,
+    updateImagesListFromLinks,
+    updateLinksList,
+  };
 });

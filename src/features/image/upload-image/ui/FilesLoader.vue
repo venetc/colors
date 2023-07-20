@@ -10,20 +10,27 @@ type ImageType = typeof IMAGE_FILES;
 type TextType = typeof TEXT_FILES;
 type FileType = ImageType | TextType;
 
-export interface Props { allowedFiles: FileType }
+export interface Props {
+  allowedFiles: FileType;
+}
 
 const { allowedFiles } = defineProps<Props>();
 
 const emit = defineEmits<{
-  onLinksParseSuccess: [links: string[]]
-  onLinksParseFail: []
+  onLinksParseSuccess: [links: string[]];
+  onLinksParseFail: [];
 }>();
 const TEXT_FILES = '.txt' as const;
 const IMAGE_FILES = 'image/png,image/jpeg' as const;
 
 const fileLoaderStore = useFileLoaderStore();
 
-const { updateImagesFileList, clearUploader, updateImagesListFromFiles, getLinksFromFile } = fileLoaderStore;
+const {
+  updateImagesFileList,
+  clearUploader,
+  updateImagesListFromFiles,
+  getLinksFromFile,
+} = fileLoaderStore;
 const { cleanUploaderMethod } = storeToRefs(fileLoaderStore);
 
 async function composeUpdateFileList({ fileList }: { fileList: UploadFileInfo[] }) {

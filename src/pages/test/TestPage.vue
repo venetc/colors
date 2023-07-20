@@ -1,47 +1,11 @@
 <script setup lang="ts">
-import { nextTick, ref } from 'vue';
-import { NInput } from 'naive-ui';
+import { /* nextTick */ ref } from 'vue';
+import type { ExposedCropperData } from './CanvasCropper.vue';
 import CanvasCropper from './CanvasCropper.vue';
 import { generateColorsBetween, shadeHexColor } from '@/shared/lib/color';
 
-interface CropperMethods {
-  reset: () => void
-  crop: () => void
-  undo: () => void
-  redo: () => void
-  edit: () => void
-  isEdit: Readonly<boolean>
-}
-
-const cropper = ref<InstanceType<typeof CanvasCropper> & CropperMethods>();
-
+const cropper = ref<InstanceType<typeof CanvasCropper> & ExposedCropperData>();
 const colors = ref<string[]>([]);
-
-const isEdit = ref(false);
-
-function reset() {
-  if (cropper.value)
-    cropper.value.reset();
-}
-function crop() {
-  if (cropper.value)
-    cropper.value.crop();
-}
-function undo() {
-  if (cropper.value)
-    cropper.value.undo();
-}
-function redo() {
-  if (cropper.value)
-    cropper.value.redo();
-}
-function edit() {
-  if (!cropper.value)
-    return;
-
-  cropper.value.edit();
-  isEdit.value = cropper.value.isEdit;
-}
 
 function setColors(c: string[]) {
   colors.value = [...new Set(c)];
@@ -60,7 +24,11 @@ function createBoxShadowLine(result: string, colors: string, index: number, arra
 
 function generateBoxShadow(centerColor: string): string {
   const DARKEST = shadeHexColor(centerColor, 1.05);
-  const range = generateColorsBetween({ startColor: centerColor, endColor: DARKEST, count: SHADES_COUNT });
+  const range = generateColorsBetween({
+    startColor: centerColor,
+    endColor: DARKEST,
+    count: SHADES_COUNT,
+  });
 
   return range.reduce(createBoxShadowLine, '');
 }
@@ -71,88 +39,60 @@ function logColor(c: string) {
 
 // const src = ref('https://upload.wikimedia.org/wikipedia/commons/4/47/PNG_transparency_demonstration_1.png');
 const src = ref('https://i.imgur.com/reEImKg.jpg');
-
-function setImage(value: string) {
-  src.value = value;
-  nextTick(reset);
-}
-
-async function xxx(e: Event) {
-  console.log(e);
-  const files = (e.target as HTMLInputElement).files;
-  const img = new Image();
-
-  if (files) {
-    if (!files)
-      return;
-
-    img.src = URL.createObjectURL(files[0]);
-  }
-  else {
-    const url = (e.target as HTMLInputElement).value;
-
-    const response = await fetch(url);
-    const blob = await response.blob();
-
-    img.src = URL.createObjectURL(blob);
-  }
-  console.log(img);
-}
 </script>
 
 <template>
   <section class="w-[496px]">
-    <input
-      type="file"
-      @change="xxx"
-    >
-    <input
-      type="url"
-      @change="xxx"
-    >
-    <NInput
-      class="my-4"
-      :onInput="setImage"
-    />
-    <div class="flex flex-wrap gap-2 py-2">
-      <button
-        class="py-0.5 px-2 border border-slate-950 rounded-md outline-offset-1 outline outline-2"
-        :class="[isEdit ? 'outline-green-600' : 'outline-red-600']"
-        @click="edit"
-      >
-        edit
-      </button>
-      <button
-        class="py-0.5 px-2 border border-slate-950 rounded-md"
-        @click="crop"
-      >
-        crop
-      </button>
-      <button
-        class="py-0.5 px-2 border border-slate-950 rounded-md"
-        @click="undo"
-      >
-        undo
-      </button>
-      <button
-        class="py-0.5 px-2 border border-slate-950 rounded-md"
-        @click="redo"
-      >
-        redo
-      </button>
-      <button
-        class="py-0.5 px-2 border border-slate-950 rounded-md"
-        @click="reset"
-      >
-        reset
-      </button>
-    </div>
-    <div class="w-full h-80">
+    <div class="w-full">
       <CanvasCropper
         ref="cropper"
         :imageSource="src"
         @onColorsSend="setColors"
-      />
+      >
+        <template #actions="{ edit, isEdit, isDrawingMode, draw, redo, crop, undo, reset }: ExposedCropperData">
+          <div class="flex flex-wrap gap-2 py-2">
+            <button
+              class="py-0.5 px-2 border-2 rounded-md disabled:cursor-not-allowed font-mono font-medium"
+              :class="[isDrawingMode.value ? 'border-green-600 text-green-600' : 'border-red-600 text-red-600']"
+              :disabled="!isEdit.value"
+              @click="draw()"
+            >
+              draw
+            </button>
+            <button
+              class="py-0.5 px-2 border-2 rounded-md disabled:cursor-not-allowed font-mono font-medium"
+              :class="[isEdit.value ? 'border-green-600 text-green-600' : 'border-red-600 text-red-600']"
+              @click="edit()"
+            >
+              edit
+            </button>
+            <button
+              class="py-0.5 px-2 border-2 border-slate-950 rounded-md font-mono font-medium"
+              @click="crop()"
+            >
+              crop
+            </button>
+            <button
+              class="py-0.5 px-2 border-2 border-slate-950 rounded-md font-mono font-medium"
+              @click="undo()"
+            >
+              undo
+            </button>
+            <button
+              class="py-0.5 px-2 border-2 border-slate-950 rounded-md font-mono font-medium"
+              @click="redo()"
+            >
+              redo
+            </button>
+            <button
+              class="py-0.5 px-2 border-2 border-slate-950 rounded-md font-mono font-medium"
+              @click="reset()"
+            >
+              reset
+            </button>
+          </div>
+        </template>
+      </CanvasCropper>
     </div>
     <div class="flex items-center justify-center flex-wrap gap-6 py-4 px-3">
       <div

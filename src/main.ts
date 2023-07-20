@@ -7,7 +7,7 @@ import '@/style.css';
 
 declare module 'pinia' {
   export interface PiniaCustomProperties {
-    router: Router
+    router: Router;
   }
 }
 

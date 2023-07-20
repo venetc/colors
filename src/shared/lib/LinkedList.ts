@@ -7,17 +7,17 @@ export class LinkedListNode<T> {
 }
 
 interface LinkedListInterface<T> {
-  insertInBegin(data: T): LinkedListNode<T>
+  insertInBegin(data: T): LinkedListNode<T>;
 
-  insertAtEnd(data: T): LinkedListNode<T>
+  insertAtEnd(data: T): LinkedListNode<T>;
 
-  deleteNode(node: LinkedListNode<T>): void
+  deleteNode(node: LinkedListNode<T>): void;
 
-  traverse(): T[]
+  traverse(): T[];
 
-  size(): number
+  size(): number;
 
-  search(comparator: (data: T) => boolean): LinkedListNode<T> | null
+  search(comparator: (data: T) => boolean): LinkedListNode<T> | null;
 }
 
 export class LinkedList<T> implements LinkedListInterface<T> {
@@ -27,8 +27,7 @@ export class LinkedList<T> implements LinkedListInterface<T> {
     const node = new LinkedListNode(data);
     if (!this.head) {
       this.head = node;
-    }
-    else {
+    } else {
       const getLast = (node: LinkedListNode<T>): LinkedListNode<T> => (node.next ? getLast(node.next) : node);
 
       const lastNode = getLast(this.head);
@@ -42,8 +41,7 @@ export class LinkedList<T> implements LinkedListInterface<T> {
     const node = new LinkedListNode(data);
     if (!this.head) {
       this.head = node;
-    }
-    else {
+    } else {
       this.head.prev = node;
       node.next = this.head;
       this.head = node;
@@ -54,8 +52,7 @@ export class LinkedList<T> implements LinkedListInterface<T> {
   public deleteNode(node: LinkedListNode<T>): void {
     if (!node.prev) {
       this.head = node.next;
-    }
-    else {
+    } else {
       const prevNode = node.prev;
       prevNode.next = node.next;
     }
@@ -63,8 +60,8 @@ export class LinkedList<T> implements LinkedListInterface<T> {
 
   public search(comparator: (data: T) => boolean): LinkedListNode<T> | null {
     const checkNext = (node: LinkedListNode<T>): LinkedListNode<T> | null => {
-      if (comparator(node.data))
-        return node;
+      if (comparator(node.data)) return node;
+
       return node.next ? checkNext(node.next) : null;
     };
     return this.head ? checkNext(this.head) : null;
@@ -73,8 +70,7 @@ export class LinkedList<T> implements LinkedListInterface<T> {
   public traverse(): T[] {
     const array: T[] = [];
 
-    if (!this.head)
-      return array;
+    if (!this.head) return array;
 
     const addToArray = (node: LinkedListNode<T>): T[] => {
       array.push(node.data);

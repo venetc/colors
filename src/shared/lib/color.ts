@@ -2,11 +2,19 @@ import type { Tuple } from './types';
 
 type RGB = Tuple<number, 3>;
 
-export function generateColorsBetween({ startColor, endColor, count }: {
-  startColor: string
-  endColor: string
-  count: number
-}): string[] {
+interface GenerateColorsBetweenParams {
+  startColor: string;
+  endColor: string;
+  count: number;
+}
+
+export function generateColorsBetween(args: GenerateColorsBetweenParams): string[] {
+  const {
+    startColor,
+    endColor,
+    count,
+  } = args;
+
   // Преобразуем hex-строки в RGB-значения
   const startRGB = hexToRGB(startColor);
   const endRGB = hexToRGB(endColor);
@@ -23,6 +31,7 @@ export function generateColorsBetween({ startColor, endColor, count }: {
 
   return colors;
 }
+
 /** Преобразование hex-строки в RGB-значения */
 export function hexToRGB(hex: string): RGB {
   const r = Number.parseInt(hex.slice(1, 3), 16);
@@ -30,6 +39,7 @@ export function hexToRGB(hex: string): RGB {
   const b = Number.parseInt(hex.slice(5, 7), 16);
   return [r, g, b];
 }
+
 /** Преобразование RGB-значений в hex-строку */
 export function rgbToHex(rgb: RGB): string {
   const hexR = rgb[0].toString(16).padStart(2, '0');
@@ -47,6 +57,7 @@ export function shadeHexColor(color: string, decimal: number): string {
       return res;
     }, '#');
 }
+
 /**
  * @description Формула относительной яркости.
  * @description Y = 0.2126R + 0.7152G + 0.0722B.

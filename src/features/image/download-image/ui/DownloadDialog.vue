@@ -1,24 +1,44 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
 import { computed, ref } from 'vue';
-import { NButton, NCard, NModal, NNumberAnimation, NProgress, NSpace, NStatistic, NTooltip, type NumberAnimationInst, useThemeVars } from 'naive-ui';
+import {
+  NButton,
+  NCard,
+  NModal,
+  NNumberAnimation,
+  NProgress,
+  NSpace,
+  NStatistic,
+  NTooltip,
+  type NumberAnimationInst,
+  useThemeVars,
+} from 'naive-ui';
 import { ExternalLink, Sparkles, Trash2 } from 'lucide-vue-next';
 import { useImageDownloaderStore } from '../model';
 import { valueToPercent } from '@/shared/lib/number';
 import { ellipsisString } from '@/shared/lib/string';
 
-const imageDownlaoderStore = useImageDownloaderStore();
-const { useImageDownloader, clearLinksList, updateImagesListFromLinks } = imageDownlaoderStore;
-const { amountOflinks, imagesFailedToFetch, loadedWithoutError, totalFetchedImages } = storeToRefs(imageDownlaoderStore);
+const imageDownloaderStore = useImageDownloaderStore();
+const {
+  useImageDownloader,
+  clearLinksList,
+  updateImagesListFromLinks,
+} = imageDownloaderStore;
+const {
+  amountOfLinks,
+  imagesFailedToFetch,
+  loadedWithoutError,
+  totalFetchedImages,
+} = storeToRefs(imageDownloaderStore);
 
-const showModal = computed(() => amountOflinks.value > 0 || imagesFailedToFetch.value.size > 0);
+const showModal = computed(() => amountOfLinks.value > 0 || imagesFailedToFetch.value.size > 0);
 
 const totalImagesAnimationRef = ref<NumberAnimationInst | null>(null);
 const playTotalLinksAnimation = () => totalImagesAnimationRef.value?.play();
 
 const themeVars = useThemeVars();
 const trackColor = computed(() => (imagesFailedToFetch.value.size > 0 ? themeVars.value.warningColor : themeVars.value.successColor));
-const percentage = computed(() => (~~valueToPercent(totalFetchedImages.value, 0, amountOflinks.value)));
+const percentage = computed(() => (~~valueToPercent(totalFetchedImages.value, 0, amountOfLinks.value)));
 
 function clearAndCloseModal() {
   imagesFailedToFetch.value.clear();
@@ -31,7 +51,10 @@ function completeLinksUpload() {
   clearAndCloseModal();
 }
 
-const { isLoading, loadImages } = useImageDownloader({ onSuccess: completeLinksUpload });
+const {
+  isLoading,
+  loadImages,
+} = useImageDownloader({ onSuccess: completeLinksUpload });
 </script>
 
 <template>
@@ -61,7 +84,7 @@ const { isLoading, loadImages } = useImageDownloader({ onSuccess: completeLinksU
             <NNumberAnimation
               ref="totalImagesAnimationRef"
               :from="0"
-              :to="amountOflinks"
+              :to="amountOfLinks"
               :active="false"
               :duration="1500"
               @finish="loadImages"
