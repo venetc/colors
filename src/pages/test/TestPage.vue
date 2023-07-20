@@ -38,70 +38,73 @@ function logColor(c: string) {
 }
 
 // const src = ref('https://upload.wikimedia.org/wikipedia/commons/4/47/PNG_transparency_demonstration_1.png');
+// const src = ref('https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Projection_main_aspect_ratio.svg/229px-Projection_main_aspect_ratio.svg.png');
 const src = ref('https://i.imgur.com/reEImKg.jpg');
 </script>
 
 <template>
-  <section class="w-[496px]">
+  <section class="grid grid-cols-3 gap-5">
     <div class="w-full">
-      <CanvasCropper
-        ref="cropper"
-        :imageSource="src"
-        @onColorsSend="setColors"
-      >
-        <template #actions="{ edit, isEdit, isDrawingMode, draw, redo, crop, undo, reset }: ExposedCropperData">
-          <div class="flex flex-wrap gap-2 py-2">
-            <button
-              class="py-0.5 px-2 border-2 rounded-md disabled:cursor-not-allowed font-mono font-medium"
-              :class="[isDrawingMode.value ? 'border-green-600 text-green-600' : 'border-red-600 text-red-600']"
-              :disabled="!isEdit.value"
-              @click="draw()"
-            >
-              draw
-            </button>
-            <button
-              class="py-0.5 px-2 border-2 rounded-md disabled:cursor-not-allowed font-mono font-medium"
-              :class="[isEdit.value ? 'border-green-600 text-green-600' : 'border-red-600 text-red-600']"
-              @click="edit()"
-            >
-              edit
-            </button>
-            <button
-              class="py-0.5 px-2 border-2 border-slate-950 rounded-md font-mono font-medium"
-              @click="crop()"
-            >
-              crop
-            </button>
-            <button
-              class="py-0.5 px-2 border-2 border-slate-950 rounded-md font-mono font-medium"
-              @click="undo()"
-            >
-              undo
-            </button>
-            <button
-              class="py-0.5 px-2 border-2 border-slate-950 rounded-md font-mono font-medium"
-              @click="redo()"
-            >
-              redo
-            </button>
-            <button
-              class="py-0.5 px-2 border-2 border-slate-950 rounded-md font-mono font-medium"
-              @click="reset()"
-            >
-              reset
-            </button>
-          </div>
-        </template>
-      </CanvasCropper>
-    </div>
-    <div class="flex items-center justify-center flex-wrap gap-6 py-4 px-3">
-      <div
-        v-for="color in colors"
-        :key="color"
-        :style="{ backgroundColor: color, boxShadow: generateBoxShadow(color) }"
-        class="w-6 h-6 rounded-full relative before-overlay"
-        @click="logColor(color)"
-      />
+      <div class="w-full">
+        <CanvasCropper
+          ref="cropper"
+          :imageSource="src"
+          @onColorsSend="setColors"
+        >
+          <template #actions="{ edit, isEdit, isDrawingMode, draw, redo, crop, undo, reset }: ExposedCropperData">
+            <div class="flex flex-wrap gap-2 py-2">
+              <button
+                class="py-0.5 px-2 border-2 rounded-md disabled:cursor-not-allowed font-mono font-medium"
+                :class="[isDrawingMode.value ? 'border-green-600 text-green-600' : 'border-red-600 text-red-600']"
+                :disabled="!isEdit.value"
+                @click="draw()"
+              >
+                draw
+              </button>
+              <button
+                class="py-0.5 px-2 border-2 rounded-md disabled:cursor-not-allowed font-mono font-medium"
+                :class="[isEdit.value ? 'border-green-600 text-green-600' : 'border-red-600 text-red-600']"
+                @click="edit()"
+              >
+                edit
+              </button>
+              <button
+                class="py-0.5 px-2 border-2 border-slate-950 rounded-md font-mono font-medium"
+                @click="crop()"
+              >
+                crop
+              </button>
+              <button
+                class="py-0.5 px-2 border-2 border-slate-950 rounded-md font-mono font-medium"
+                @click="undo()"
+              >
+                undo
+              </button>
+              <button
+                class="py-0.5 px-2 border-2 border-slate-950 rounded-md font-mono font-medium"
+                @click="redo()"
+              >
+                redo
+              </button>
+              <button
+                class="py-0.5 px-2 border-2 border-slate-950 rounded-md font-mono font-medium"
+                @click="reset()"
+              >
+                reset
+              </button>
+            </div>
+          </template>
+        </CanvasCropper>
+      </div>
+      <div class="flex items-center justify-center flex-wrap gap-6 py-4 px-3">
+        <div
+          v-for="color in colors"
+          :key="color"
+          :style="{ backgroundColor: color, boxShadow: generateBoxShadow(color) }"
+          class="w-6 h-6 rounded-full relative before-overlay"
+          @click="logColor(color)"
+        />
+      </div>
     </div>
   </section>
 </template>

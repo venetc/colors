@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, readonly, ref, toRefs } from 'vue';
-import { useElementBounding, useParentElement } from '@vueuse/core';
-import { cover } from '@/shared/lib/canvas';
+import { useElementBounding } from '@vueuse/core';
+import { contain } from '@/shared/lib/canvas';
 import { rgbToHex } from '@/shared/lib/color';
 import { getPalette } from '@/entities/image/lib';
 
@@ -16,7 +16,7 @@ export interface ExposedCropperData {
   redo: typeof redo;
   edit: typeof edit;
   draw: typeof toggleDrawing;
-  isEdit: typeof isEditing;
+  isEdit: Readonly<typeof isEditing>;
   isDrawingMode: Readonly<typeof isDrawingMode>;
 }
 
@@ -58,8 +58,6 @@ const resultImage = ref<string | null>(null);
 const imgWidth = ref(0);
 const imgHeight = ref(0);
 
-const parentEl = useParentElement(canvasParent);
-
 function init() {
   if (!canvasRef.value) return;
 
@@ -79,7 +77,7 @@ function init() {
     const {
       width: parentWidth,
       height: parentHeight,
-    } = useElementBounding(parentEl.value);
+    } = useElementBounding(canvasParent);
 
     imgWidth.value = parentWidth.value > 0 ? parentWidth.value : img.width;
     imgHeight.value = parentHeight.value > 0 ? parentHeight.value : img.height;
@@ -91,7 +89,7 @@ function init() {
       offsetY,
       width: _width,
       height: _height,
-    } = cover(parentWidth.value, parentHeight.value, img.naturalWidth * SCALE_FACTOR, img.naturalHeight * SCALE_FACTOR);
+    } = contain(parentWidth.value, parentHeight.value, img.naturalWidth * SCALE_FACTOR, img.naturalHeight * SCALE_FACTOR);
 
     ctx.value.drawImage(img, offsetX * SCALE_FACTOR, offsetY * SCALE_FACTOR, _width * SCALE_FACTOR, _height * SCALE_FACTOR);
 
@@ -369,13 +367,13 @@ function mouseMove(e: MouseEvent) {
   if (!ctx.value) return;
 
   const last = currentPointers.value[currentPointers.value.length - 1];
-  const penultimate = currentPointers.value[currentPointers.value.length - 2] ?? last;
+  const nextToLast = currentPointers.value[currentPointers.value.length - 2] ?? last;
 
   ctx.value.beginPath();
-  ctx.value.lineWidth = 2 * SCALE_FACTOR;
+  ctx.value.lineWidth = 1.5 * SCALE_FACTOR;
   ctx.value.lineCap = 'round';
   ctx.value.strokeStyle = '#00ff00';
-  ctx.value.moveTo(penultimate.x * SCALE_FACTOR, penultimate.y * SCALE_FACTOR);
+  ctx.value.moveTo(nextToLast.x * SCALE_FACTOR, nextToLast.y * SCALE_FACTOR);
   ctx.value.lineTo(last.x * SCALE_FACTOR, last.y * SCALE_FACTOR);
   ctx.value.stroke();
 }
@@ -388,51 +386,57 @@ function edit() {
 
 function toggleDrawing() {
   if (!isEditing.value) return;
-  if (!isCropped.value) reset();
+  if (!isDrawingMode.value || !isCropped.value) reset();
   isDrawingMode.value = !isDrawingMode.value;
 }
 
 onMounted(init);
 
-const exposedProps: ExposedCropperData = {
+const exposedData: ExposedCropperData = {
   reset,
   crop,
   undo,
   redo,
   edit,
   draw: toggleDrawing,
-  isDrawingMode,
+  isDrawingMode: readonly(isDrawingMode),
   isEdit: readonly(isEditing),
 };
+
+function onTransitionEnd(e: TransitionEvent) {
+  if (e.propertyName === 'height' || e.propertyName === 'width') {
+    console.log('???');
+    reset();
+  }
+}
 </script>
 
 <template>
-  <div class="w-full h-80">
+  <div class="w-full aspect-[16/10] flex items-center justify-center">
     <div
       ref="canvasParent"
-      class="relative w-full h-full"
+      class="relative w-full h-full transition-all duration-300 border rounded-xl overflow-hidden"
+      :class="[isEditing ? 'bg-transparent border-gray-100' : 'bg-slate-50 border-gray-200']"
+      @transitionend="onTransitionEnd"
     >
       <img
-        :style="{
-          opacity: isCropped || isEditing ? 0.25 : 1,
-          pointerEvents: isCropped || isEditing ? 'none' : 'auto',
-        }"
         :src="imageSource"
-        class="absolute w-full h-full object-cover block"
+        class="w-full h-full max-w-full max-h-full object-contain block"
+        :class="[isCropped || isEditing ? 'opacity-25 pointer-events-none' : 'pointer-events-auto']"
         alt="#"
         crossorigin="anonymous"
       >
       <canvas
         ref="canvasRef"
-        :style="{ pointerEvents: isCropped || isEditing ? 'auto' : 'none' }"
-        class="absolute w-full h-full object-cover block"
+        class="absolute top-0 left-0 w-full h-full object-cover block"
+        :class="[isCropped || isEditing ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0']"
         @mousedown="mouseDown"
         @mouseup="mouseUp"
         @mousemove="mouseMove"
       />
       <div
         v-if="!isDrawingMode"
-        class="absolute w-full h-full pointer-events-none"
+        class="absolute w-full h-full pointer-events-none top-0 left-0"
       >
         <span
           v-for="point in currentPointers"
@@ -446,7 +450,7 @@ const exposedProps: ExposedCropperData = {
 
   <slot
     name="actions"
-    v-bind="exposedProps"
+    v-bind="exposedData"
   />
 </template>
 
