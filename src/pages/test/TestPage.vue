@@ -40,6 +40,7 @@ function logColor(c: string) {
 // const src = ref('https://upload.wikimedia.org/wikipedia/commons/4/47/PNG_transparency_demonstration_1.png');
 // const src = ref('https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Projection_main_aspect_ratio.svg/229px-Projection_main_aspect_ratio.svg.png');
 const src = ref('https://i.imgur.com/reEImKg.jpg');
+// const src = ref('');
 </script>
 
 <template>

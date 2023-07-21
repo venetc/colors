@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, readonly, ref, toRefs } from 'vue';
 import { useElementBounding } from '@vueuse/core';
-import { contain } from '@/shared/lib/canvas';
+import { cover } from '@/shared/lib/canvas';
 import { rgbToHex } from '@/shared/lib/color';
 import { getPalette } from '@/entities/image/lib';
 
@@ -28,7 +28,7 @@ const emit = defineEmits<{
 
 const { imageSource } = toRefs(props);
 
-const SCALE_FACTOR = 2;
+const SCALE_FACTOR = 3;
 
 interface Coordinates {
   x: number;
@@ -43,6 +43,7 @@ const isDrawingInProgress = ref(false);
 
 const canvasRef = ref<HTMLCanvasElement>();
 const canvasParent = ref<HTMLElement>();
+const imageRef = ref<HTMLImageElement>();
 
 const imageObj = ref<HTMLImageElement | null>();
 const position = ref<Coordinates | null>(null);
@@ -79,19 +80,24 @@ function init() {
       height: parentHeight,
     } = useElementBounding(canvasParent);
 
-    imgWidth.value = parentWidth.value > 0 ? parentWidth.value : img.width;
-    imgHeight.value = parentHeight.value > 0 ? parentHeight.value : img.height;
-    ctx.value.canvas.width = parentWidth.value * SCALE_FACTOR;
-    ctx.value.canvas.height = parentHeight.value * SCALE_FACTOR;
+    if (imageRef.value) {
+      imageRef.value.width = Math.round(parentWidth.value);
+      imageRef.value.height = Math.round(parentHeight.value);
+    }
+
+    imgWidth.value = Math.round(parentWidth.value) > 0 ? Math.round(parentWidth.value) : img.width;
+    imgHeight.value = Math.round(parentHeight.value) > 0 ? Math.round(parentHeight.value) : img.height;
+    ctx.value.canvas.width = Math.round(parentWidth.value) * SCALE_FACTOR;
+    ctx.value.canvas.height = Math.round(parentHeight.value) * SCALE_FACTOR;
 
     const {
       offsetX,
       offsetY,
       width: _width,
       height: _height,
-    } = contain(parentWidth.value, parentHeight.value, img.naturalWidth * SCALE_FACTOR, img.naturalHeight * SCALE_FACTOR);
+    } = cover(Math.round(parentWidth.value), Math.round(parentHeight.value), Math.round(img.naturalWidth) * SCALE_FACTOR, Math.round(img.naturalHeight) * SCALE_FACTOR);
 
-    ctx.value.drawImage(img, offsetX * SCALE_FACTOR, offsetY * SCALE_FACTOR, _width * SCALE_FACTOR, _height * SCALE_FACTOR);
+    ctx.value.drawImage(img, ((offsetX) * SCALE_FACTOR), ((offsetY) * SCALE_FACTOR), ((_width) * SCALE_FACTOR), ((_height) * SCALE_FACTOR));
 
     const canvasImg = new Image();
     if (!canvasRef.value) return;
@@ -189,7 +195,7 @@ function restoreState(marksToPop: string[], marksToPush: string[]) {
     img.onload = () => {
       if (!ctx.value) return;
 
-      ctx.value.clearRect(0, 0, imgWidth.value, imgHeight.value);
+      ctx.value.clearRect(0, 0, imgWidth.value * SCALE_FACTOR, imgHeight.value * SCALE_FACTOR);
       ctx.value.drawImage(img, 0, 0);
     };
   }
@@ -319,16 +325,18 @@ function mouseDown(e: MouseEvent) {
         x: oldX,
         y: oldY,
       } = positionOld.value;
+
       const {
         x,
         y,
       } = position.value;
 
       ctx.value.beginPath();
+      ctx.value.strokeStyle = '#ff0000';
+      ctx.value.lineWidth = SCALE_FACTOR;
+      ctx.value.lineCap = 'round';
       ctx.value.moveTo(oldX * SCALE_FACTOR, oldY * SCALE_FACTOR);
       ctx.value.lineTo(x * SCALE_FACTOR, y * SCALE_FACTOR);
-      ctx.value.strokeStyle = '#00ff01';
-      ctx.value.lineWidth = SCALE_FACTOR;
       ctx.value.stroke();
     }
 
@@ -372,7 +380,7 @@ function mouseMove(e: MouseEvent) {
   ctx.value.beginPath();
   ctx.value.lineWidth = 1.5 * SCALE_FACTOR;
   ctx.value.lineCap = 'round';
-  ctx.value.strokeStyle = '#00ff00';
+  ctx.value.strokeStyle = '#ff0000';
   ctx.value.moveTo(nextToLast.x * SCALE_FACTOR, nextToLast.y * SCALE_FACTOR);
   ctx.value.lineTo(last.x * SCALE_FACTOR, last.y * SCALE_FACTOR);
   ctx.value.stroke();
@@ -403,7 +411,7 @@ const exposedData: ExposedCropperData = {
   isEdit: readonly(isEditing),
 };
 
-function onTransitionEnd(e: TransitionEvent) {
+function onTransitionStart(e: TransitionEvent) {
   if (e.propertyName === 'height' || e.propertyName === 'width') {
     console.log('???');
     reset();
@@ -415,18 +423,22 @@ function onTransitionEnd(e: TransitionEvent) {
   <div class="w-full aspect-[16/10] flex items-center justify-center">
     <div
       ref="canvasParent"
-      class="relative w-full h-full transition-all duration-300 border rounded-xl overflow-hidden"
-      :class="[isEditing ? 'bg-transparent border-gray-100' : 'bg-slate-50 border-gray-200']"
-      @transitionend="onTransitionEnd"
+      class="relative w-full h-full transition-all duration-300 rounded-xl overflow-hidden"
+      :class="[isEditing ? 'bg-transparent' : 'bg-slate-50']"
+      @transitionstart="onTransitionStart"
     >
       <img
+        v-if="imageSource"
+        ref="imageRef"
         :src="imageSource"
-        class="w-full h-full max-w-full max-h-full object-contain block"
+        class="absolute top-0 left-0 w-full h-full object-cover block"
         :class="[isCropped || isEditing ? 'opacity-25 pointer-events-none' : 'pointer-events-auto']"
         alt="#"
         crossorigin="anonymous"
+        @load="console.log"
       >
       <canvas
+        v-if="imageSource"
         ref="canvasRef"
         class="absolute top-0 left-0 w-full h-full object-cover block"
         :class="[isCropped || isEditing ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0']"
@@ -435,7 +447,7 @@ function onTransitionEnd(e: TransitionEvent) {
         @mousemove="mouseMove"
       />
       <div
-        v-if="!isDrawingMode"
+        v-if="!isDrawingMode && imageSource"
         class="absolute w-full h-full pointer-events-none top-0 left-0"
       >
         <span
@@ -456,12 +468,13 @@ function onTransitionEnd(e: TransitionEvent) {
 
 <style>
 .vue-crop-pointer {
-  background-color: #00ff00;
+  /*background-color: #00ff00;*/
   border-radius: 50%;
+  border: 1px solid #ff0000;
   position: absolute;
-  transform: translate(-50%, -50%);
-  width: 5px;
-  height: 5px;
+  transform: translate(calc(-50%), -50%);
+  width: 10px;
+  height: 10px;
   pointer-events: none;
 }
 </style>

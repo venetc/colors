@@ -18,7 +18,6 @@ const targetIsVisible = useElementVisibility(card);
 const _imageSrc = ref<HTMLImageElement['src'] | undefined>(undefined);
 
 const isLoading = ref<boolean>(true);
-const isError = ref<unknown>();
 
 const unwatchVisibility = watch(targetIsVisible, (isVisible) => {
   if (!isVisible)
@@ -34,7 +33,6 @@ const unwatchImageSrc = watch(_imageSrc, async (src) => {
 
   loadImage.then((image) => {
     isLoading.value = image.isLoading.value;
-    isError.value = image.error.value;
     unwatchImageSrc();
   });
 });
@@ -63,14 +61,8 @@ function onLoad() {
         >
           <span>LOADING...</span>
         </div>
-        <div
-          v-if="!isLoading && isError"
-          class="absolute w-full h-full flex items-center justify-center"
-        >
-          <span>ERROR</span>
-        </div>
         <img
-          v-if="!isLoading && !isError"
+          v-else
           ref="imageRef"
           :src="_imageSrc"
           :alt="_imageSrc"
