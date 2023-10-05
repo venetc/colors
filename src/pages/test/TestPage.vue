@@ -1,12 +1,11 @@
 <script setup lang="ts">
 import { /* nextTick */ ref } from 'vue';
-import type { ExposedCropperData } from './CanvasCropper.vue';
-import CanvasCropper from './CanvasCropper.vue';
+import { ImageCropper } from '@/features/image/crop-image';
 import { generateColorsBetween, shadeHexColor } from '@/shared/lib/color';
 
-const cropper = ref<InstanceType<typeof CanvasCropper> & ExposedCropperData>();
+const cropper = ref<InstanceType<typeof ImageCropper>>();
 const colors = ref<string[]>([]);
-
+// @ts-expect-error TEMP
 function setColors(c: string[]) {
   colors.value = [...new Set(c)];
 }
@@ -16,12 +15,11 @@ const SHADES_COUNT = 10;
 function createBoxShadowLine(result: string, colors: string, index: number, array: string[]) {
   result += `0px 0px 0px ${index}px ${colors}`;
 
-  if (index !== array.length - 1)
-    result += ', ';
+  if (index !== array.length - 1) result += ', ';
 
   return result;
 }
-
+// @ts-expect-error TEMP
 function generateBoxShadow(centerColor: string): string {
   const DARKEST = shadeHexColor(centerColor, 1.05);
   const range = generateColorsBetween({
@@ -32,13 +30,14 @@ function generateBoxShadow(centerColor: string): string {
 
   return range.reduce(createBoxShadowLine, '');
 }
-
+// @ts-expect-error TEMP
 function logColor(c: string) {
   console.log(c);
 }
 
 // const src = ref('https://upload.wikimedia.org/wikipedia/commons/4/47/PNG_transparency_demonstration_1.png');
 // const src = ref('https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Projection_main_aspect_ratio.svg/229px-Projection_main_aspect_ratio.svg.png');
+// const src = ref('https://www.shutterstock.com/shutterstock/photos/716920510/display_1500/stock-photo-panoramic-beautiful-seascape-with-cloud-on-a-sunny-day-716920510.jpg');
 const src = ref('https://i.imgur.com/reEImKg.jpg');
 // const src = ref('');
 </script>
@@ -46,66 +45,19 @@ const src = ref('https://i.imgur.com/reEImKg.jpg');
 <template>
   <section class="grid grid-cols-3 gap-5">
     <div class="w-full">
-      <div class="w-full">
-        <CanvasCropper
-          ref="cropper"
-          :imageSource="src"
-          @onColorsSend="setColors"
-        >
-          <template #actions="{ edit, isEdit, isDrawingMode, draw, redo, crop, undo, reset }: ExposedCropperData">
-            <div class="flex flex-wrap gap-2 py-2">
-              <button
-                class="py-0.5 px-2 border-2 rounded-md disabled:cursor-not-allowed font-mono font-medium"
-                :class="[isDrawingMode.value ? 'border-green-600 text-green-600' : 'border-red-600 text-red-600']"
-                :disabled="!isEdit.value"
-                @click="draw()"
-              >
-                draw
-              </button>
-              <button
-                class="py-0.5 px-2 border-2 rounded-md disabled:cursor-not-allowed font-mono font-medium"
-                :class="[isEdit.value ? 'border-green-600 text-green-600' : 'border-red-600 text-red-600']"
-                @click="edit()"
-              >
-                edit
-              </button>
-              <button
-                class="py-0.5 px-2 border-2 border-slate-950 rounded-md font-mono font-medium"
-                @click="crop()"
-              >
-                crop
-              </button>
-              <button
-                class="py-0.5 px-2 border-2 border-slate-950 rounded-md font-mono font-medium"
-                @click="undo()"
-              >
-                undo
-              </button>
-              <button
-                class="py-0.5 px-2 border-2 border-slate-950 rounded-md font-mono font-medium"
-                @click="redo()"
-              >
-                redo
-              </button>
-              <button
-                class="py-0.5 px-2 border-2 border-slate-950 rounded-md font-mono font-medium"
-                @click="reset()"
-              >
-                reset
-              </button>
-            </div>
-          </template>
-        </CanvasCropper>
-      </div>
-      <div class="flex items-center justify-center flex-wrap gap-6 py-4 px-3">
+      <ImageCropper
+        ref="cropper"
+        :imageSource="src"
+      />
+      <!--      <div class="flex items-center justify-center flex-wrap gap-6 py-4 px-3">
         <div
           v-for="color in colors"
           :key="color"
           :style="{ backgroundColor: color, boxShadow: generateBoxShadow(color) }"
-          class="w-6 h-6 rounded-full relative before-overlay"
+          class="w-5 h-5 rounded-full relative before-overlay"
           @click="logColor(color)"
         />
-      </div>
+      </div> -->
     </div>
   </section>
 </template>

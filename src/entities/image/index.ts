@@ -1,6 +1,5 @@
 import { defineAsyncComponent } from 'vue';
 
-export const ImageCard = defineAsyncComponent(() => (import('./ui/ImageCard.vue')));
+export const ImagePreview = defineAsyncComponent(() => (import('./ui/ImagePreview.vue')));
 
 export * from './model';
-export * from './lib';

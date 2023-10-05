@@ -21,18 +21,25 @@ import { formatStringToLinks } from '@/shared/lib/string';
 import { NoValidLinksError, useNotificationManager } from '@/shared/ui/notification';
 
 const fileLoaderStore = useFileLoaderStore();
-const imageDownlaoderStore = useImageDownloaderStore();
+const imageDownloaderStore = useImageDownloaderStore();
 const imagesStore = useImagesStore();
 
-const { clearUploader, clearFileList } = fileLoaderStore;
+const {
+  clearUploader,
+  clearFileList,
+} = fileLoaderStore;
 const { filesList } = storeToRefs(fileLoaderStore);
 
 const { clearBlobCache } = imagesStore;
 const { images } = storeToRefs(imagesStore);
 
-const { updateLinksList } = imageDownlaoderStore;
+const { updateLinksList } = imageDownloaderStore;
 
-const { callNotification: popInvalidLinksNotification } = useNotificationManager({ type: 'error', title: 'No valid links found!', content: NoValidLinksError });
+const { callNotification: popInvalidLinksNotification } = useNotificationManager({
+  type: 'error',
+  title: 'No valid links found!',
+  content: NoValidLinksError,
+});
 
 const { push } = useRouter();
 
@@ -50,6 +57,7 @@ function removeImage(token: string) {
   images.value.delete(token);
   filesList.value.delete(token);
 }
+
 const activeTab = ref('images');
 
 function resetInput() {
@@ -83,7 +91,7 @@ function resetAll() {
             class="image aspect-square mb-2 mr-2 inline-block relative group rounded-md bg-slate-500 bg-opacity-10"
           >
             <NImage
-              :src="image.src"
+              :src="image.blobSrc"
               objectFit="cover"
               :imgProps="{ style: { marginInline: 'auto', position: 'absolute', width: '100%', height: '100%' } }"
               class="aspect-square select-none"

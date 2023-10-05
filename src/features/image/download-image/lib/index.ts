@@ -1,10 +1,17 @@
 import type { ImageFromLink } from '@/entities/image';
 
-export function createImageFromLink({ originalSrc, src }: { originalSrc: string; src: string }): ImageFromLink {
+type CreateImageFromLinkArgs = Pick<ImageFromLink, 'originalSrc' | 'blobSrc'>;
+
+export function createImageFromLink(payload: CreateImageFromLinkArgs): ImageFromLink {
+  const {
+    originalSrc,
+    blobSrc,
+  } = payload;
+
   return {
     origin: 'link',
-    colors: [],
+    croppedSrc: undefined,
     originalSrc,
-    src,
+    blobSrc,
   };
 }

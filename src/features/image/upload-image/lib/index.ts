@@ -1,10 +1,17 @@
 import type { ImageFromFile } from '@/entities/image';
 
-export function createImageFromFile({ fileName, src }: { fileName: string; src: string }): ImageFromFile {
+type CreateImageFromFileArgs = Pick<ImageFromFile, 'fileName' | 'blobSrc'>;
+
+export function createImageFromFile(payload: CreateImageFromFileArgs): ImageFromFile {
+  const {
+    fileName,
+    blobSrc,
+  } = payload;
+
   return {
     origin: 'file',
-    colors: [],
+    croppedSrc: undefined,
     fileName,
-    src,
+    blobSrc,
   };
 }

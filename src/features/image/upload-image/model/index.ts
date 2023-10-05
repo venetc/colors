@@ -34,11 +34,11 @@ export const useFileLoaderStore = defineStore('ImagesUploaderStore', () => {
 
     filesList.value.forEach((file) => {
       const fileName = file.name;
-      const src = blobCache.value.get(fileName);
+      const blobSrc = blobCache.value.get(fileName);
 
-      if (!src) return;
+      if (!blobSrc) return;
 
-      const image = createImageFromFile({ fileName, src });
+      const image = createImageFromFile({ fileName, blobSrc });
       imagesStore.addImageToList(fileName, image);
     });
   };

@@ -1,9 +1,9 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 
-interface CoreProps { src: string; colors: string[] }
-export type ImageFromFile = CoreProps & { origin: 'file'; fileName: string };
-export type ImageFromLink = CoreProps & { origin: 'link'; originalSrc: string };
+export interface CoreImageProps { blobSrc: string; croppedSrc: string | undefined }
+export type ImageFromFile = CoreImageProps & { origin: 'file'; fileName: string };
+export type ImageFromLink = CoreImageProps & { origin: 'link'; originalSrc: string };
 export type Img = ImageFromFile | ImageFromLink;
 export type BlobCache = Map<string, string>;
 export type BlobCacheItem = File | { blobSrc: string; originSrc: string };

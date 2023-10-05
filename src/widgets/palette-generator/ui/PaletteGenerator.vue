@@ -1,20 +1,15 @@
 <script setup lang="ts">
-import { storeToRefs } from 'pinia';
+import { toRefs } from 'vue';
+import type { Img } from '@/entities/image';
+import { ImageCropper } from '@/features/image/crop-image';
 
-// import { usePaletteGeneratorStore } from '../model';
-import { ImageCard, useImagesStore } from '@/entities/image';
+const props = defineProps<{ image: Img }>();
 
-const imagesStore = useImagesStore();
-const { images } = storeToRefs(imagesStore);
+const { image } = toRefs(props);
 </script>
 
 <template>
-  <section class="grid grid-cols-12 gap-5">
-    <ImageCard
-      v-for="[imageKey, image] in images"
-      :key="imageKey"
-      :image="image"
-      class="col-span-4"
-    />
-  </section>
+  <ImageCropper
+    :image="image"
+  />
 </template>

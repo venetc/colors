@@ -80,15 +80,15 @@ export const useImageDownloaderStore = defineStore('ImagesDownloaderStore', () =
     const imagesStore = useImagesStore();
     const { blobCache } = storeToRefs(imagesStore);
     linksList.value.forEach((originalSrc) => {
-      const src = blobCache.value.get(originalSrc);
+      const blobSrc = blobCache.value.get(originalSrc);
 
-      if (!src) return;
+      if (!blobSrc) return;
 
       const imagesStore = useImagesStore();
 
       const image = createImageFromLink({
         originalSrc,
-        src,
+        blobSrc,
       });
       imagesStore.addImageToList(originalSrc, image);
     });

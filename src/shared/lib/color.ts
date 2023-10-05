@@ -1,6 +1,6 @@
 import type { Tuple } from './types';
 
-type RGB = Tuple<number, 3>;
+export type RGB = Tuple<number, 3>;
 
 interface GenerateColorsBetweenParams {
   startColor: string;
