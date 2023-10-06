@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { Crop, Lasso, Redo2, RotateCcw, Scaling, Undo2 } from 'lucide-vue-next';
-import { NButton, NPopselect, NSwitch } from 'naive-ui';
 import { onMounted, ref, toRefs } from 'vue';
 
 import type { CroppedImageData } from '../model';
@@ -31,7 +29,7 @@ const cropperParams = {
   cropCallback,
 };
 
-const cropper = useImageCropper(cropperParams);
+const cropperData = useImageCropper(cropperParams);
 
 const {
   init,
@@ -53,9 +51,11 @@ const {
   canvasIsHidden,
   redoPointers,
   undoPointers,
-} = cropper;
+} = cropperData;
 
 onMounted(init);
+
+defineExpose(cropperData);
 
 function transitionEndHandler(e: TransitionEvent) {
   if (e.propertyName === 'height' || e.propertyName === 'width') {
@@ -72,13 +72,13 @@ function transitionStartHandler(e: TransitionEvent) {
 </script>
 
 <template>
-  <div class="w-full h-full group/card">
-    <div class="h-full bg-white aspect-[16/10] relative z-10 flex items-center justify-center">
+  <div class="w-full h-full group/card flex justify-center items-center">
+    <div class="h-full aspect-[16/10] max-w-full max-h-full relative z-10 flex items-center justify-center">
       <div
         v-if="image"
         ref="parentElement"
-        class="relative transition-all duration-300 overflow-hidden"
-        :class="[isEditing ? 'bg-transparent' : 'bg-slate-50', ratioClass]"
+        class="relative transition-all duration-300 overflow-hidden bg-white backdrop-blur-3xl bg-opacity-5 shadow-lg rounded-lg"
+        :class="ratioClass"
         @transitionend="transitionEndHandler"
         @transitionstart="transitionStartHandler"
       >
@@ -86,7 +86,7 @@ function transitionStartHandler(e: TransitionEvent) {
           ref="imageElement"
           :src="image.blobSrc"
           class="absolute top-0 left-0 w-full h-full object-cover block"
-          :class="[(isCropped || isEditing) && !canvasIsHidden ? 'opacity-10 delay-75' : 'pointer-events-auto delay-0']"
+          :class="[(isCropped || isEditing) && !canvasIsHidden ? 'opacity-5 delay-75' : 'pointer-events-auto delay-0']"
           alt="#"
           crossorigin="anonymous"
           @load="console.log"
@@ -113,7 +113,7 @@ function transitionStartHandler(e: TransitionEvent) {
       </div>
     </div>
 
-    <div
+    <!--    <div
       class="flex flex-wrap py-2 px-1 items-center justify-between transition-transform -translate-y-full group-hover/card:transform-none"
     >
       <div class="flex flex-wrap gap-2 items-center">
@@ -208,7 +208,7 @@ function transitionStartHandler(e: TransitionEvent) {
           </template>
         </NButton>
       </div>
-    </div>
+    </div> -->
   </div>
 </template>
 

@@ -2,4 +2,4 @@ import { defineAsyncComponent } from 'vue';
 
 export const PaletteGenerator = defineAsyncComponent(() => (import('./ui/PaletteGenerator.vue')));
 
-export { usePaletteGeneratorStore } from './model';
+export * from './model';

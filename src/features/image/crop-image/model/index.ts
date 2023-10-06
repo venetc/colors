@@ -9,16 +9,7 @@ export interface Coordinates {
   y: number;
 }
 
-export interface ExposedCropperData {
-  reset: () => void;
-  crop: () => void;
-  undo: () => void;
-  redo: () => void;
-  edit: () => void;
-  draw: () => void;
-  isEdit: Readonly<Ref<boolean>>;
-  isDrawingMode: Readonly<Ref<boolean>>;
-}
+export type ExposedCropperData = ReturnType<typeof useImageCropper>;
 
 export interface CroppedImageData {
   image: Img;

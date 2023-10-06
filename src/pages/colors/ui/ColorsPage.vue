@@ -2,8 +2,7 @@
 import { Settings } from 'lucide-vue-next';
 import { NButton, NCard } from 'naive-ui';
 import { storeToRefs } from 'pinia';
-import { ref } from 'vue';
-import ImageCropper from '@/features/image/crop-image/ui/ImageCropper.vue';
+import { ImageEditor, useImageEditorStore } from '@/widgets/image-editor';
 import type { Img } from '@/entities/image';
 import { ImagePreview, useImagesStore } from '@/entities/image';
 import { useColorsStore } from '@/entities/color';
@@ -15,13 +14,8 @@ const colorsStore = useColorsStore();
 const { colors } = storeToRefs(colorsStore);
 const { grabColorsFromSrc } = colorsStore;
 
-const modalActive = ref(false);
-const activeImage = ref<Img>();
-
-function on(img: Img) {
-  activeImage.value = img;
-  modalActive.value = true;
-}
+const imageEditorStore = useImageEditorStore();
+const { setActiveImage, setEditorState } = imageEditorStore;
 </script>
 
 <template>
@@ -58,7 +52,7 @@ function on(img: Img) {
               circle
               size="large"
               class="opacity-0 group-hover/card:opacity-100"
-              @click="on(image)"
+              @click="setActiveImage(image); setEditorState('opened')"
             >
               <template #icon>
                 <Settings />
@@ -69,19 +63,6 @@ function on(img: Img) {
       </NCard>
     </div>
 
-    <Transition name="fade">
-      <div
-        v-if="modalActive"
-        class="fixed w-full h-full top-0 left-0 flex items-center justify-center"
-      >
-        <div
-          class="absolute top-0 left-0 w-full h-full bg-opacity-50 bg-black"
-          @click="modalActive = false"
-        />
-        <div class="bg-white rounded w-11/12 h-5/6 relative">
-          <ImageCropper :image="activeImage!" />
-        </div>
-      </div>
-    </Transition>
+    <ImageEditor />
   </section>
 </template>
