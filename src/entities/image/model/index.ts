@@ -1,7 +1,11 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 
-export interface CoreImageProps { blobSrc: string; croppedSrc: string | undefined }
+export interface CoreImageProps {
+  blobSrc: string;
+  croppedSrc: string | undefined;
+}
+
 export type ImageFromFile = CoreImageProps & { origin: 'file'; fileName: string };
 export type ImageFromLink = CoreImageProps & { origin: 'link'; originalSrc: string };
 export type Img = ImageFromFile | ImageFromLink;
@@ -9,6 +13,7 @@ export type BlobCache = Map<string, string>;
 export type BlobCacheItem = File | { blobSrc: string; originSrc: string };
 
 export const useImagesStore = defineStore('ImagesStore', () => {
+  const downloadOrigin = ref<'images' | 'txt' | 'links' | undefined>();
   const images = ref<Map<string, Img>>(new Map());
   const blobCache = ref<BlobCache>(new Map());
 
@@ -23,16 +28,16 @@ export const useImagesStore = defineStore('ImagesStore', () => {
   const addBlobToCache = (entity: BlobCacheItem | null | undefined) => {
     if (!entity) return;
 
-    if (entity instanceof File) {
-      const blobFromCache = blobCache.value.get(entity.name);
+    const isFile = entity instanceof File;
+    const token = isFile ? entity.name : entity.originSrc;
+    const existingBlobInCache = blobCache.value.get(token);
+    const existingImage = images.value.get(token);
 
-      if (blobFromCache) return;
+    if (existingBlobInCache) return;
 
-      const src = URL.createObjectURL(entity);
-      blobCache.value.set(entity.name, src);
-    } else {
-      blobCache.value.set(entity.originSrc, entity.blobSrc);
-    }
+    const src = isFile ? URL.createObjectURL(entity) : entity.blobSrc;
+
+    blobCache.value.set(token, existingImage ? existingImage.blobSrc : src);
   };
   const removeBlobFromCache = (entity: BlobCacheItem) => {
     const key = entity instanceof File ? entity.name : entity.originSrc;
@@ -48,5 +53,14 @@ export const useImagesStore = defineStore('ImagesStore', () => {
     blobCache.value.clear();
   };
 
-  return { images, blobCache, addImageToList, removeImageFromList, addBlobToCache, removeBlobFromCache, clearBlobCache };
+  return {
+    images,
+    blobCache,
+    downloadOrigin,
+    addImageToList,
+    removeImageFromList,
+    addBlobToCache,
+    removeBlobFromCache,
+    clearBlobCache,
+  };
 });

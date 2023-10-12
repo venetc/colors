@@ -1,6 +1,6 @@
 import ColorThief from 'colorthief';
-import { rgbToHex } from '@/shared/lib/color';
-import type { RGB } from '@/shared/lib/color';
+import { getBrightness, hslToCss, rgbToHSL, rgbToHex } from '@/shared/lib/color';
+import type { HSL, RGB } from '@/shared/lib/color';
 
 const colorScrapper = new ColorThief();
 
@@ -9,24 +9,35 @@ type GetPalette = (args: { img: HTMLImageElement; colorCount?: number; quality?:
 export interface Color {
   hex: string;
   rgb: string;
-  rawRGB: RGB;
+  rgbArray: RGB;
+  hsl: string;
+  hslArray: HSL;
+  brightness: number;
 }
 
 export const getPalette: GetPalette = ({
   img,
-  colorCount = 5,
+  colorCount = 6,
   quality = 2,
 }) => {
   return colorScrapper.getPalette(img, colorCount, quality);
 };
 
-export function generateColorObject(rawRGB: RGB): Color {
-  const rgb = `rgb(${rawRGB[0]}, ${rawRGB[1]}, ${rawRGB[2]})`;
-  const hex = rgbToHex(rawRGB);
+export function generateColorData(payload: RGB): Color {
+  const rgbArray = payload.map(number => number > 255 ? 255 : number) as RGB;
+
+  const rgb = `rgb(${rgbArray[0]}, ${rgbArray[1]}, ${rgbArray[2]})`;
+  const hex = rgbToHex(rgbArray);
+  const hslArray = rgbToHSL(rgbArray);
+  const hsl = hslToCss(hslArray);
+  const brightness = getBrightness(rgbArray);
 
   return {
     hex,
     rgb,
-    rawRGB,
+    rgbArray,
+    hsl,
+    hslArray,
+    brightness,
   };
 }

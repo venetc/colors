@@ -1,15 +1,7 @@
 <script setup lang="ts">
-import {
-  NButton,
-  NImage,
-  NImageGroup,
-  NInput,
-  NSpace,
-  NTabPane,
-  NTabs,
-} from 'naive-ui';
+import { NButton, NImage, NImageGroup, NInput, NSpace, NTabPane, NTabs } from 'naive-ui';
 import { storeToRefs } from 'pinia';
-import { ref } from 'vue';
+import { nextTick, onMounted, ref } from 'vue';
 import { ClipboardList, FileImage, FileText, Search, Sparkles, X, XOctagon } from 'lucide-vue-next';
 import { useElementSize } from '@vueuse/core';
 
@@ -31,7 +23,11 @@ const {
 const { filesList } = storeToRefs(fileLoaderStore);
 
 const { clearBlobCache } = imagesStore;
-const { images } = storeToRefs(imagesStore);
+const {
+  images,
+  blobCache,
+  downloadOrigin,
+} = storeToRefs(imagesStore);
 
 const { updateLinksList } = imageDownloaderStore;
 
@@ -54,11 +50,18 @@ const imagesContainer = ref<HTMLElement>();
 const { width: containerWidth } = useElementSize(imagesContainer);
 
 function removeImage(token: string) {
+  const target = images.value.get(token);
+
+  if (target) {
+    URL.revokeObjectURL(target.blobSrc);
+    if (target.croppedSrc) URL.revokeObjectURL(target.croppedSrc);
+  }
+
   images.value.delete(token);
   filesList.value.delete(token);
 }
 
-const activeTab = ref('images');
+const activeTab = ref<'images' | 'txt' | 'links'>(downloadOrigin.value ?? 'images');
 
 function resetInput() {
   inputValue.value = '';
@@ -75,13 +78,27 @@ function resetAll() {
   clearImages();
   resetInput();
 }
+
+function saveDownloadOrigin(origin?: 'images' | 'txt' | 'links') {
+  nextTick(() => {
+    downloadOrigin.value = origin ?? activeTab.value;
+  });
+}
+
+function populateTextArea() {
+  if (downloadOrigin.value !== 'links' || images.value.size < 1) return;
+  inputValue.value = [...images.value.keys()].join('\r\n');
+}
+
+onMounted(saveDownloadOrigin);
+onMounted(populateTextArea);
 </script>
 
 <template>
-  <section class="root grid grid-cols-12 gap-5">
+  <section class="root pb-5 grid grid-cols-12 gap-5">
     <div
       ref="imagesContainer"
-      class="row-start-1 col-start-5 col-span-8 images-container"
+      class="images-container row-start-1 col-start-7 col-span-6 xl:col-start-7 xl:col-span-6 2xl:col-start-5 2xl:col-span-8"
     >
       <NImageGroup>
         <TransitionGroup name="images-list">
@@ -110,8 +127,8 @@ function resetAll() {
       </NImageGroup>
     </div>
     <div
-      class=" transition flex flex-col flex-nowrap gap-6 row-start-1  col-span-4 col-start-5 loader-container"
-      :class="{ '-translate-x-[calc(100%_+_1.25rem)]': images.size > 0 }"
+      class="loader-container transition flex flex-col flex-nowrap gap-6 row-start-1 col-span-8 col-start-3 lg:col-span-6 lg:col-start-4 xl:col-span-6 xl:col-start-4 2xl:col-span-4 2xl:col-start-5"
+      :class="{ '2xl:-translate-x-[calc(100%_+_1.25rem)] lg:-translate-x-[calc(50%_+_0.65rem)] -translate-x-1/2': images.size > 0 }"
     >
       <NTabs
         v-model:value="activeTab"
@@ -119,7 +136,7 @@ function resetAll() {
         justifyContent="center"
         animated
         :tabsPadding="5"
-        @updateValue="resetAll"
+        @updateValue="resetAll(); saveDownloadOrigin($event)"
       >
         <NTabPane
           name="images"
@@ -135,7 +152,10 @@ function resetAll() {
             </div>
           </template>
           <template #default>
-            <FilesLoader allowedFiles="image/png,image/jpeg">
+            <FilesLoader
+              allowedFiles="image/png,image/jpeg"
+              :disabled="false"
+            >
               <div class="flex flex-col items-center gap-4 py-4">
                 <FileImage
                   :size="32"
@@ -164,6 +184,7 @@ function resetAll() {
           <template #default>
             <FilesLoader
               allowedFiles=".txt"
+              :disabled="images.size > 0"
               @onLinksParseSuccess="updateLinksList"
               @onLinksParseFail="popInvalidLinksNotification"
             >
@@ -199,6 +220,7 @@ function resetAll() {
               type="textarea"
               :resizable="false"
               placeholder="Paste images URL"
+              :disabled="images.size > 0"
             />
           </template>
         </NTabPane>
@@ -256,7 +278,7 @@ function resetAll() {
             size="medium"
             type="success"
             class="!font-mono"
-            @click="push({ name: 'Colors' })"
+            @click="push({ name: 'Colors' }); blobCache.clear()"
           >
             <template #icon>
               <Sparkles :size="16" />
@@ -286,8 +308,24 @@ function resetAll() {
 }
 
 .image {
-  width: calc((var(--container-width) / 7) - 0.5rem);
+  width: calc((var(--container-width) / 2) - 0.5rem);
   transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@media (min-width: 1024px) {
+  .image {
+    width: calc((var(--container-width) / 4) - 0.5rem);
+  }
+}
+@media (min-width: 1280px) {
+  .image {
+    width: calc((var(--container-width) / 5) - 0.5rem);
+  }
+}
+@media (min-width: 1536px) {
+  .image {
+    width: calc((var(--container-width) / 7) - 0.5rem);
+  }
 }
 
 .images-list-enter-from,

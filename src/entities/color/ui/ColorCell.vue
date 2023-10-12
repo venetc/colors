@@ -1,0 +1,23 @@
+<script setup lang="ts">
+import { toRefs } from 'vue';
+import type { ImageColor } from '../model';
+
+const props = defineProps<{ color: ImageColor }>();
+const { color } = toRefs(props);
+</script>
+
+<template>
+  <div class="w-full h-full relative group/cell cursor-pointer">
+    <div
+      class="absolute w-full h-full top-0 left-0 rounded transition-all"
+      :class="{ 'group-hover/cell:-translate-y-1 group-hover/cell:-translate-x-1': color.selected }"
+      :style="{ backgroundColor: color.original.hex }"
+    />
+
+    <div
+      class="absolute w-full h-full top-0 left-0 rounded transition-all"
+      :class="{ 'group-hover/cell:translate-y-0.5 group-hover/cell:translate-x-0.5': color.selected }"
+      :style="{ backgroundColor: color.selected ? color.selected.hex : 'transparent' }"
+    />
+  </div>
+</template>

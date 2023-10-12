@@ -38,7 +38,10 @@ export const useFileLoaderStore = defineStore('ImagesUploaderStore', () => {
 
       if (!blobSrc) return;
 
-      const image = createImageFromFile({ fileName, blobSrc });
+      const image = createImageFromFile({
+        fileName,
+        blobSrc,
+      });
       imagesStore.addImageToList(fileName, image);
     });
   };

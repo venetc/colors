@@ -27,6 +27,9 @@
       "warn",
       "never"
     ],
+    "vue/valid-v-model": [
+      "off"
+    ],
     "vue/v-on-event-hyphenation": [
       "warn",
       "never",

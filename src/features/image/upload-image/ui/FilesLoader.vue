@@ -12,6 +12,7 @@ type FileType = ImageType | TextType;
 
 export interface Props {
   allowedFiles: FileType;
+  disabled: boolean;
 }
 
 const { allowedFiles } = defineProps<Props>();
@@ -30,6 +31,7 @@ const {
   clearUploader,
   updateImagesListFromFiles,
   getLinksFromFile,
+  clearFileList,
 } = fileLoaderStore;
 const { cleanUploaderMethod } = storeToRefs(fileLoaderStore);
 
@@ -37,6 +39,7 @@ async function composeUpdateFileList({ fileList }: { fileList: UploadFileInfo[] 
   if (allowedFiles === IMAGE_FILES) {
     updateImagesFileList({ fileList });
     updateImagesListFromFiles();
+    clearFileList();
   } else {
     const [{ file }] = fileList;
     const links = await getLinksFromFile(file);
@@ -44,7 +47,6 @@ async function composeUpdateFileList({ fileList }: { fileList: UploadFileInfo[] 
     if (links.length > 0) {
       emit('onLinksParseSuccess', links);
     } else {
-      // popInvalidLinksNotification();
       emit('onLinksParseFail');
     }
   }
@@ -68,6 +70,7 @@ onMounted(() => {
     :accept="allowedFiles"
     :defaultUpload="false"
     :showFileList="false"
+    :disabled="disabled"
     @change="debouncedUpdateFileList"
   >
     <NUploadDragger>

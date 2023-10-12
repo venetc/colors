@@ -1,5 +1,5 @@
 import { useElementBounding } from '@vueuse/core';
-import { computed, ref, toRaw } from 'vue';
+import { computed, nextTick, ref } from 'vue';
 import type { Ref } from 'vue';
 import type { Img } from '@/entities/image';
 import { cover } from '@/shared/lib/canvas';
@@ -9,36 +9,88 @@ export interface Coordinates {
   y: number;
 }
 
-export type ExposedCropperData = ReturnType<typeof useImageCropper>;
-
-export interface CroppedImageData {
-  image: Img;
-  cropped: string | undefined;
-}
+export type ExposedCropperData = Pick<ReturnType<typeof useImageCropper>, 'reset' | 'toggleDrawing' | 'redo' | 'undo' | 'init' | 'edit' | 'crop' | 'isDrawingMode'>;
 
 const SCALE_FACTOR = 1;
 
 export interface CropperParams {
-  canvasElement: Ref<HTMLCanvasElement | undefined>;
-  parentElement: Ref<HTMLElement | undefined>;
-  imageElement: Ref<HTMLImageElement | undefined>;
+  currentPointers: Ref<Coordinates[]>;
+  undoPointers: Ref<Coordinates[]>;
+  redoPointers: Ref<Coordinates[]>;
+  isDrawingMode: Ref<boolean>;
+  isEditing: Ref<boolean>;
+  isCropped: Ref<boolean>;
+  canvasIsHidden: Ref<boolean>;
   image: Ref<Img>;
-  cropCallback?: (data: CroppedImageData) => void;
+  canvasElement: Ref<HTMLCanvasElement | undefined>;
+  imageElement: Ref<HTMLImageElement | undefined>;
+  parentElement: Ref<HTMLElement | undefined>;
+  cropCallback?: (croppedImage: string) => void;
 }
+
+export const ratios = [
+  {
+    label: '16:9',
+    value: '16:9',
+  },
+  {
+    label: '9:16',
+    value: '9:16',
+  },
+  {
+    label: '21:9',
+    value: '21:9',
+  },
+  {
+    label: '9:21',
+    value: '9:21',
+  },
+  {
+    label: '1:1',
+    value: '1:1',
+  },
+];
+
+export const selectedRatio = ref<typeof ratios[number]>(ratios[0]);
+
+export function ratioSelectHandler(variant: typeof ratios[number]) {
+  selectedRatio.value = variant;
+}
+
+export function ratioClassHandler() {
+  switch (selectedRatio.value.value) {
+    case '16:9':
+      return 'w-full h-full';
+    case '9:16':
+      return 'w-[39%] h-full';
+    case '1:1':
+      return 'w-[62.5%] h-full';
+    case '21:9':
+      return 'w-full h-[68.5%]';
+    case '9:21':
+      return 'w-[26.7%] h-full';
+    default:
+      return 'w-full h-full';
+  }
+}
+
+export const ratioClass = computed(ratioClassHandler);
 
 export function useImageCropper(params: CropperParams) {
   const {
+    currentPointers,
+    undoPointers,
+    redoPointers,
+    isDrawingMode,
+    isEditing,
+    isCropped,
+    canvasIsHidden,
     image,
-    imageElement,
     canvasElement,
+    imageElement,
     parentElement,
     cropCallback,
   } = params;
-
-  const isEditing = ref(true);
-  const isDrawingMode = ref(false);
-  const isCropped = ref(false);
-  const canvasIsHidden = ref(false);
 
   const isDrawingInProgress = ref(false);
 
@@ -52,57 +104,10 @@ export function useImageCropper(params: CropperParams) {
   const ctx = ref<CanvasRenderingContext2D | null>();
   const redoSnapshots = ref<string[]>([]);
   const undoSnapshots = ref<string[]>([]);
-  const redoPointers = ref<Coordinates[]>([]);
-  const undoPointers = ref<Coordinates[]>([]);
-  const currentPointers = ref<Coordinates[]>([]);
   const resultImage = ref<string | null>(null);
 
   const imgWidth = ref(0);
   const imgHeight = ref(0);
-
-  const ratios = [
-    {
-      label: '16:9',
-      value: '16:9',
-    },
-    {
-      label: '9:16',
-      value: '9:16',
-    },
-    {
-      label: '21:9',
-      value: '21:9',
-    },
-    {
-      label: '9:21',
-      value: '9:21',
-    },
-    {
-      label: '1:1',
-      value: '1:1',
-    },
-  ];
-
-  const selectedRatio = ref<typeof ratios[number]['value']>(ratios[0].value);
-
-  const ratioClassHandler = () => {
-    switch (selectedRatio.value) {
-      case '16:9':
-        return 'w-full h-full';
-      case '9:16':
-        return 'w-[39%] h-full';
-      case '1:1':
-        return 'w-[62.5%] h-full';
-      case '21:9':
-        return 'w-full h-[68.5%]';
-      case '9:21':
-        return 'w-[26.7%] h-full';
-      default:
-        return 'w-full h-full';
-    }
-  };
-
-  const ratioClass = computed(ratioClassHandler);
 
   const init = () => {
     if (!canvasRef.value) return;
@@ -113,7 +118,7 @@ export function useImageCropper(params: CropperParams) {
     const img = new Image();
 
     img.crossOrigin = 'anonymous';
-    img.src = image.value.blobSrc;
+    img.src = image.value.croppedSrc ?? image.value.blobSrc;
 
     img.onload = () => {
       if (!ctx.value) return;
@@ -142,14 +147,22 @@ export function useImageCropper(params: CropperParams) {
 
       ctx.value.drawImage(img, ((offsetX) * SCALE_FACTOR), ((offsetY) * SCALE_FACTOR), ((_width) * SCALE_FACTOR), ((_height) * SCALE_FACTOR));
 
-      const canvasImg = new Image();
       if (!canvasRef.value) return;
 
-      canvasImg.crossOrigin = 'anonymous';
-      canvasImg.src = canvasRef.value.toDataURL();
-      canvasImg.onload = () => {
-        imageObj.value = canvasImg;
-      };
+      canvasRef.value.toBlob((blob) => {
+        if (!blob) return;
+        const canvasImg = new Image();
+        canvasImg.crossOrigin = 'anonymous';
+
+        canvasImg.onload = () => {
+          if (imageObj.value) URL.revokeObjectURL(imageObj.value.src);
+          imageObj.value = canvasImg;
+
+          URL.revokeObjectURL(canvasImg.src);
+        };
+
+        canvasImg.src = URL.createObjectURL(blob);
+      });
     };
   };
 
@@ -161,13 +174,16 @@ export function useImageCropper(params: CropperParams) {
     currentPointers.value = [];
   };
 
-  const reset = () => {
-    empty();
-    imageObj.value = null;
-    resultImage.value = null;
-    isCropped.value = false;
-    positionOld.value = position.value = null;
-    init();
+  const reset = async () => {
+    await nextTick(() => {
+      empty();
+      if (imageObj.value) URL.revokeObjectURL(imageObj.value.src);
+      imageObj.value = null;
+      resultImage.value = null;
+      isCropped.value = false;
+      positionOld.value = position.value = null;
+      init();
+    });
   };
 
   const savePointer = (point: Coordinates) => {
@@ -331,32 +347,20 @@ export function useImageCropper(params: CropperParams) {
 
     trimEmptyPixel(canvasRef.value, ctx.value);
 
-    const img = new Image();
-    img.src = canvasRef.value.toDataURL();
-    img.onload = () => {
-      if (cropCallback) cropCallback({
-        image: toRaw(image.value),
-        cropped: img.src,
-      });
-    };
+    canvasRef.value.toBlob((blob) => {
+      if (!blob || !canvasRef.value) return;
 
-    empty();
-    isCropped.value = true;
-  };
+      const img = new Image();
+      img.src = URL.createObjectURL(blob);
 
-  /*
-  function sendColors(img: HTMLImageElement) {
-    const palette = getPalette({
-      img,
-      colorCount: 5,
-      quality: 2,
+      img.onload = () => {
+        if (cropCallback) cropCallback(img.src);
+      };
+
+      empty();
+      isCropped.value = true;
     });
-
-    const colors = palette ? palette.map(rgbToHex) : [];
-
-    emit('onColorsSend', colors);
-  }
-*/
+  };
 
   const mouseDown = (e: MouseEvent) => {
     if (!isEditing.value) return;
@@ -435,14 +439,15 @@ export function useImageCropper(params: CropperParams) {
   };
 
   const edit = () => {
-    if (!isCropped.value) reset();
+    if (!isCropped.value) void reset();
     isEditing.value = !isEditing.value;
     if (!isEditing.value) isDrawingMode.value = false;
   };
 
   const toggleDrawing = () => {
     if (!isEditing.value) return;
-    if (!isDrawingMode.value || !isCropped.value) reset();
+    if (isCropped.value || !(isCropped.value && isDrawingMode.value)) void reset();
+
     isDrawingMode.value = !isDrawingMode.value;
   };
 
@@ -460,12 +465,6 @@ export function useImageCropper(params: CropperParams) {
     isDrawingMode,
     isEditing,
     isCropped,
-    currentPointers,
     canvasIsHidden,
-    redoPointers,
-    undoPointers,
-    ratioClass,
-    ratios,
-    selectedRatio,
   };
 }

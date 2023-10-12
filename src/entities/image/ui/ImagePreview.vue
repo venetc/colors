@@ -1,16 +1,12 @@
 <script setup lang="ts">
-import { computed, ref, toRefs, unref, watch } from 'vue';
+import { computed, ref, toRefs, watch } from 'vue';
 import { useElementVisibility } from '@vueuse/core';
 import { NSkeleton } from 'naive-ui';
-
-// import { getPalette } from '../lib';
 import { type Img } from '../model';
-
-// import { rgbToHex } from '@/shared/lib/color';
 
 const props = defineProps<{ image: Img }>();
 const emit = defineEmits<{
-  onLoad: [image: Img];
+  onLoad: [src: string];
 }>();
 
 const { image } = toRefs(props);
@@ -35,7 +31,10 @@ function loadImage() {
     _imageSrc.value = img.src;
 
     isLoading.value = false;
-    emit('onLoad', unref(image));
+    emit('onLoad', targetSrc.value);
+    /* ??? */
+    img.removeAttribute('src');
+    /* ??? */
   };
 
   img.src = targetSrc.value;
@@ -49,20 +48,6 @@ const unwatchInitialVisibility = watch(targetIsVisible, (isVisible) => {
 });
 
 watch(targetSrc, loadImage);
-
-// const imagePalette = ref<string[]>();
-
-/* function onLoad() {
-  if (!imageRef.value) return;
-
-  const palette = getPalette({
-    img: imageRef.value,
-    colorCount: 5,
-    quality: 2,
-  });
-
-  imagePalette.value = palette.map(rgbToHex);
-} */
 </script>
 
 <template>
@@ -86,13 +71,4 @@ watch(targetSrc, loadImage);
       class="absolute w-full h-full object-cover"
     >
   </div>
-
-  <!--    <div class="flex flex-wrap gap-3 py-3 px-2">
-    <div
-      v-for="color in imagePalette"
-      :key="color"
-      :style="{ backgroundColor: color }"
-      class="w-8 h-8 rounded-full"
-    />
-  </div> -->
 </template>

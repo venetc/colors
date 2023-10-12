@@ -13,15 +13,30 @@
 }
 
 html {
-    scrollbar-gutter: stable;
+    overflow: hidden;
 }
 
 html, body {
     height: 100%;
 }
 
+body {
+    overflow: auto;
+    scrollbar-gutter: stable both-edges;
+}
+
 #app {
     min-height: 100%;
+}
+
+body::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.35);
+    border-radius: 3px;
+}
+
+body::-webkit-scrollbar {
+    background-color: transparent;
+    width: 8px;
 }
 
 .fade-enter-active {
@@ -46,6 +61,31 @@ html, body {
     }
     100% {
         opacity: 1;
+    }
+}
+
+.slide-up-enter-active {
+    animation: slide-up 0.15s;
+}
+
+.slide-up-leave-active {
+    animation: slide-up 0.15s reverse;
+}
+
+.slide-up-slower-enter-active {
+    animation: slide-up 0.35s;
+}
+
+.slide-up-slower-leave-active {
+    animation: slide-up 0.35s reverse;
+}
+
+@keyframes slide-up {
+    0% {
+        transform: translateY(-100%);
+    }
+    100% {
+        transform: translateY(0);
     }
 }
 

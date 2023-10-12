@@ -10,5 +10,8 @@ export default defineConfig({
       '@': resolve(__dirname, 'src'),
     },
   },
-  plugins: [vue(), eslint()],
+  plugins: [
+    vue(),
+    eslint(),
+  ],
 });
