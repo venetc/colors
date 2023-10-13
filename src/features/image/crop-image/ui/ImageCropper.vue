@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { watchDebounced } from '@vueuse/core';
-import { onMounted, ref, toRefs } from 'vue';
+import { nextTick, onMounted, ref, toRefs } from 'vue';
 import type { Coordinates } from '../model';
 import { ratioClass, useImageCropper } from '../model';
 import type { Img } from '@/entities/image';
@@ -90,7 +90,9 @@ watchDebounced([
   maxWait: 500,
 });
 
-onMounted(init);
+onMounted(async () => {
+  await nextTick(init);
+});
 
 defineExpose({
   init,

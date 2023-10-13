@@ -14,14 +14,8 @@ const emit = defineEmits<{
 
 const { defaultColor } = toRefs(props);
 
-const inputRef = ref<HTMLInputElement>();
-
 const _color = ref<string>();
 const debouncedColor = refThrottled(_color, 200);
-
-function clickHandler() {
-  inputRef.value?.click();
-}
 
 onMounted(() => {
   _color.value = defaultColor.value;
@@ -39,15 +33,14 @@ watch(debouncedColor, (colorValue) => {
 <template>
   <div class="overflow-hidden relative flex items-center content-center">
     <input
-      ref="inputRef"
       v-model="_color"
       type="color"
-      class="opacity-0 absolute w-0 h-0 bottom-0 left-0 z-10"
+      class="opacity-0 absolute w-full h-full cursor-pointer bottom-0 left-0 z-10"
     >
     <NButton
       type="info"
       size="tiny"
-      @click="clickHandler"
+      class="relative z-0"
     >
       <template #icon>
         <Palette :size="16" />
