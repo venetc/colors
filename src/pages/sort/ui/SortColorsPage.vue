@@ -1,620 +1,219 @@
 <script setup lang="ts">
+import type { ButtonProps } from 'naive-ui';
+import { NButton, NIcon, NPopconfirm } from 'naive-ui';
 import { storeToRefs } from 'pinia';
 import { onMounted } from 'vue';
-import { generateColorObjectsFromMapEntity, useSortedColorsStore } from '@/features/color/sort-colors';
+import { Plus, Trash2 } from 'lucide-vue-next';
+
+import { generateColorData } from '@/entities/color';
+import { generateColorsBetween, generateRandomRgb, getContrastTextColor, shadeHexColor } from '@/shared/lib/color';
+import { useSortedColorsStore } from '@/features/color/sort-colors';
 
 const sortedColorsStore = useSortedColorsStore();
-const { generateColorObjects } = sortedColorsStore;
-// @ts-expect-error TEMP
-const { colorObjects } = storeToRefs(sortedColorsStore);
-
-const DATA = [
-  {
-    key: '54gw45hwerth.jpg',
-    value: [{
-      original: {
-        hex: '#4b4a51',
-        rgb: 'rgb(75, 74, 81)',
-        rgbArray: [75, 74, 81],
-        hsl: 'hsl(248.57142857142853, 4.516129032258057%, 30.3921568627451%)',
-        hslArray: [248.57142857142853, 4.516129032258057, 30.3921568627451],
-        brightness: 74.718,
-      },
-    }, {
-      original: {
-        hex: '#d3b1a8',
-        rgb: 'rgb(211, 177, 168)',
-        rgbArray: [211, 177, 168],
-        hsl: 'hsl(12.55813953488372, 32.82442748091602%, 74.31372549019608%)',
-        hslArray: [12.55813953488372, 32.82442748091602, 74.31372549019608],
-        brightness: 183.5786,
-      },
-    }, {
-      original: {
-        hex: '#908588',
-        rgb: 'rgb(144, 133, 136)',
-        rgbArray: [144, 133, 136],
-        hsl: 'hsl(343.6363636363637, 4.72103004291845%, 54.313725490196084%)',
-        hslArray: [343.6363636363637, 4.72103004291845, 54.313725490196084],
-        brightness: 135.55519999999999,
-      },
-    }, {
-      original: {
-        hex: '#49d0e0',
-        rgb: 'rgb(73, 208, 224)',
-        rgbArray: [73, 208, 224],
-        hsl: 'hsl(186.35761589403972, 70.89201877934272%, 58.23529411764705%)',
-        hslArray: [186.35761589403972, 70.89201877934272, 58.23529411764705],
-        brightness: 180.4542,
-      },
-    }, {
-      original: {
-        hex: '#21a3b8',
-        rgb: 'rgb(33, 163, 184)',
-        rgbArray: [33, 163, 184],
-        hsl: 'hsl(188.34437086092714, 69.5852534562212%, 42.549019607843135%)',
-        hslArray: [188.34437086092714, 69.5852534562212, 42.549019607843135],
-        brightness: 136.8782,
-      },
-    }, {
-      original: {
-        hex: '#0a8da3',
-        rgb: 'rgb(10, 141, 163)',
-        rgbArray: [10, 141, 163],
-        hsl: 'hsl(188.62745098039215, 88.43930635838151%, 33.921568627450974%)',
-        hslArray: [188.62745098039215, 88.43930635838151, 33.921568627450974],
-        brightness: 114.7378,
-      },
-    }],
-  },
-  {
-    key: '4q34g.jpg',
-    value: [{
-      original: {
-        hex: '#8c6752',
-        rgb: 'rgb(140, 103, 82)',
-        rgbArray: [140, 103, 82],
-        hsl: 'hsl(21.724137931034477, 26.126126126126124%, 43.529411764705884%)',
-        hslArray: [21.724137931034477, 26.126126126126124, 43.529411764705884],
-        brightness: 109.35,
-      },
-    }, {
-      original: {
-        hex: '#1c3745',
-        rgb: 'rgb(28, 55, 69)',
-        rgbArray: [28, 55, 69],
-        hsl: 'hsl(200.48780487804876, 42.2680412371134%, 19.019607843137255%)',
-        hslArray: [200.48780487804876, 42.2680412371134, 19.019607843137255],
-        brightness: 50.270599999999995,
-      },
-    }],
-  },
-  {
-    key: '45hgw345hw45.jpg',
-    value: [{
-      original: {
-        hex: '#6d6560',
-        rgb: 'rgb(109, 101, 96)',
-        rgbArray: [109, 101, 96],
-        hsl: 'hsl(23.07692307692307, 6.341463414634144%, 40.19607843137255%)',
-        hslArray: [23.07692307692307, 6.341463414634144, 40.19607843137255],
-        brightness: 102.3398,
-      },
-    }, {
-      original: {
-        hex: '#e7bf59',
-        rgb: 'rgb(231, 191, 89)',
-        rgbArray: [231, 191, 89],
-        hsl: 'hsl(43.098591549295776, 74.73684210526315%, 62.745098039215684%)',
-        hslArray: [43.098591549295776, 74.73684210526315, 62.745098039215684],
-        brightness: 192.1396,
-      },
-    }, {
-      original: {
-        hex: '#0f2429',
-        rgb: 'rgb(15, 36, 41)',
-        rgbArray: [15, 36, 41],
-        hsl: 'hsl(191.53846153846155, 46.42857142857144%, 10.980392156862745%)',
-        hslArray: [191.53846153846155, 46.42857142857144, 10.980392156862745],
-        brightness: 31.8964,
-      },
-    }, {
-      original: {
-        hex: '#74c7c9',
-        rgb: 'rgb(116, 199, 201)',
-        rgbArray: [116, 199, 201],
-        hsl: 'hsl(181.41176470588235, 44.04145077720206%, 62.15686274509804%)',
-        hslArray: [181.41176470588235, 44.04145077720206, 62.15686274509804],
-        brightness: 181.49859999999998,
-      },
-    }, {
-      original: {
-        hex: '#2f9dba',
-        rgb: 'rgb(47, 157, 186)',
-        rgbArray: [47, 157, 186],
-        hsl: 'hsl(192.5179856115108, 59.65665236051502%, 45.68627450980392%)',
-        hslArray: [192.5179856115108, 59.65665236051502, 45.68627450980392],
-        brightness: 135.7078,
-      },
-    }, {
-      original: {
-        hex: '#332724',
-        rgb: 'rgb(51, 39, 36)',
-        rgbArray: [51, 39, 36],
-        hsl: 'hsl(12.00000000000001, 17.241379310344833%, 17.058823529411764%)',
-        hslArray: [12.00000000000001, 17.241379310344833, 17.058823529411764],
-        brightness: 41.3346,
-      },
-    }],
-  },
-  {
-    key: '345g2345g.jpg',
-    value: [{
-      original: {
-        hex: '#6d332e',
-        rgb: 'rgb(109, 51, 46)',
-        rgbArray: [109, 51, 46],
-        hsl: 'hsl(4.761904761904766, 40.64516129032258%, 30.392156862745097%)',
-        hslArray: [4.761904761904766, 40.64516129032258, 30.392156862745097],
-        brightness: 62.96979999999999,
-      },
-    }, {
-      original: {
-        hex: '#e49f2c',
-        rgb: 'rgb(228, 159, 44)',
-        rgbArray: [228, 159, 44],
-        hsl: 'hsl(37.49999999999999, 77.31092436974791%, 53.333333333333336%)',
-        hslArray: [37.49999999999999, 77.31092436974791, 53.333333333333336],
-        brightness: 165.3664,
-      },
-    }, {
-      original: {
-        hex: '#171922',
-        rgb: 'rgb(23, 25, 34)',
-        rgbArray: [23, 25, 34],
-        hsl: 'hsl(229.0909090909091, 19.29824561403509%, 11.176470588235293%)',
-        hslArray: [229.0909090909091, 19.29824561403509, 11.176470588235293],
-        brightness: 25.2246,
-      },
-    }, {
-      original: {
-        hex: '#a46f56',
-        rgb: 'rgb(164, 111, 86)',
-        rgbArray: [164, 111, 86],
-        hsl: 'hsl(19.230769230769226, 31.2%, 49.01960784313726%)',
-        hslArray: [19.230769230769226, 31.2, 49.01960784313726],
-        brightness: 120.46279999999999,
-      },
-    }, {
-      original: {
-        hex: '#6dbcd1',
-        rgb: 'rgb(109, 188, 209)',
-        rgbArray: [109, 188, 209],
-        hsl: 'hsl(192.60000000000002, 52.083333333333336%, 62.35294117647059%)',
-        hslArray: [192.60000000000002, 52.083333333333336, 62.35294117647059],
-        brightness: 172.72079999999997,
-      },
-    }, {
-      original: {
-        hex: '#3682a8',
-        rgb: 'rgb(54, 130, 168)',
-        rgbArray: [54, 130, 168],
-        hsl: 'hsl(200, 51.35135135135135%, 43.529411764705884%)',
-        hslArray: [200, 51.35135135135135, 43.529411764705884],
-        brightness: 116.586,
-      },
-    }],
-  },
-  {
-    key: '345gh2345g.jpg',
-    value: [{
-      original: {
-        hex: '#ab9895',
-        rgb: 'rgb(171, 152, 149)',
-        rgbArray: [171, 152, 149],
-        hsl: 'hsl(8.18181818181816, 11.578947368421039%, 62.745098039215684%)',
-        hslArray: [8.18181818181816, 11.578947368421039, 62.745098039215684],
-        brightness: 155.8228,
-      },
-    }, {
-      original: {
-        hex: '#231f25',
-        rgb: 'rgb(35, 31, 37)',
-        rgbArray: [35, 31, 37],
-        hsl: 'hsl(280, 8.82352941176471%, 13.333333333333334%)',
-        hslArray: [280, 8.82352941176471, 13.333333333333334],
-        brightness: 32.2836,
-      },
-    }, {
-      original: {
-        hex: '#673113',
-        rgb: 'rgb(103, 49, 19)',
-        rgbArray: [103, 49, 19],
-        hsl: 'hsl(21.42857142857143, 68.85245901639344%, 23.92156862745098%)',
-        hslArray: [21.42857142857143, 68.85245901639344, 23.92156862745098],
-        brightness: 58.3144,
-      },
-    }, {
-      original: {
-        hex: '#d0ecec',
-        rgb: 'rgb(208, 236, 236)',
-        rgbArray: [208, 236, 236],
-        hsl: 'hsl(180, 42.42424242424245%, 87.05882352941177%)',
-        hslArray: [180, 42.42424242424245, 87.05882352941177],
-        brightness: 230.04719999999998,
-      },
-    }, {
-      original: {
-        hex: '#ae5e20',
-        rgb: 'rgb(174, 94, 32)',
-        rgbArray: [174, 94, 32],
-        hsl: 'hsl(26.19718309859155, 68.93203883495146%, 40.3921568627451%)',
-        hslArray: [26.19718309859155, 68.93203883495146, 40.3921568627451],
-        brightness: 106.5316,
-      },
-    }, {
-      original: {
-        hex: '#6b6e71',
-        rgb: 'rgb(107, 110, 113)',
-        rgbArray: [107, 110, 113],
-        hsl: 'hsl(209.99999999999994, 2.727272727272724%, 43.13725490196079%)',
-        hslArray: [209.99999999999994, 2.727272727272724, 43.13725490196079],
-        brightness: 109.5788,
-      },
-    }],
-  },
-  {
-    key: '34g345g345.jpg',
-    value: [{
-      original: {
-        hex: '#c9977a',
-        rgb: 'rgb(201, 151, 122)',
-        rgbArray: [201, 151, 122],
-        hsl: 'hsl(22.025316455696203, 42.245989304812824%, 63.33333333333333%)',
-        hslArray: [22.025316455696203, 42.245989304812824, 63.33333333333333],
-        brightness: 159.5362,
-      },
-      selected: {
-        hex: '#9f5400',
-        rgb: 'rgb(159, 84, 0)',
-        rgbArray: [159, 84, 0],
-        hsl: 'hsl(31.698113207547166, 100%, 31.176470588235293%)',
-        hslArray: [31.698113207547166, 100, 31.176470588235293],
-        brightness: 93.8802,
-      },
-    }, {
-      original: {
-        hex: '#203744',
-        rgb: 'rgb(32, 55, 68)',
-        rgbArray: [32, 55, 68],
-        hsl: 'hsl(201.66666666666669, 36%, 19.607843137254903%)',
-        hslArray: [201.66666666666669, 36, 19.607843137254903],
-        brightness: 51.0488,
-      },
-      selected: {
-        hex: '#05a5da',
-        rgb: 'rgb(5, 165, 218)',
-        rgbArray: [5, 165, 218],
-        hsl: 'hsl(194.9295774647887, 95.51569506726456%, 43.72549019607843%)',
-        hslArray: [194.9295774647887, 95.51569506726456, 43.72549019607843],
-        brightness: 134.8106,
-      },
-    }, {
-      original: {
-        hex: '#b6241d',
-        rgb: 'rgb(182, 36, 29)',
-        rgbArray: [182, 36, 29],
-        hsl: 'hsl(2.7450980392156867, 72.51184834123222%, 41.372549019607845%)',
-        hslArray: [2.7450980392156867, 72.51184834123222, 41.372549019607845],
-        brightness: 66.53420000000001,
-      },
-      selected: {
-        hex: '#ba9c8e',
-        rgb: 'rgb(186, 156, 142)',
-        rgbArray: [186, 156, 142],
-        hsl: 'hsl(19.090909090909108, 24.17582417582417%, 64.31372549019608%)',
-        hslArray: [19.090909090909108, 24.17582417582417, 64.31372549019608],
-        brightness: 161.3672,
-      },
-    }, {
-      original: {
-        hex: '#e4dfda',
-        rgb: 'rgb(228, 223, 218)',
-        rgbArray: [228, 223, 218],
-        hsl: 'hsl(30, 15.625000000000025%, 87.45098039215686%)',
-        hslArray: [30, 15.625000000000025, 87.45098039215686],
-        brightness: 223.702,
-      },
-    }, {
-      original: {
-        hex: '#bb701b',
-        rgb: 'rgb(187, 112, 27)',
-        rgbArray: [187, 112, 27],
-        hsl: 'hsl(31.875, 74.76635514018693%, 41.96078431372548%)',
-        hslArray: [31.875, 74.76635514018693, 41.96078431372548],
-        brightness: 121.80799999999999,
-      },
-    }, {
-      original: {
-        hex: '#f2dc9e',
-        rgb: 'rgb(242, 220, 158)',
-        rgbArray: [242, 220, 158],
-        hsl: 'hsl(44.28571428571429, 76.36363636363635%, 78.43137254901961%)',
-        hslArray: [44.28571428571429, 76.36363636363635, 78.43137254901961],
-        brightness: 220.20080000000002,
-      },
-    }],
-  },
-  {
-    key: 'a.jpg',
-    value: [{
-      original: {
-        hex: '#7b5e59',
-        rgb: 'rgb(123, 94, 89)',
-        rgbArray: [123, 94, 89],
-        hsl: 'hsl(8.823529411764722, 16.03773584905661%, 41.56862745098039%)',
-        hslArray: [8.823529411764722, 16.03773584905661, 41.56862745098039],
-        brightness: 99.80439999999999,
-      },
-    }, {
-      original: {
-        hex: '#ebb56b',
-        rgb: 'rgb(235, 181, 107)',
-        rgbArray: [235, 181, 107],
-        hsl: 'hsl(34.6875, 76.19047619047618%, 67.05882352941175%)',
-        hslArray: [34.6875, 76.19047619047618, 67.05882352941175],
-        brightness: 187.13760000000002,
-      },
-    }, {
-      original: {
-        hex: '#141419',
-        rgb: 'rgb(20, 20, 25)',
-        rgbArray: [20, 20, 25],
-        hsl: 'hsl(240, 11.111111111111112%, 8.823529411764705%)',
-        hslArray: [240, 11.111111111111112, 8.823529411764705],
-        brightness: 20.360999999999997,
-      },
-    }, {
-      original: {
-        hex: '#491906',
-        rgb: 'rgb(73, 25, 6)',
-        rgbArray: [73, 25, 6],
-        hsl: 'hsl(17.014925373134332, 84.81012658227847%, 15.490196078431373%)',
-        hslArray: [17.014925373134332, 84.81012658227847, 15.490196078431373],
-        brightness: 33.833,
-      },
-    }, {
-      original: {
-        hex: '#aebabb',
-        rgb: 'rgb(174, 186, 187)',
-        rgbArray: [174, 186, 187],
-        hsl: 'hsl(184.61538461538458, 8.72483221476509%, 70.7843137254902%)',
-        hslArray: [184.61538461538458, 8.72483221476509, 70.7843137254902],
-        brightness: 183.521,
-      },
-    }, {
-      original: {
-        hex: '#8292b3',
-        rgb: 'rgb(130, 146, 179)',
-        rgbArray: [130, 146, 179],
-        hsl: 'hsl(220.40816326530611, 24.378109452736314%, 60.588235294117645%)',
-        hslArray: [220.40816326530611, 24.378109452736314, 60.588235294117645],
-        brightness: 144.981,
-      },
-    }],
-  },
-  {
-    key: 'aSD.jpg',
-    value: [{
-      original: {
-        hex: '#493a39',
-        rgb: 'rgb(73, 58, 57)',
-        rgbArray: [73, 58, 57],
-        hsl: 'hsl(3.7499999999999885, 12.307692307692303%, 25.49019607843137%)',
-        hslArray: [3.7499999999999885, 12.307692307692303, 25.49019607843137],
-        brightness: 61.116800000000005,
-      },
-    }, {
-      original: {
-        hex: '#e1ab7b',
-        rgb: 'rgb(225, 171, 123)',
-        rgbArray: [225, 171, 123],
-        hsl: 'hsl(28.235294117647054, 62.96296296296296%, 68.23529411764706%)',
-        hslArray: [28.235294117647054, 62.96296296296296, 68.23529411764706],
-        brightness: 179.01479999999998,
-      },
-    }, {
-      original: {
-        hex: '#956655',
-        rgb: 'rgb(149, 102, 85)',
-        rgbArray: [149, 102, 85],
-        hsl: 'hsl(15.937500000000005, 27.350427350427353%, 45.88235294117647%)',
-        hslArray: [15.937500000000005, 27.350427350427353, 45.88235294117647],
-        brightness: 110.7648,
-      },
-    }, {
-      original: {
-        hex: '#42c199',
-        rgb: 'rgb(66, 193, 153)',
-        rgbArray: [66, 193, 153],
-        hsl: 'hsl(161.10236220472441, 50.597609561752975%, 50.78431372549019%)',
-        hslArray: [161.10236220472441, 50.597609561752975, 50.78431372549019],
-        brightness: 163.1118,
-      },
-    }, {
-      original: {
-        hex: '#308576',
-        rgb: 'rgb(48, 133, 118)',
-        rgbArray: [48, 133, 118],
-        hsl: 'hsl(169.41176470588232, 46.96132596685083%, 35.490196078431374%)',
-        hslArray: [169.41176470588232, 46.96132596685083, 35.490196078431374],
-        brightness: 113.84599999999999,
-      },
-    }, {
-      original: {
-        hex: '#8597a8',
-        rgb: 'rgb(133, 151, 168)',
-        rgbArray: [133, 151, 168],
-        hsl: 'hsl(209.14285714285717, 16.74641148325358%, 59.01960784313726%)',
-        hslArray: [209.14285714285717, 16.74641148325358, 59.01960784313726],
-        brightness: 148.4006,
-      },
-    }],
-  },
-  {
-    key: 'asdasdvas.jpg',
-    value: [{
-      original: {
-        hex: '#7a6659',
-        rgb: 'rgb(122, 102, 89)',
-        rgbArray: [122, 102, 89],
-        hsl: 'hsl(23.636363636363647, 15.63981042654029%, 41.37254901960784%)',
-        hslArray: [23.636363636363647, 15.63981042654029, 41.37254901960784],
-        brightness: 105.31339999999999,
-      },
-    }, {
-      original: {
-        hex: '#1d3d3e',
-        rgb: 'rgb(29, 61, 62)',
-        rgbArray: [29, 61, 62],
-        hsl: 'hsl(181.81818181818184, 36.263736263736256%, 17.84313725490196%)',
-        hslArray: [181.81818181818184, 36.263736263736256, 17.84313725490196],
-        brightness: 54.26899999999999,
-      },
-    }, {
-      original: {
-        hex: '#d7dbaf',
-        rgb: 'rgb(215, 219, 175)',
-        rgbArray: [215, 219, 175],
-        hsl: 'hsl(65.45454545454544, 37.93103448275861%, 77.25490196078431%)',
-        hslArray: [65.45454545454544, 37.93103448275861, 77.25490196078431],
-        brightness: 214.97279999999998,
-      },
-    }, {
-      original: {
-        hex: '#cdab97',
-        rgb: 'rgb(205, 171, 151)',
-        rgbArray: [205, 171, 151],
-        hsl: 'hsl(22.222222222222204, 35.06493506493507%, 69.80392156862744%)',
-        hslArray: [22.222222222222204, 35.06493506493507, 69.80392156862744],
-        brightness: 176.78439999999998,
-      },
-    }, {
-      original: {
-        hex: '#7eb3c5',
-        rgb: 'rgb(126, 179, 197)',
-        rgbArray: [126, 179, 197],
-        hsl: 'hsl(195.21126760563382, 37.96791443850267%, 63.33333333333333%)',
-        hslArray: [195.21126760563382, 37.96791443850267, 63.33333333333333],
-        brightness: 169.03179999999998,
-      },
-    }, {
-      original: {
-        hex: '#582019',
-        rgb: 'rgb(88, 32, 25)',
-        rgbArray: [88, 32, 25],
-        hsl: 'hsl(6.666666666666666, 55.75221238938054%, 22.15686274509804%)',
-        hslArray: [6.666666666666666, 55.75221238938054, 22.15686274509804],
-        brightness: 43.4002,
-      },
-    }],
-  },
-  {
-    key: 'ASDQWE.jpg',
-    value: [{
-      original: {
-        hex: '#473e3b',
-        rgb: 'rgb(71, 62, 59)',
-        rgbArray: [71, 62, 59],
-        hsl: 'hsl(14.999999999999982, 9.230769230769232%, 25.49019607843137%)',
-        hslArray: [14.999999999999982, 9.230769230769232, 25.49019607843137],
-        brightness: 63.696799999999996,
-      },
-    }, {
-      original: {
-        hex: '#d6a87f',
-        rgb: 'rgb(214, 168, 127)',
-        rgbArray: [214, 168, 127],
-        hsl: 'hsl(28.275862068965512, 51.47928994082841%, 66.86274509803923%)',
-        hslArray: [28.275862068965512, 51.47928994082841, 66.86274509803923],
-        brightness: 174.8194,
-      },
-    }, {
-      original: {
-        hex: '#9c5736',
-        rgb: 'rgb(156, 87, 54)',
-        rgbArray: [156, 87, 54],
-        hsl: 'hsl(19.411764705882355, 48.57142857142857%, 41.1764705882353%)',
-        hslArray: [19.411764705882355, 48.57142857142857, 41.1764705882353],
-        brightness: 99.2868,
-      },
-    }, {
-      original: {
-        hex: '#6f766d',
-        rgb: 'rgb(111, 118, 109)',
-        rgbArray: [111, 118, 109],
-        hsl: 'hsl(106.66666666666664, 3.9647577092511064%, 44.509803921568626%)',
-        hslArray: [106.66666666666664, 3.9647577092511064, 44.509803921568626],
-        brightness: 115.862,
-      },
-    }, {
-      original: {
-        hex: '#8ea999',
-        rgb: 'rgb(142, 169, 153)',
-        rgbArray: [142, 169, 153],
-        hsl: 'hsl(144.44444444444443, 13.567839195979891%, 60.98039215686275%)',
-        hslArray: [144.44444444444443, 13.567839195979891, 60.98039215686275],
-        brightness: 162.1046,
-      },
-    }, {
-      original: {
-        hex: '#969ca4',
-        rgb: 'rgb(150, 156, 164)',
-        rgbArray: [150, 156, 164],
-        hsl: 'hsl(214.28571428571428, 7.142857142857147%, 61.568627450980394%)',
-        hslArray: [214.28571428571428, 7.142857142857147, 61.568627450980394],
-        brightness: 155.302,
-      },
-    }],
-  },
-];
-
-const MOCK = DATA
-  .reduce((map, currentValue) => {
-    map.set(currentValue.key, currentValue.value);
-    return map;
-  }, new Map());
-
-// @ts-expect-error TEMP
-const result = [...MOCK.entries()].map(generateColorObjectsFromMapEntity);
+const {
+  generateColorObjects,
+  addColorScheme,
+  deleteColorSchemeByToken,
+} = sortedColorsStore;
+const {
+  colorSchemes,
+} = storeToRefs(sortedColorsStore);
 
 onMounted(generateColorObjects);
 
 const isDev = import.meta.env.DEV;
+
+const SHADES_COUNT = 10;
+
+function createBoxShadowLine(result: string, colors: string, index: number, array: string[]) {
+  result += `0px 0px 0px ${index}px ${colors}`;
+
+  if (index !== array.length - 1) result += ', ';
+
+  return result;
+}
+
+// @ts-expect-error TEMP
+function generateBoxShadow(centerColor: string): string {
+  const DARKEST = shadeHexColor(centerColor, 1.05);
+  const range = generateColorsBetween({
+    startColor: centerColor,
+    endColor: DARKEST,
+    count: SHADES_COUNT,
+  });
+
+  return range.reduce(createBoxShadowLine, '');
+}
+
+function _addRandomColors(schemeToken: string) {
+  const length = 1 + ((5 * crypto.getRandomValues(new Uint32Array(1))[0]) / 2 ** 32) | 0;
+
+  const colors = Array
+    .from({ length })
+    .map(generateRandomRgb)
+    .map(generateColorData);
+
+  const target = colorSchemes.value.get(schemeToken);
+
+  if (!target) return;
+
+  colors.forEach((color) => {
+    target.colors.push(color);
+  });
+}
+
+function beforeLeave(el: Element) {
+  /* TODO обнови зависимости под конец, пес */
+  if (!(el instanceof HTMLElement)) return;
+  const {
+    marginLeft,
+    marginTop,
+    width,
+    height,
+  } = window.getComputedStyle(el);
+
+  el.style.left = `${el.offsetLeft - Number.parseFloat(marginLeft)}px`;
+  el.style.top = `${el.offsetTop - Number.parseFloat(marginTop)}px`;
+  el.style.width = width;
+  el.style.height = height;
+}
+
+function positiveButtonPropsHandler(schemeToken: string): ButtonProps {
+  return {
+    size: 'tiny',
+    type: 'success',
+    onClick: () => deleteColorSchemeByToken(schemeToken),
+  };
+}
+
+const negativeButtonProps: ButtonProps = {
+  size: 'tiny',
+  type: 'error',
+};
 </script>
 
 <template>
   <section
     v-if="isDev"
-    class="pt-5 bg-green-100"
+    class="pt-5"
   >
-    <div class="flex flex-row font-mono text-xs overflow-hidden max-h-[calc(100vh-60px)]">
+    <div class="flex flex-row font-mono w-full items-center pb-4">
+      <div class="w-2/12 mr-1">
+        11111
+      </div>
+      <div class="w-10/12 ml-1 px-6 gap-3 flex flex-nowrap">
+        <NButton
+          strong
+          secondary
+          circle
+          type="success"
+          @click="addColorScheme"
+        >
+          <template #icon>
+            <NIcon>
+              <Plus />
+            </NIcon>
+          </template>
+        </NButton>
+        <NButton
+          strong
+          secondary
+          circle
+          type="error"
+          @click="colorSchemes.clear()"
+        >
+          <template #icon>
+            <NIcon>
+              <Trash2 />
+            </NIcon>
+          </template>
+        </NButton>
+      </div>
+    </div>
+    <div class="flex flex-row font-mono text-xs overflow-hidden h-full max-h-[calc(100vh-120px)]">
       <div
-        class="bg-red-100 w-2/12 overflow-auto"
+        class="w-2/12 overflow-auto border rounded-xl border-cyan mr-1"
         dir="rtl"
       >
         <div dir="ltr">
-          {{ DATA }}
+          ???
         </div>
       </div>
       <div
-        class="bg-blue-100 w-10/12 overflow-auto"
+        class="custom-scroll w-10/12 overflow-auto border rounded-xl border-cyan ml-1 pb-10 scroll-space"
         dir="ltr"
       >
-        <div
-          dir="ltr"
-        >
-          {{ DATA }}
+        <div class="cards-container py-7 flex flex-col gap-y-7 relative px-3.5">
+          <TransitionGroup
+            name="cards-list"
+            @beforeLeave="beforeLeave"
+          >
+            <div
+              v-for="[schemeToken, scheme] in colorSchemes"
+              :key="schemeToken"
+              class="color-card p-2 before:pointer-events-none before:w-full before:aspect-square items-start auto-rows-fr before:col-start-[24] before:col-span-1 before:row-start-1 before:row-span-1 grid gap-2 place-items-start grid-cols-[repeat(24,_1fr)] w-full rounded-md hover:shadow-xl shadow-md transition-shadow bg-slate-50 relative group/card"
+            >
+              <button
+                class="w-5 h-5 font-sans border border-red-500 rounded-md grid place-items-center absolute bottom-full left-full"
+                @click="_addRandomColors(schemeToken)"
+              >
+                <Plus
+                  :size="14"
+                  class="text-red-500"
+                />
+              </button>
+
+              <div
+                class="w-full h-full col-start-[19] col-span-6 row-start-1 row-span-2 grid place-items-center bg-slate-100"
+              >
+                <div class="w-full h-full rounded-md border relative p-2">
+                  <div class="w-full h-full rounded-md border relative p-2  grid place-items-center">
+                    <div
+                      class="relative z-10 text-2xl"
+                      :style="{ color: getContrastTextColor(scheme.leadColor.hex) }"
+                    >
+                      {{ scheme.leadColor.hex }}
+                    </div>
+
+                    <div class="absolute right-2 top-2 z-10">
+                      <NPopconfirm
+                        class="!font-mono"
+                        :showIcon="false"
+                        :positiveButtonProps="positiveButtonPropsHandler(schemeToken)"
+                        :negativeButtonProps="negativeButtonProps"
+                        :showArrow="true"
+                        placement="top"
+                      >
+                        <template #trigger>
+                          <NButton
+                            type="error"
+                            size="tiny"
+                          >
+                            <template #icon>
+                              <Trash2 :size="14" />
+                            </template>
+                          </NButton>
+                        </template>
+                        Remove group?
+                      </NPopconfirm>
+                    </div>
+
+                    <div
+                      class="w-full h-full absolute top-0 left-0 rounded-md z-0"
+                      :style="{ backgroundColor: scheme.leadColor.hex }"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div
+                v-for="color in scheme.colors"
+                :key="color.hex"
+                class="w-full aspect-square rounded inline-block "
+                :style="{ backgroundColor: color.hex }"
+              />
+            </div>
+          </TransitionGroup>
         </div>
       </div>
     </div>
@@ -626,3 +225,21 @@ const isDev = import.meta.env.DEV;
     <div>¯\_(ツ)_/¯</div>
   </section>
 </template>
+
+<style scoped>
+.cards-list-move,
+.cards-list-enter-active,
+.cards-list-leave-active {
+  transition: all 0.35s ease-in-out;
+}
+
+.cards-list-enter-from,
+.cards-list-leave-to {
+  opacity: 0;
+  transform: translateX(-100%);
+}
+
+.cards-list-leave-active {
+  position: absolute;
+}
+</style>

@@ -46,7 +46,7 @@ export function rgbToHex(rgb: RGB): string {
   const hexR = rgb[0].toString(16).padStart(2, '0');
   const hexG = rgb[1].toString(16).padStart(2, '0');
   const hexB = rgb[2].toString(16).padStart(2, '0');
-  return `#${hexR}${hexG}${hexB}`;
+  return `#${hexR}${hexG}${hexB}`.toUpperCase();
 }
 
 export function rgbToCss(rgb: RGB): string {
@@ -168,4 +168,10 @@ export function getContrastTextColor(bgColor: string) {
   const BRIGHTNESS_BREAKPOINT = 170;
 
   return brightness > BRIGHTNESS_BREAKPOINT ? '#000000' : '#FFFFFF';
+}
+
+export function generateRandomRgb(): RGB {
+  return Array
+    .from({ length: 3 })
+    .map(() => (Math.floor(Math.random() * (255 + 1)))) as RGB;
 }

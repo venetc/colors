@@ -143,9 +143,9 @@ function transitionStartHandler(e: TransitionEvent) {
           ref="canvasElement"
           class="absolute top-0 left-0 w-full h-full object-cover block"
           :class="[(cropperParams.isCropped.value || cropperParams.isEditing.value) && !cropperParams.canvasIsHidden.value ? 'pointer-events-auto opacity-100 delay-75' : 'pointer-events-none opacity-0 delay-0']"
-          @mousedown="mouseDown"
-          @mouseup="mouseUp"
-          @mousemove="mouseMove"
+          @pointerdown="mouseDown"
+          @pointerup="mouseUp"
+          @pointermove="mouseMove"
         />
         <div
           v-if="!cropperParams.isDrawingMode.value && !cropperParams.canvasIsHidden.value"

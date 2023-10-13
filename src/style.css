@@ -22,6 +22,9 @@ html, body {
 
 body {
     overflow: auto;
+}
+
+.scroll-space {
     scrollbar-gutter: stable both-edges;
 }
 
@@ -29,14 +32,14 @@ body {
     min-height: 100%;
 }
 
-body::-webkit-scrollbar-thumb {
-    background: rgba(0, 0, 0, 0.35);
-    border-radius: 3px;
-}
-
-body::-webkit-scrollbar {
+.custom-scroll::-webkit-scrollbar {
     background-color: transparent;
     width: 8px;
+}
+
+.custom-scroll::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.35);
+    border-radius: 3px;
 }
 
 .fade-enter-active {

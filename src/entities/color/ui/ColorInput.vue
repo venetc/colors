@@ -20,7 +20,7 @@ const _color = ref<string>();
 const debouncedColor = refThrottled(_color, 200);
 
 function clickHandler() {
-  if (inputRef.value) inputRef.value.click();
+  inputRef.value?.click();
 }
 
 onMounted(() => {
@@ -37,12 +37,12 @@ watch(debouncedColor, (colorValue) => {
 </script>
 
 <template>
-  <label class="overflow-hidden relative flex items-center content-center">
+  <div class="overflow-hidden relative flex items-center content-center">
     <input
       ref="inputRef"
       v-model="_color"
       type="color"
-      class="opacity-0 pointer-events-none absolute w-0 h-0 bottom-0 left-0"
+      class="opacity-0 absolute w-0 h-0 bottom-0 left-0 z-10"
     >
     <NButton
       type="info"
@@ -53,5 +53,5 @@ watch(debouncedColor, (colorValue) => {
         <Palette :size="16" />
       </template>
     </NButton>
-  </label>
+  </div>
 </template>

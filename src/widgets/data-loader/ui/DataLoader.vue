@@ -51,11 +51,10 @@ const { width: containerWidth } = useElementSize(imagesContainer);
 
 function removeImage(token: string) {
   const target = images.value.get(token);
+  const targetInCache = blobCache.value.get(token);
 
-  if (target) {
-    URL.revokeObjectURL(target.blobSrc);
-    if (target.croppedSrc) URL.revokeObjectURL(target.croppedSrc);
-  }
+  if (target && target.croppedSrc) URL.revokeObjectURL(target.croppedSrc);
+  if (target && !targetInCache) URL.revokeObjectURL(target.blobSrc);
 
   images.value.delete(token);
   filesList.value.delete(token);
@@ -317,11 +316,13 @@ onMounted(populateTextArea);
     width: calc((var(--container-width) / 4) - 0.5rem);
   }
 }
+
 @media (min-width: 1280px) {
   .image {
     width: calc((var(--container-width) / 5) - 0.5rem);
   }
 }
+
 @media (min-width: 1536px) {
   .image {
     width: calc((var(--container-width) / 7) - 0.5rem);
