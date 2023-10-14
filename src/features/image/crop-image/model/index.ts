@@ -98,7 +98,7 @@ export function useImageCropper(params: CropperParams) {
   const canvasParent = parentElement;
   const imageRef = imageElement;
 
-  const imageObj = ref<HTMLImageElement | null>();
+  const imageObj = ref<HTMLImageElement | null>(null);
   const position = ref<Coordinates | null>(null);
   const positionOld = ref<Coordinates | null>(null);
   const ctx = ref<CanvasRenderingContext2D | null>();
@@ -109,61 +109,63 @@ export function useImageCropper(params: CropperParams) {
   const imgWidth = ref(0);
   const imgHeight = ref(0);
 
-  const init = () => {
-    if (!canvasRef.value) return;
-
-    ctx.value = canvasRef.value.getContext('2d', { willReadFrequently: true });
-    if (ctx.value) ctx.value.imageSmoothingEnabled = false;
-
-    const img = new Image();
-
-    img.crossOrigin = 'anonymous';
-    img.src = image.value.croppedSrc ?? image.value.blobSrc;
-
-    img.onload = () => {
-      if (!ctx.value) return;
-
-      const {
-        width: parentWidth,
-        height: parentHeight,
-      } = useElementBounding(canvasParent);
-
-      if (imageRef.value) {
-        imageRef.value.width = Math.round(parentWidth.value);
-        imageRef.value.height = Math.round(parentHeight.value);
-      }
-
-      imgWidth.value = Math.round(parentWidth.value) > 0 ? Math.round(parentWidth.value) : img.width;
-      imgHeight.value = Math.round(parentHeight.value) > 0 ? Math.round(parentHeight.value) : img.height;
-      ctx.value.canvas.width = Math.round(parentWidth.value) * SCALE_FACTOR;
-      ctx.value.canvas.height = Math.round(parentHeight.value) * SCALE_FACTOR;
-
-      const {
-        offsetX,
-        offsetY,
-        width: _width,
-        height: _height,
-      } = cover(Math.round(parentWidth.value), Math.round(parentHeight.value), Math.round(img.naturalWidth) * SCALE_FACTOR, Math.round(img.naturalHeight) * SCALE_FACTOR);
-
-      ctx.value.drawImage(img, ((offsetX) * SCALE_FACTOR), ((offsetY) * SCALE_FACTOR), ((_width) * SCALE_FACTOR), ((_height) * SCALE_FACTOR));
-
+  const init = async () => {
+    await nextTick(() => {
       if (!canvasRef.value) return;
 
-      canvasRef.value.toBlob((blob) => {
-        if (!blob) return;
-        const canvasImg = new Image();
-        canvasImg.crossOrigin = 'anonymous';
+      ctx.value = canvasRef.value.getContext('2d', { willReadFrequently: true });
+      if (ctx.value) ctx.value.imageSmoothingEnabled = false;
 
-        canvasImg.onload = () => {
-          if (imageObj.value) URL.revokeObjectURL(imageObj.value.src);
-          imageObj.value = canvasImg;
+      const img = new Image();
 
-          URL.revokeObjectURL(canvasImg.src);
-        };
+      img.crossOrigin = 'anonymous';
+      img.src = image.value.croppedSrc ?? image.value.blobSrc;
 
-        canvasImg.src = URL.createObjectURL(blob);
-      });
-    };
+      img.onload = () => {
+        if (!ctx.value) return;
+
+        const {
+          width: parentWidth,
+          height: parentHeight,
+        } = useElementBounding(canvasParent);
+
+        if (imageRef.value) {
+          imageRef.value.width = Math.round(parentWidth.value);
+          imageRef.value.height = Math.round(parentHeight.value);
+        }
+
+        imgWidth.value = Math.round(parentWidth.value) > 0 ? Math.round(parentWidth.value) : img.width;
+        imgHeight.value = Math.round(parentHeight.value) > 0 ? Math.round(parentHeight.value) : img.height;
+        ctx.value.canvas.width = Math.round(parentWidth.value) * SCALE_FACTOR;
+        ctx.value.canvas.height = Math.round(parentHeight.value) * SCALE_FACTOR;
+
+        const {
+          offsetX,
+          offsetY,
+          width: _width,
+          height: _height,
+        } = cover(Math.round(parentWidth.value), Math.round(parentHeight.value), Math.round(img.naturalWidth) * SCALE_FACTOR, Math.round(img.naturalHeight) * SCALE_FACTOR);
+
+        ctx.value.drawImage(img, ((offsetX) * SCALE_FACTOR), ((offsetY) * SCALE_FACTOR), ((_width) * SCALE_FACTOR), ((_height) * SCALE_FACTOR));
+
+        if (!canvasRef.value) return;
+
+        canvasRef.value.toBlob((blob) => {
+          if (!blob) return;
+          const canvasImg = new Image();
+          canvasImg.crossOrigin = 'anonymous';
+
+          canvasImg.onload = () => {
+            if (imageObj.value) URL.revokeObjectURL(imageObj.value.src);
+            imageObj.value = canvasImg;
+
+            URL.revokeObjectURL(canvasImg.src);
+          };
+
+          canvasImg.src = URL.createObjectURL(blob);
+        });
+      };
+    });
   };
 
   const empty = () => {
@@ -370,37 +372,41 @@ export function useImageCropper(params: CropperParams) {
     if (isDrawingMode.value) {
       isDrawingInProgress.value = true;
     } else {
-      saveState(canvasRef.value);
+      void nextTick(() => {
+        if (!ctx.value || !canvasRef.value) return;
 
-      if (positionOld.value && position.value && undoSnapshots.value.length > 0) {
-        const {
-          x: oldX,
-          y: oldY,
-        } = positionOld.value;
+        saveState(canvasRef.value);
 
-        const {
-          x,
-          y,
-        } = position.value;
+        if (positionOld.value && position.value && undoSnapshots.value.length > 0) {
+          const {
+            x: oldX,
+            y: oldY,
+          } = positionOld.value;
 
-        ctx.value.beginPath();
-        ctx.value.strokeStyle = '#ff0000';
-        ctx.value.lineWidth = 1.5 * SCALE_FACTOR;
-        ctx.value.lineCap = 'round';
-        ctx.value.moveTo(oldX * SCALE_FACTOR, oldY * SCALE_FACTOR);
-        ctx.value.lineTo(x * SCALE_FACTOR, y * SCALE_FACTOR);
-        ctx.value.stroke();
-      }
+          const {
+            x,
+            y,
+          } = position.value;
 
-      savePointer({
-        x: e.offsetX,
-        y: e.offsetY,
+          ctx.value.beginPath();
+          ctx.value.strokeStyle = '#ff0000';
+          ctx.value.lineWidth = 1.5 * SCALE_FACTOR;
+          ctx.value.lineCap = 'round';
+          ctx.value.moveTo(oldX * SCALE_FACTOR, oldY * SCALE_FACTOR);
+          ctx.value.lineTo(x * SCALE_FACTOR, y * SCALE_FACTOR);
+          ctx.value.stroke();
+        }
+
+        savePointer({
+          x: e.offsetX,
+          y: e.offsetY,
+        });
+
+        positionOld.value = position.value = {
+          x: e.offsetX,
+          y: e.offsetY,
+        };
       });
-
-      positionOld.value = position.value = {
-        x: e.offsetX,
-        y: e.offsetY,
-      };
     }
   };
 
