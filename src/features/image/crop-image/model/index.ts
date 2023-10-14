@@ -120,6 +120,11 @@ export function useImageCropper(params: CropperParams) {
     img.crossOrigin = 'anonymous';
     img.src = image.value.croppedSrc ?? image.value.blobSrc;
 
+    if (imageElement.value) {
+      img.width = imageElement.value.width;
+      img.height = imageElement.value.height;
+    }
+
     img.onload = async () => {
       await nextTick(() => {
         if (!ctx.value) return;
@@ -146,7 +151,7 @@ export function useImageCropper(params: CropperParams) {
           height: _height,
         } = cover(Math.round(parentWidth.value), Math.round(parentHeight.value), Math.round(img.naturalWidth) * SCALE_FACTOR, Math.round(img.naturalHeight) * SCALE_FACTOR);
 
-        ctx.value.drawImage(img, ((offsetX) * SCALE_FACTOR), ((offsetY) * SCALE_FACTOR), ((_width) * SCALE_FACTOR), ((_height) * SCALE_FACTOR));
+        ctx.value.drawImage(img, (offsetX * SCALE_FACTOR), (offsetY * SCALE_FACTOR), (_width * SCALE_FACTOR), (_height * SCALE_FACTOR));
 
         if (!canvasRef.value) return;
 
