@@ -109,19 +109,19 @@ export function useImageCropper(params: CropperParams) {
   const imgWidth = ref(0);
   const imgHeight = ref(0);
 
-  const init = async () => {
-    await nextTick(() => {
-      if (!canvasRef.value) return;
+  const init = () => {
+    if (!canvasRef.value) return;
 
-      ctx.value = canvasRef.value.getContext('2d', { willReadFrequently: true });
-      if (ctx.value) ctx.value.imageSmoothingEnabled = false;
+    ctx.value = canvasRef.value.getContext('2d', { willReadFrequently: true });
+    if (ctx.value) ctx.value.imageSmoothingEnabled = false;
 
-      const img = new Image();
+    const img = new Image();
 
-      img.crossOrigin = 'anonymous';
-      img.src = image.value.croppedSrc ?? image.value.blobSrc;
+    img.crossOrigin = 'anonymous';
+    img.src = image.value.croppedSrc ?? image.value.blobSrc;
 
-      img.onload = () => {
+    img.onload = async () => {
+      await nextTick(() => {
         if (!ctx.value) return;
 
         const {
@@ -134,8 +134,8 @@ export function useImageCropper(params: CropperParams) {
           imageRef.value.height = Math.round(parentHeight.value);
         }
 
-        imgWidth.value = Math.round(parentWidth.value) > 0 ? Math.round(parentWidth.value) : img.width;
-        imgHeight.value = Math.round(parentHeight.value) > 0 ? Math.round(parentHeight.value) : img.height;
+        imgWidth.value = Math.round(parentWidth.value);
+        imgHeight.value = Math.round(parentHeight.value);
         ctx.value.canvas.width = Math.round(parentWidth.value) * SCALE_FACTOR;
         ctx.value.canvas.height = Math.round(parentHeight.value) * SCALE_FACTOR;
 
@@ -164,8 +164,8 @@ export function useImageCropper(params: CropperParams) {
 
           canvasImg.src = URL.createObjectURL(blob);
         });
-      };
-    });
+      });
+    };
   };
 
   const empty = () => {
@@ -382,6 +382,11 @@ export function useImageCropper(params: CropperParams) {
             x: oldX,
             y: oldY,
           } = positionOld.value;
+
+          position.value = {
+            x: e.offsetX,
+            y: e.offsetY,
+          };
 
           const {
             x,

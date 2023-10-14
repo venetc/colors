@@ -182,7 +182,7 @@ function setCropperData(payload: typeof cropperData.value) {
                 :key="variant.label"
                 class="text-white text-sm cursor-pointer flex flex-nowrap justify-between items-center gap-1 transition-all"
                 :class="[selectedRatio.value === variant.value ? 'opacity-100 translate-x-1' : 'opacity-50']"
-                @click="cropper.reset(); ratioSelectHandler(variant)"
+                @click="ratioSelectHandler(variant)"
               >
                 {{ variant.label }}
               </div>
