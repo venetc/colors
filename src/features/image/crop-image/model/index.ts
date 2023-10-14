@@ -120,13 +120,8 @@ export function useImageCropper(params: CropperParams) {
     img.crossOrigin = 'anonymous';
     img.src = image.value.croppedSrc ?? image.value.blobSrc;
 
-    if (imageElement.value) {
-      img.width = imageElement.value.width;
-      img.height = imageElement.value.height;
-    }
-
-    img.onload = async () => {
-      await nextTick(() => {
+    img.onload = () => {
+      setTimeout(() => {
         if (!ctx.value) return;
 
         const {
@@ -169,7 +164,7 @@ export function useImageCropper(params: CropperParams) {
 
           canvasImg.src = URL.createObjectURL(blob);
         });
-      });
+      }, 300);
     };
   };
 

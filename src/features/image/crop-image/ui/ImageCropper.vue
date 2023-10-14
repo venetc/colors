@@ -137,14 +137,14 @@ function transitionStartHandler(e: TransitionEvent) {
           ref="imageElement"
           :src="image.blobSrc"
           class="absolute top-0 left-0 w-full h-full object-cover block"
-          :class="[(cropperParams.isCropped.value || cropperParams.isEditing.value) && !cropperParams.canvasIsHidden.value ? 'opacity-5 delay-75' : 'pointer-events-auto delay-0']"
+          :class="[(cropperParams.isCropped.value || cropperParams.isEditing.value) && !cropperParams.canvasIsHidden.value ? 'opacity-5 delay-500' : 'pointer-events-auto delay-0']"
           alt="#"
           crossorigin="anonymous"
         >
         <canvas
           ref="canvasElement"
           class="absolute top-0 left-0 w-full h-full object-cover block"
-          :class="[(cropperParams.isCropped.value || cropperParams.isEditing.value) && !cropperParams.canvasIsHidden.value ? 'pointer-events-auto opacity-100 delay-75' : 'pointer-events-none opacity-0 delay-0']"
+          :class="[(cropperParams.isCropped.value || cropperParams.isEditing.value) && !cropperParams.canvasIsHidden.value ? 'pointer-events-auto opacity-100 delay-500' : 'pointer-events-none opacity-0 delay-0']"
           @pointerdown="mouseDown"
           @pointerup="mouseUp"
           @pointermove="mouseMove"
