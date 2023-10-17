@@ -1,13 +1,21 @@
 <script setup lang="ts">
-import type { ButtonProps } from 'naive-ui';
-import { NButton, NIcon, NPopconfirm } from 'naive-ui';
+import { Plus, Trash2 } from 'lucide-vue-next';
+import { NButton, NIcon } from 'naive-ui';
 import { storeToRefs } from 'pinia';
 import { onMounted } from 'vue';
-import { Plus, Trash2 } from 'lucide-vue-next';
-
-import { generateColorData } from '@/entities/color';
-import { generateColorsBetween, generateRandomRgb, getContrastTextColor, shadeHexColor } from '@/shared/lib/color';
+import GroupCard from './ColorsGroupCard.vue';
+import type { ImageColor } from '@/entities/color';
+import { useColorsStore } from '@/entities/color';
 import { useSortedColorsStore } from '@/features/color/sort-colors';
+import {
+  generateColorsBetween,
+  getBrightness,
+  hexToRGB,
+  hslToCss,
+  rgbToCss,
+  rgbToHSL,
+  shadeHexColor,
+} from '@/shared/lib/color';
 
 const sortedColorsStore = useSortedColorsStore();
 const {
@@ -18,6 +26,9 @@ const {
 const {
   colorSchemes,
 } = storeToRefs(sortedColorsStore);
+
+const colorsStore = useColorsStore();
+const { colors } = storeToRefs(colorsStore);
 
 onMounted(generateColorObjects);
 
@@ -45,23 +56,6 @@ function generateBoxShadow(centerColor: string): string {
   return range.reduce(createBoxShadowLine, '');
 }
 
-function _addRandomColors(schemeToken: string) {
-  const length = 1 + ((5 * crypto.getRandomValues(new Uint32Array(1))[0]) / 2 ** 32) | 0;
-
-  const colors = Array
-    .from({ length })
-    .map(generateRandomRgb)
-    .map(generateColorData);
-
-  const target = colorSchemes.value.get(schemeToken);
-
-  if (!target) return;
-
-  colors.forEach((color) => {
-    target.colors.push(color);
-  });
-}
-
 function beforeLeave(el: Element) {
   /* TODO обнови зависимости под конец, пес */
   if (!(el instanceof HTMLElement)) return;
@@ -78,18 +72,48 @@ function beforeLeave(el: Element) {
   el.style.height = height;
 }
 
-function positiveButtonPropsHandler(schemeToken: string): ButtonProps {
-  return {
-    size: 'tiny',
-    type: 'success',
-    onClick: () => deleteColorSchemeByToken(schemeToken),
+const _newScheme = [{
+  title: 'Add new group',
+  handler: addColorScheme,
+}];
+
+function leadColorChangeHandler(hex: string, uuid: string) {
+  const targetScheme = colorSchemes.value.get(uuid);
+  if (!targetScheme) return;
+
+  const rgbArray = hexToRGB(hex);
+  const rgb = rgbToCss(rgbArray);
+  const hslArray = rgbToHSL(rgbArray);
+  const hsl = hslToCss(hslArray);
+  const brightness = getBrightness(rgbArray);
+
+  targetScheme.leadColor = {
+    hex,
+    brightness,
+    hsl,
+    rgb,
+    rgbArray,
+    hslArray,
   };
 }
 
-const negativeButtonProps: ButtonProps = {
-  size: 'tiny',
-  type: 'error',
-};
+function dragStartHandler(event: DragEvent, color: ImageColor) {
+  if (!event.dataTransfer) return;
+
+  event.dataTransfer.clearData();
+
+  event.dataTransfer.setData('text/plain', JSON.stringify({ color }));
+}
+
+function dropToScheme(color: ImageColor, uuid: string) {
+  const target = colorSchemes.value.get(uuid);
+
+  console.log({ color, target });
+
+  // if (!target) return;
+
+  // target.colors.add(color.selected ?? color.original);
+}
 </script>
 
 <template>
@@ -99,22 +123,9 @@ const negativeButtonProps: ButtonProps = {
   >
     <div class="flex flex-row font-mono w-full items-center pb-4">
       <div class="w-2/12 mr-1">
-        11111
+        111
       </div>
       <div class="w-10/12 ml-1 px-6 gap-3 flex flex-nowrap">
-        <NButton
-          strong
-          secondary
-          circle
-          type="success"
-          @click="addColorScheme"
-        >
-          <template #icon>
-            <NIcon>
-              <Plus />
-            </NIcon>
-          </template>
-        </NButton>
         <NButton
           strong
           secondary
@@ -130,87 +141,59 @@ const negativeButtonProps: ButtonProps = {
         </NButton>
       </div>
     </div>
-    <div class="flex flex-row font-mono text-xs overflow-hidden h-full max-h-[calc(100vh-120px)]">
+    <div class="flex flex-row justify-between font-mono text-xs overflow-hidden h-full max-h-[calc(100vh-120px)]">
       <div
-        class="w-2/12 overflow-auto border rounded-xl border-cyan mr-1"
+        class="custom-scroll w-fit overflow-auto rounded-xl border-cyan pb-10 scroll-space"
         dir="rtl"
       >
-        <div dir="ltr">
-          ???
+        <div
+          dir="ltr"
+          class="py-3.5 pl-7 pr-3.5 grid gap-3.5"
+        >
+          <div
+            v-for="[sourceToken, colorsArray] in colors"
+            :key="sourceToken"
+            class="shadow-md rounded-md p-2 grid gap-1.5 place-items-start grid-cols-[repeat(2,_2.5rem)] w-fit"
+          >
+            <div
+              v-for="color in colorsArray"
+              :key="color.selected?.hex ?? color.original.hex"
+              class="w-10 h-10 rounded border-2 border-black "
+              draggable="true"
+              :style="{ backgroundColor: color.selected?.hex ?? color.original.hex }"
+              @dragstart="dragStartHandler($event, color)"
+            />
+          </div>
         </div>
       </div>
       <div
-        class="custom-scroll w-10/12 overflow-auto border rounded-xl border-cyan ml-1 pb-10 scroll-space"
+        class="custom-scroll overflow-auto rounded-xl border-cyan pb-10 scroll-space"
         dir="ltr"
       >
-        <div class="cards-container py-7 flex flex-col gap-y-7 relative px-3.5">
+        <div class="cards-container py-3.5 pr-7 pl-3.5 flex flex-col items-center gap-3.5 relative">
           <TransitionGroup
             name="cards-list"
             @beforeLeave="beforeLeave"
           >
+            <GroupCard
+              v-for="[uuid, scheme] in colorSchemes"
+              :key="uuid"
+              :uuid="uuid"
+              :scheme="scheme"
+              @onDrop="dropToScheme($event, uuid)"
+              @onDelete="deleteColorSchemeByToken"
+              @onColorPick="leadColorChangeHandler($event, uuid)"
+            />
+
             <div
-              v-for="[schemeToken, scheme] in colorSchemes"
-              :key="schemeToken"
-              class="color-card p-2 before:pointer-events-none before:w-full before:aspect-square items-start auto-rows-fr before:col-start-[24] before:col-span-1 before:row-start-1 before:row-span-1 grid gap-2 place-items-start grid-cols-[repeat(24,_1fr)] w-full rounded-md hover:shadow-xl shadow-md transition-shadow bg-slate-50 relative group/card"
+              v-for="cta in _newScheme"
+              :key="cta.title"
+              class="cursor-pointer p-2 auto-rows-[2.5rem] grid gap-1.5 justify-items-center items-center grid-cols-[repeat(26,_2.5rem)] border-2 border-dashed w-full transition-all rounded-md text-[rgba(32,_128,_240,_0.15)] hover:text-[rgba(32,_128,_240,_0.25)] active:text-[rgba(32,_128,_240,_0.5)] border-[rgba(32,_128,_240,_0.15)] hover:border-[rgba(32,_128,_240,_0.25)] active:border-[rgba(32,_128,_240,_0.5)]"
+              @click="cta.handler"
             >
-              <button
-                class="w-5 h-5 font-sans border border-red-500 rounded-md grid place-items-center absolute bottom-full left-full"
-                @click="_addRandomColors(schemeToken)"
-              >
-                <Plus
-                  :size="14"
-                  class="text-red-500"
-                />
-              </button>
-
-              <div
-                class="w-full h-full col-start-[19] col-span-6 row-start-1 row-span-2 grid place-items-center bg-slate-100"
-              >
-                <div class="w-full h-full rounded-md border relative p-2">
-                  <div class="w-full h-full rounded-md border relative p-2  grid place-items-center">
-                    <div
-                      class="relative z-10 text-2xl"
-                      :style="{ color: getContrastTextColor(scheme.leadColor.hex) }"
-                    >
-                      {{ scheme.leadColor.hex }}
-                    </div>
-
-                    <div class="absolute right-2 top-2 z-10">
-                      <NPopconfirm
-                        class="!font-mono"
-                        :showIcon="false"
-                        :positiveButtonProps="positiveButtonPropsHandler(schemeToken)"
-                        :negativeButtonProps="negativeButtonProps"
-                        :showArrow="true"
-                        placement="top"
-                      >
-                        <template #trigger>
-                          <NButton
-                            type="error"
-                            size="tiny"
-                          >
-                            <template #icon>
-                              <Trash2 :size="14" />
-                            </template>
-                          </NButton>
-                        </template>
-                        Remove group?
-                      </NPopconfirm>
-                    </div>
-
-                    <div
-                      class="w-full h-full absolute top-0 left-0 rounded-md z-0"
-                      :style="{ backgroundColor: scheme.leadColor.hex }"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div
-                v-for="color in scheme.colors"
-                :key="color.hex"
-                class="w-full aspect-square rounded inline-block "
-                :style="{ backgroundColor: color.hex }"
+              <Plus
+                class="col-[13_/span_1]"
+                :size="26"
               />
             </div>
           </TransitionGroup>
@@ -230,7 +213,7 @@ const negativeButtonProps: ButtonProps = {
 .cards-list-move,
 .cards-list-enter-active,
 .cards-list-leave-active {
-  transition: all 0.35s ease-in-out;
+  transition: all 0.25s ease-in-out;
 }
 
 .cards-list-enter-from,

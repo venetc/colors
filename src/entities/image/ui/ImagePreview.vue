@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, toRefs, watch } from 'vue';
+import { computed, nextTick, ref, toRefs, watch } from 'vue';
 import { useElementVisibility } from '@vueuse/core';
 import { NSkeleton } from 'naive-ui';
 import { type Img } from '../model';
@@ -47,7 +47,7 @@ const unwatchInitialVisibility = watch(targetIsVisible, (isVisible) => {
   unwatchInitialVisibility();
 });
 
-watch(targetSrc, loadImage);
+watch(targetSrc, () => nextTick(loadImage));
 </script>
 
 <template>

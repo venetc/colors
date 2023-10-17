@@ -2,10 +2,8 @@
  * Разбивает массив на чанки
  */
 export function chunkArray<T>(array: T[], size: number): T[][] {
-  if (!Array.isArray(array) || !array.length)
-    return [];
-  if (!size)
-    return [array];
+  if (!Array.isArray(array) || !array.length) return [];
+  if (!size) return [array];
 
   const head = array.slice(0, size);
   const tail = array.slice(size);

@@ -1,5 +1,8 @@
 import { defineStore, storeToRefs } from 'pinia';
 import { ref } from 'vue';
+import type { Img } from '@/entities/image';
+import { useImagesStore } from '@/entities/image';
+import { generateUUID } from '@/shared/lib/string.ts';
 import { generateRandomRgb, getBrightness, hslToCss, rgbToCss, rgbToHSL, rgbToHex } from '@/shared/lib/color';
 import type { Color, ImageColor } from '@/entities/color';
 import { useColorsStore } from '@/entities/color';
@@ -11,25 +14,40 @@ export interface ColorObject {
 
 export interface ColorScheme {
   leadColor: Color;
-  colors: Color[];
+  colors: Map<string, Color>;
 }
 
 export const useSortedColorsStore = defineStore('SortedColorsStore', () => {
-  const colorObjects = ref<ColorObject[][]>([]);
+  const colorObjects = ref<Map<Img, ImageColor[]>>(new Map());
   const colorSchemes = ref<Map<string, ColorScheme>>(new Map());
 
-  const colorsStore = useColorsStore();
-  const { colors } = storeToRefs(colorsStore);
-
   const generateColorObjects = () => {
-    colorObjects.value = [...colors.value.entries()].map(generateColorObjectsFromMapEntity);
+    const colorsStore = useColorsStore();
+    const imagesStore = useImagesStore();
+
+    const { colors } = storeToRefs(colorsStore);
+    const { images } = storeToRefs(imagesStore);
+
+    // console.log(colors.value);
+    // console.log(images.value);
+
+    colors.value.forEach((imageColor, sourceToken) => {
+      const parentImage = images.value.get(sourceToken);
+
+      if (!parentImage) return;
+
+      colorObjects.value.set(parentImage, imageColor);
+    });
+
+    // colorObjects.value = [...colors.value.entries()].map(generateColorObjectsFromMapEntity);
   };
 
   const addColorScheme = () => {
     const rgbArray = generateRandomRgb();
     const hex = rgbToHex(rgbArray);
 
-    const alreadyInMap = colorSchemes.value.get(hex);
+    const values = [...colorSchemes.value.values()];
+    const alreadyInMap = values.some(color => color.leadColor.hex === hex);
 
     if (!alreadyInMap) {
       const hsl = hslToCss(rgbArray);
@@ -48,17 +66,19 @@ export const useSortedColorsStore = defineStore('SortedColorsStore', () => {
 
       const result: ColorScheme = {
         leadColor,
-        colors: [],
+        colors: new Map<string, Color>(),
       };
 
-      colorSchemes.value.set(leadColor.hex, result);
+      const uuid = generateUUID();
+
+      colorSchemes.value.set(uuid, result);
     } else {
       addColorScheme();
     }
   };
 
-  const deleteColorSchemeByToken = (token: string) => {
-    colorSchemes.value.delete(token);
+  const deleteColorSchemeByToken = (uuid: string) => {
+    colorSchemes.value.delete(uuid);
   };
 
   return {
@@ -73,9 +93,12 @@ export const useSortedColorsStore = defineStore('SortedColorsStore', () => {
 export function generateColorObjectsFromMapEntity(mapEntity: [string, ImageColor[]]): ColorObject[] {
   const [source, imageColors] = mapEntity;
 
-  const filteredColors = imageColors.map(color => (color.selected ?? color.original));
-  return filteredColors.map(color => ({
-    source,
-    color,
-  }));
+  return imageColors.map((imageColor) => {
+    const color = imageColor.selected ?? imageColor.original;
+
+    return {
+      source,
+      color,
+    };
+  });
 }
