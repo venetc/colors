@@ -13,7 +13,7 @@ export const useColorsStore = defineStore('ColorsStore', () => {
   const MIN_COLORS = 6;
   const colors = ref(new Map<string, ImageColor[]>());
 
-  const readColorsFromImageBySrc = (token: MaybeRef<string>, src: MaybeRef<string>) => {
+  const readColorsFromImageBySrc = (uuid: MaybeRef<string>, src: MaybeRef<string>) => {
     const img = new Image();
 
     img.crossOrigin = 'anonymous';
@@ -32,7 +32,7 @@ export const useColorsStore = defineStore('ColorsStore', () => {
       const colorData = palette.map(generateColorData);
       const uniqueColors = _filterOriginalColors(colorData).map(_appendBlankSelectedColor);
 
-      colors.value.set(unref(token), uniqueColors);
+      colors.value.set(unref(uuid), uniqueColors);
       /* ??? */
       img.removeAttribute('src');
       /* ??? */
@@ -52,31 +52,31 @@ export const useColorsStore = defineStore('ColorsStore', () => {
     return targetColor;
   };
 
-  const clearAllSelectedColors = (token: string) => {
-    const target = colors.value.get(token);
+  const clearAllSelectedColors = (uuid: string) => {
+    const target = colors.value.get(uuid);
     if (!target) return;
 
-    colors.value.set(token, target.map(clearSelectedColor));
+    colors.value.set(uuid, target.map(clearSelectedColor));
   };
 
-  const removeColorCompletely = (token: string, color: ImageColor) => {
-    const target = colors.value.get(token);
+  const removeColorCompletely = (uuid: string, color: ImageColor) => {
+    const target = colors.value.get(uuid);
     if (!target) return;
 
     const result = target.filter(_color => (_color.original.hex !== color.original.hex));
 
-    colors.value.set(token, result);
+    colors.value.set(uuid, result);
   };
 
-  const checkIfSomeColorsAreSelected = (token: string) => {
-    const target = colors.value.get(token);
+  const checkIfSomeColorsAreSelected = (uuid: string) => {
+    const target = colors.value.get(uuid);
     if (!target) return false;
 
     return target.some(color => color.selected);
   };
 
-  const amountOfColors = (token: string) => {
-    const target = colors.value.get(token);
+  const amountOfColors = (uuid: string) => {
+    const target = colors.value.get(uuid);
     if (!target) return 0;
 
     return target.length;

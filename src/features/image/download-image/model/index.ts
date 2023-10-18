@@ -2,6 +2,7 @@ import { useFetch } from '@vueuse/core';
 import { defineStore, storeToRefs } from 'pinia';
 import { computed, ref } from 'vue';
 import { createImageFromLink } from '../lib';
+import { generateUUID } from '@/shared/lib/string.ts';
 import { useImagesStore } from '@/entities/image';
 
 export type LinksSet = Set<string>;
@@ -90,7 +91,8 @@ export const useImageDownloaderStore = defineStore('ImagesDownloaderStore', () =
         blobSrc,
       });
 
-      imagesStore.addImageToList(originalSrc, image);
+      const uuid = generateUUID();
+      imagesStore.addImageToList(uuid, image);
     });
   };
   const updateLinksList = (links: string[]) => {

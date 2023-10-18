@@ -4,18 +4,18 @@ import { NCard } from 'naive-ui';
 import ImagePreview from '../ui/ImagePreview.vue';
 import type { Img } from '../model';
 
-const props = defineProps<{ image: Img; token: string }>();
+const props = defineProps<{ image: Img; uuid: string }>();
 const emit = defineEmits<{
-  onLoad: [token: string, src: string];
+  onLoad: [uuid: string, src: string];
 }>();
 
 const {
-  token,
+  uuid,
   image,
 } = toRefs(props);
 
 function loadHandler(src: string) {
-  emit('onLoad', token.value, src);
+  emit('onLoad', uuid.value, src);
 }
 </script>
 
@@ -27,7 +27,6 @@ function loadHandler(src: string) {
     <template #cover>
       <ImagePreview
         :image="image"
-        :token="token"
         class="w-full h-80"
         @onLoad="loadHandler"
       />

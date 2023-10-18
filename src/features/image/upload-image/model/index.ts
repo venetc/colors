@@ -3,7 +3,7 @@ import type { NUpload, UploadFileInfo } from 'naive-ui';
 import { ref } from 'vue';
 import { createImageFromFile } from '../lib';
 import { useImagesStore } from '@/entities/image';
-import { formatStringToLinks } from '@/shared/lib/string';
+import { formatStringToLinks, generateUUID } from '@/shared/lib/string';
 
 export type FileList = Map<string, UploadFileInfo>;
 
@@ -12,13 +12,23 @@ export const useFileLoaderStore = defineStore('ImagesUploaderStore', () => {
   const filesList = ref<FileList>(new Map());
 
   const updateImagesFileList = ({ fileList: inputFiles }: { fileList: UploadFileInfo[] }) => {
+    const imagesStore = useImagesStore();
+    const { images } = storeToRefs(imagesStore);
+
+    const imagesInStore = new Set([...images.value.values()].map(image => image.origin === 'file' ? image.fileName : image.originalSrc));
+
     const upsertFileInMap = (file: UploadFileInfo) => {
-      filesList.value.set(file.name, file);
+      const fileName = file.name;
+
+      const alreadyInList = imagesInStore.has(fileName);
+
+      if (alreadyInList) return;
+
+      const uuid = generateUUID();
+      filesList.value.set(uuid, file);
     };
 
     inputFiles.forEach(upsertFileInMap);
-
-    const imagesStore = useImagesStore();
 
     filesList.value.forEach(({ file }) => {
       imagesStore.addBlobToCache(file);
@@ -32,17 +42,17 @@ export const useFileLoaderStore = defineStore('ImagesUploaderStore', () => {
     const imagesStore = useImagesStore();
     const { blobCache } = storeToRefs(imagesStore);
 
-    filesList.value.forEach((file) => {
-      const fileName = file.name;
-      const blobSrc = blobCache.value.get(fileName);
+    filesList.value.forEach((file, uuid) => {
+      const blobSrc = blobCache.value.get(file.name);
 
       if (!blobSrc) return;
 
       const image = createImageFromFile({
-        fileName,
+        fileName: file.name,
         blobSrc,
       });
-      imagesStore.addImageToList(fileName, image);
+
+      imagesStore.addImageToList(uuid, image);
     });
   };
   const clearUploader = () => {

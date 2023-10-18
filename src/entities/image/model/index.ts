@@ -17,10 +17,10 @@ export const useImagesStore = defineStore('ImagesStore', () => {
   const images = ref<Map<string, Img>>(new Map());
   const blobCache = ref<BlobCache>(new Map());
 
-  const addImageToList = (token: string, image: Img) => {
-    if (images.value.has(token)) return;
+  const addImageToList = (uuid: string, image: Img) => {
+    if (images.value.has(uuid)) return;
 
-    images.value.set(token, image);
+    images.value.set(uuid, image);
   };
   const removeImageFromList = (token: string) => {
     return images.value.delete(token);
@@ -31,13 +31,13 @@ export const useImagesStore = defineStore('ImagesStore', () => {
     const isFile = entity instanceof File;
     const token = isFile ? entity.name : entity.originSrc;
     const existingBlobInCache = blobCache.value.get(token);
-    const existingImage = images.value.get(token);
+    const uncachedImage = images.value.get(token);
 
     if (existingBlobInCache) return;
 
     const src = isFile ? URL.createObjectURL(entity) : entity.blobSrc;
 
-    blobCache.value.set(token, existingImage ? existingImage.blobSrc : src);
+    blobCache.value.set(token, uncachedImage ? uncachedImage.blobSrc : src);
   };
   const removeBlobFromCache = (entity: BlobCacheItem) => {
     const key = entity instanceof File ? entity.name : entity.originSrc;

@@ -47,25 +47,25 @@ onUnmounted(() => {
   <section class="py-5">
     <div class="grid grid-cols-3 gap-5">
       <ImageCard
-        v-for="[imageKey, image] in images"
-        :key="imageKey"
+        v-for="[uuid, image] in images"
+        :key="uuid"
         :image="image"
-        :token="imageKey"
+        :uuid="uuid"
         @onLoad="readColorsFromImageBySrc"
       >
         <div class="flex flex-nowrap items-stretch justify-between py-2 px-2 before:w-[26px]">
           <div class="flex justify-center items-center gap-2 h-12">
-            <ColorsEditor :imageToken="imageKey" />
+            <ColorsEditor :imageToken="uuid" />
           </div>
 
           <div
             class="flex flex-col flex-nowrap justify-between opacity-0 group-hover/card:opacity-100 transition-all duration-300"
           >
             <NButton
-              :disabled="!(checkIfSomeColorsAreSelected(imageKey) || (amountOfColors(imageKey) < MIN_COLORS))"
+              :disabled="!(checkIfSomeColorsAreSelected(uuid) || (amountOfColors(uuid) < MIN_COLORS))"
               size="tiny"
               type="error"
-              @click="readColorsFromImageBySrc(imageKey, image.croppedSrc ?? image.blobSrc)"
+              @click="readColorsFromImageBySrc(uuid, image.croppedSrc ?? image.blobSrc)"
             >
               <template #icon>
                 <RotateCcw :size="16" />
@@ -74,7 +74,7 @@ onUnmounted(() => {
             <NButton
               size="tiny"
               type="info"
-              @click="setActiveImage(image, imageKey); setEditorState('opened'); isHeaderActive = false"
+              @click="setActiveImage(image, uuid); setEditorState('opened'); isHeaderActive = false"
             >
               <template #icon>
                 <Settings2 :size="16" />
