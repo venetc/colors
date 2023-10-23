@@ -1,6 +1,7 @@
 import { useElementBounding } from '@vueuse/core';
-import { computed, nextTick, ref } from 'vue';
+import { computed, inject, nextTick, ref } from 'vue';
 import type { Ref } from 'vue';
+import { cropperInfrastructureData } from '../lib';
 import type { Img } from '@/entities/image';
 import { cover } from '@/shared/lib/canvas';
 
@@ -9,18 +10,12 @@ export interface Coordinates {
   y: number;
 }
 
-export type ExposedCropperData = Pick<ReturnType<typeof useImageCropper>, 'reset' | 'toggleDrawing' | 'redo' | 'undo' | 'init' | 'edit' | 'crop' | 'isDrawingMode'>;
+export type ExposedCropperData = Pick<ReturnType<typeof useImageCropper>, 'init' | 'mouseUp' | 'mouseDown' | 'mouseMove' | 'reset' | 'crop' | 'undo' | 'redo' | 'toggleDrawing'>;
 
 const SCALE_FACTOR = 1;
 
 export interface CropperParams {
   currentPointers: Ref<Coordinates[]>;
-  undoPointers: Ref<Coordinates[]>;
-  redoPointers: Ref<Coordinates[]>;
-  isDrawingMode: Ref<boolean>;
-  isEditing: Ref<boolean>;
-  isCropped: Ref<boolean>;
-  canvasIsHidden: Ref<boolean>;
   image: Ref<Img>;
   canvasElement: Ref<HTMLCanvasElement | undefined>;
   imageElement: Ref<HTMLImageElement | undefined>;
@@ -79,18 +74,20 @@ export const ratioClass = computed(ratioClassHandler);
 export function useImageCropper(params: CropperParams) {
   const {
     currentPointers,
-    undoPointers,
-    redoPointers,
-    isDrawingMode,
-    isEditing,
-    isCropped,
-    canvasIsHidden,
     image,
     canvasElement,
     imageElement,
     parentElement,
     cropCallback,
   } = params;
+
+  const cropperInfraData = inject(cropperInfrastructureData);
+
+  const undoPointers = ref<Coordinates[]>([]);
+  const redoPointers = ref<Coordinates[]>([]);
+  const isDrawingMode = ref(true);
+  const isEditing = ref(true);
+  const isCropped = ref(!!image.value.croppedSrc);
 
   const isDrawingInProgress = ref(false);
 
@@ -164,6 +161,13 @@ export function useImageCropper(params: CropperParams) {
 
           canvasImg.src = URL.createObjectURL(blob);
         });
+
+        cropperInfraData?.setCurrentPointersAmount(currentPointers.value.length);
+        cropperInfraData?.setUndoPointersAmount(undoPointers.value.length);
+        cropperInfraData?.setRedoPointersAmount(redoPointers.value.length);
+        cropperInfraData?.setIsDrawingModeFlag(isDrawingMode.value);
+        cropperInfraData?.setIsEditingModeFlag(isEditing.value);
+        cropperInfraData?.setIsImageCroppedFlag(isCropped.value);
       }, 300);
     };
   };
@@ -174,6 +178,10 @@ export function useImageCropper(params: CropperParams) {
     redoPointers.value = [];
     undoPointers.value = [];
     currentPointers.value = [];
+
+    cropperInfraData?.setRedoPointersAmount(redoPointers.value.length);
+    cropperInfraData?.setUndoPointersAmount(undoPointers.value.length);
+    cropperInfraData?.setCurrentPointersAmount(currentPointers.value.length);
   };
 
   const reset = async () => {
@@ -183,6 +191,7 @@ export function useImageCropper(params: CropperParams) {
       imageObj.value = null;
       resultImage.value = null;
       isCropped.value = false;
+      cropperInfraData?.setIsImageCroppedFlag(isCropped.value);
       positionOld.value = position.value = null;
       init();
     });
@@ -192,6 +201,10 @@ export function useImageCropper(params: CropperParams) {
     redoPointers.value = [];
     currentPointers.value.push(point);
     undoPointers.value.push(point);
+
+    cropperInfraData?.setCurrentPointersAmount(currentPointers.value.length);
+    cropperInfraData?.setUndoPointersAmount(undoPointers.value.length);
+    cropperInfraData?.setRedoPointersAmount(redoPointers.value.length);
   };
 
   const restorePointer = (pointersToPop: Coordinates[], pointersToPush: Coordinates[], isUndo: boolean) => {
@@ -233,6 +246,10 @@ export function useImageCropper(params: CropperParams) {
         };
       }
     }
+
+    cropperInfraData?.setCurrentPointersAmount(currentPointers.value.length);
+    cropperInfraData?.setUndoPointersAmount(undoPointers.value.length);
+    cropperInfraData?.setRedoPointersAmount(redoPointers.value.length);
   };
 
   const saveState = (canvas: HTMLCanvasElement, list = undoSnapshots.value, keepRedo = false) => {
@@ -266,18 +283,22 @@ export function useImageCropper(params: CropperParams) {
     if (!isEditing.value || isDrawingMode.value) return;
 
     isEditing.value = false;
+    cropperInfraData?.setIsEditingModeFlag(isEditing.value);
     restoreState(undoSnapshots.value, redoSnapshots.value);
     restorePointer(undoPointers.value, redoPointers.value, true);
     isEditing.value = true;
+    cropperInfraData?.setIsEditingModeFlag(isEditing.value);
   };
 
   const redo = () => {
     if (!isEditing.value || isDrawingMode.value) return;
 
     isEditing.value = false;
+    cropperInfraData?.setIsEditingModeFlag(isEditing.value);
     restoreState(redoSnapshots.value, undoSnapshots.value);
     restorePointer(redoPointers.value, undoPointers.value, false);
     isEditing.value = true;
+    cropperInfraData?.setIsEditingModeFlag(isEditing.value);
   };
 
   const trimEmptyPixel = (canvasElement: HTMLCanvasElement, ctx: CanvasRenderingContext2D) => {
@@ -361,6 +382,7 @@ export function useImageCropper(params: CropperParams) {
 
       empty();
       isCropped.value = true;
+      cropperInfraData?.setIsImageCroppedFlag(isCropped.value);
     });
   };
 
@@ -452,7 +474,11 @@ export function useImageCropper(params: CropperParams) {
   const edit = () => {
     if (!isCropped.value) void reset();
     isEditing.value = !isEditing.value;
-    if (!isEditing.value) isDrawingMode.value = false;
+    cropperInfraData?.setIsEditingModeFlag(isEditing.value);
+    if (!isEditing.value) {
+      isDrawingMode.value = false;
+      cropperInfraData?.setIsDrawingModeFlag(isDrawingMode.value);
+    }
   };
 
   const toggleDrawing = () => {
@@ -460,6 +486,7 @@ export function useImageCropper(params: CropperParams) {
     if (isCropped.value || !(isCropped.value && isDrawingMode.value)) void reset();
 
     isDrawingMode.value = !isDrawingMode.value;
+    cropperInfraData?.setIsDrawingModeFlag(isDrawingMode.value);
   };
 
   return {
@@ -476,6 +503,6 @@ export function useImageCropper(params: CropperParams) {
     isDrawingMode,
     isEditing,
     isCropped,
-    canvasIsHidden,
+    currentPointers,
   };
 }

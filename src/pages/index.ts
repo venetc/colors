@@ -24,8 +24,8 @@ export const routes: Array<RouteRecordRaw> = [
       header: { content: ColorsPageHeader },
     },
     beforeEnter: () => {
-      const store = useImagesStore();
-      const { images } = storeToRefs(store);
+      const imagesStore = useImagesStore();
+      const { images } = storeToRefs(imagesStore);
 
       if (images.value.size < 1) return { path: '/' };
     },

@@ -1,50 +1,39 @@
-import { defineStore, storeToRefs } from 'pinia';
+import { defineStore } from 'pinia';
 import { ref } from 'vue';
-import { useImagesStore } from '@/entities/image';
-import type { Img } from '@/entities/image';
+import type { ImageId, Img } from '@/entities/image';
 
-export const useImageEditorStore = defineStore('ImageEditorStore', () => {
+export const useImageEditorStore = defineStore('Widgets/ImageEditor', () => {
   const activeImage = ref<Img | undefined>();
-  const activeImageToken = ref<string | undefined>();
+  const activeImageId = ref<ImageId | undefined>();
   const isEditorActive = ref(false);
 
-  const imagesStore = useImagesStore();
-  const { images } = storeToRefs(imagesStore);
-
-  const setActiveImage = (image: Img | undefined, token?: string) => {
-    activeImage.value = image ? { ...image } : undefined;
-    activeImageToken.value = token;
+  const setActiveImage = (image: Img | undefined) => {
+    activeImage.value = image;
   };
-
+  const setActiveImageId = (id: ImageId | undefined) => {
+    activeImageId.value = id;
+  };
   const setEditorState = (state: 'opened' | 'closed') => {
     isEditorActive.value = state === 'opened';
   };
-
-  const setImageCroppedSrc = (croppedSrc?: string) => {
+  const setImageCroppedSrc = (croppedSrc: string | null) => {
     if (!activeImage.value) return;
 
     if (!croppedSrc) {
       if (activeImage.value.croppedSrc) URL.revokeObjectURL(activeImage.value.croppedSrc);
-      activeImage.value.croppedSrc = undefined;
+      activeImage.value.croppedSrc = null;
     } else {
       activeImage.value.croppedSrc = croppedSrc;
     }
-
-    if (!activeImageToken.value) return;
-
-    const target = images.value.get(activeImageToken.value);
-
-    if (!target) return;
-
-    target.croppedSrc = activeImage.value.croppedSrc;
   };
 
   return {
     activeImage,
-    activeImageToken,
     isEditorActive,
+    activeImageId,
     setActiveImage,
     setEditorState,
     setImageCroppedSrc,
+    setActiveImageId,
   };
 });

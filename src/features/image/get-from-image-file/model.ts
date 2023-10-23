@@ -1,14 +1,14 @@
 import { defineStore, storeToRefs } from 'pinia';
 import type { NUpload, UploadFileInfo } from 'naive-ui';
+import type { Ref } from 'vue';
 import { ref } from 'vue';
-import { createImageFromFile } from '../lib';
+import { createImageFromFile } from './lib.ts';
 import { useImagesStore } from '@/entities/image';
-import { formatStringToLinks, generateUUID } from '@/shared/lib/string';
 
 export type FileList = Map<string, UploadFileInfo>;
 
-export const useFileLoaderStore = defineStore('ImagesUploaderStore', () => {
-  const cleanUploaderMethod = ref<InstanceType<typeof NUpload>['clear']>();
+export const useGetImageFromFile = defineStore('Features/Image/GetFromImageFile', () => {
+  const cleanUploaderMethod = ref<InstanceType<typeof NUpload>['clear'] | undefined>();
   const filesList = ref<FileList>(new Map());
 
   const updateImagesFileList = ({ fileList: inputFiles }: { fileList: UploadFileInfo[] }) => {
@@ -24,8 +24,7 @@ export const useFileLoaderStore = defineStore('ImagesUploaderStore', () => {
 
       if (alreadyInList) return;
 
-      const uuid = generateUUID();
-      filesList.value.set(uuid, file);
+      filesList.value.set(file.id, file);
     };
 
     inputFiles.forEach(upsertFileInMap);
@@ -34,16 +33,15 @@ export const useFileLoaderStore = defineStore('ImagesUploaderStore', () => {
       imagesStore.addBlobToCache(file);
     });
   };
-
   const clearFileList = () => {
     filesList.value.clear();
   };
   const updateImagesListFromFiles = () => {
     const imagesStore = useImagesStore();
-    const { blobCache } = storeToRefs(imagesStore);
+    const { cache } = storeToRefs(imagesStore);
 
-    filesList.value.forEach((file, uuid) => {
-      const blobSrc = blobCache.value.get(file.name);
+    filesList.value.forEach((file) => {
+      const blobSrc = cache.value.get(file.name);
 
       if (!blobSrc) return;
 
@@ -52,30 +50,30 @@ export const useFileLoaderStore = defineStore('ImagesUploaderStore', () => {
         blobSrc,
       });
 
-      imagesStore.addImageToList(uuid, image);
+      imagesStore.addImageToList(image.id, image);
     });
   };
+
   const clearUploader = () => {
     if (cleanUploaderMethod.value) cleanUploaderMethod.value();
   };
-  const getLinksFromFile = async (file: File | null | undefined): Promise<string[]> => {
-    if (!file) return [];
-    try {
-      const text = await file.text();
-      return formatStringToLinks(text);
-    } catch (exception) {
-      console.warn(exception);
-      return [];
-    }
+  const setCleanMethod = (uploader: Ref<InstanceType<typeof NUpload> | undefined>) => {
+    cleanUploaderMethod.value = uploader.value?.clear;
+  };
+
+  const removeFileFromList = (id: string) => {
+    filesList.value.delete(id);
+    clearUploader();
   };
 
   return {
+    cleanUploaderMethod,
     filesList,
     updateImagesFileList,
     clearFileList,
     updateImagesListFromFiles,
-    cleanUploaderMethod,
     clearUploader,
-    getLinksFromFile,
+    setCleanMethod,
+    removeFileFromList,
   };
 });

@@ -2,26 +2,29 @@
 import { RotateCcw, X } from 'lucide-vue-next';
 import type { ButtonProps } from 'naive-ui';
 import { NButton, NPopconfirm, NPopover } from 'naive-ui';
-import { storeToRefs } from 'pinia';
 import { toRefs } from 'vue';
 import EyeDropper from '../ui/EyeDropper.vue';
 import ColorInput from '../ui/ColorInput.vue';
 import ColorCell from '../ui/ColorCell.vue';
-import type { ImageColor } from '@/entities/color';
-import { useColorsStore } from '@/entities/color';
+import type { Color, ImageColor } from '@/entities/color';
 
-const props = defineProps<{ imageToken: string; compact?: boolean }>();
-const { imageToken, compact } = toRefs(props);
+const props = defineProps<{ colors?: ImageColor[]; compact?: boolean }>();
+const emits = defineEmits<{
+  onDelete: [imageColor: ImageColor];
+  onColorPick: [newColor: Color, colorToReset: ImageColor];
+  onResetHandpicked: [imageColor: ImageColor];
+}>();
 
-const colorsStore = useColorsStore();
-const { colors } = storeToRefs(colorsStore);
-const { setColor, clearSelectedColor, removeColorCompletely } = colorsStore;
+const {
+  compact,
+  colors,
+} = toRefs(props);
 
-function positiveButtonPropsHandler(token: string, color: ImageColor): ButtonProps {
+function positiveButtonPropsHandler(color: ImageColor): ButtonProps {
   return {
     size: 'tiny',
     type: 'success',
-    onClick: () => removeColorCompletely(token, color),
+    onClick: () => emits('onDelete', color),
   };
 }
 
@@ -32,10 +35,14 @@ const negativeButtonProps: ButtonProps = {
 </script>
 
 <template>
-  <TransitionGroup name="colors-list">
+  <TransitionGroup
+    v-if="colors"
+    name="colors-list"
+    appear
+  >
     <div
-      v-for="color in colors.get(imageToken)"
-      :key="`${imageToken}/${color.original.hex}`"
+      v-for="imageColor in colors"
+      :key="imageColor.original.hex"
     >
       <NPopover
         trigger="hover"
@@ -46,8 +53,8 @@ const negativeButtonProps: ButtonProps = {
         :duration="200"
       >
         <template #trigger>
-          <div :class="[compact ? 'w-full h-9' : 'w-8 h-12 xl:w-12 xl:h-12']">
-            <ColorCell :color="color" />
+          <div :class="[compact ? 'w-[88px] h-9' : 'w-8 h-12 xl:w-12 xl:h-12']">
+            <ColorCell :color="imageColor" />
           </div>
         </template>
 
@@ -55,18 +62,18 @@ const negativeButtonProps: ButtonProps = {
           class="flex flex-nowrap gap-1 items-start content-start px-2 py-1.5"
           :class="[compact ? 'bg-gradient-to-br from-slate-100/25 to-slate-400/25 rounded-lg shadow-lg mr-1.5' : 'rounded shadow bg-white']"
         >
-          <EyeDropper @onColorPick="setColor($event, color)" />
+          <EyeDropper @onColorPick="emits('onColorPick', $event, imageColor)" />
 
           <ColorInput
-            :defaultColor="color.selected?.hex ?? color.original.hex"
-            @onColorPick="setColor($event, color)"
+            :defaultColor="imageColor.handpicked?.hex ?? imageColor.original.hex"
+            @onColorPick="emits('onColorPick', $event, imageColor)"
           />
 
           <NButton
-            :disabled="!color.selected"
+            :disabled="!imageColor.handpicked"
             type="error"
             size="tiny"
-            @click="clearSelectedColor(color)"
+            @click="emits('onResetHandpicked', imageColor)"
           >
             <template #icon>
               <RotateCcw :size="16" />
@@ -77,7 +84,7 @@ const negativeButtonProps: ButtonProps = {
             class="!font-mono"
             :class="[compact ? 'bg-gradient-to-br from-slate-100/25 to-slate-400/25 rounded-lg shadow-lg px-2 py-1.5 !text-sm !text-white !mb-2.5 -mr-1.5' : '']"
             :showIcon="false"
-            :positiveButtonProps="positiveButtonPropsHandler(imageToken, color)"
+            :positiveButtonProps="positiveButtonPropsHandler(imageColor)"
             :negativeButtonProps="negativeButtonProps"
             :raw="compact"
             :showArrow="!compact"
@@ -101,7 +108,7 @@ const negativeButtonProps: ButtonProps = {
   </TransitionGroup>
 </template>
 
-<style>
+<style scoped>
 .colors-list-move,
 .colors-list-enter-active,
 .colors-list-leave-active {

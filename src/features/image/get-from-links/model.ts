@@ -1,16 +1,23 @@
 import { useFetch } from '@vueuse/core';
 import { defineStore, storeToRefs } from 'pinia';
+import type { NUpload, UploadFileInfo } from 'naive-ui';
+import type { Ref } from 'vue';
 import { computed, ref } from 'vue';
-import { createImageFromLink } from '../lib';
-import { generateUUID } from '@/shared/lib/string.ts';
+import { createImageFromLink } from './lib';
+import { NoValidLinksError, useNotificationManager } from '@/shared/ui/notification';
 import { useImagesStore } from '@/entities/image';
+import { formatStringToLinks } from '@/shared/lib/string';
 
+export type FileList = Map<string, UploadFileInfo>;
 export type LinksSet = Set<string>;
 
-export const useImageDownloaderStore = defineStore('ImagesDownloaderStore', () => {
+export const useGetImageFromLinks = defineStore('Features/Image/GetFromLinks', () => {
+  const cleanUploaderMethod = ref<InstanceType<typeof NUpload>['clear'] | undefined>();
   const linksList = ref<LinksSet>(new Set());
   const totalFetchedImages = ref(0);
   const imagesFailedToFetch = ref<LinksSet>(new Set());
+
+  const textareaData = ref('');
 
   const amountOfLinks = computed(() => (linksList.value.size));
   const loadedWithoutError = computed(() => (totalFetchedImages.value - imagesFailedToFetch.value.size));
@@ -35,12 +42,12 @@ export const useImageDownloaderStore = defineStore('ImagesDownloaderStore', () =
     const loadImages = async () => {
       isLoading.value = true;
       const imagesStore = useImagesStore();
-      const { blobCache } = storeToRefs(imagesStore);
+      const { cache } = storeToRefs(imagesStore);
 
       for await (const link of linksList.value) {
         currentLink.value = link;
 
-        const alreadyInCache = blobCache.value.get(link);
+        const alreadyInCache = cache.value.get(link);
 
         if (alreadyInCache) {
           totalFetchedImages.value++;
@@ -79,10 +86,10 @@ export const useImageDownloaderStore = defineStore('ImagesDownloaderStore', () =
   };
   const updateImagesListFromLinks = () => {
     const imagesStore = useImagesStore();
-    const { blobCache } = storeToRefs(imagesStore);
+    const { cache } = storeToRefs(imagesStore);
 
     linksList.value.forEach((originalSrc) => {
-      const blobSrc = blobCache.value.get(originalSrc);
+      const blobSrc = cache.value.get(originalSrc);
 
       if (!blobSrc) return;
 
@@ -91,12 +98,48 @@ export const useImageDownloaderStore = defineStore('ImagesDownloaderStore', () =
         blobSrc,
       });
 
-      const uuid = generateUUID();
-      imagesStore.addImageToList(uuid, image);
+      imagesStore.addImageToList(image.id, image);
     });
   };
   const updateLinksList = (links: string[]) => {
     links.forEach(link => linksList.value.add(link));
+  };
+
+  const getLinksFromFile = async (file: File | null | undefined): Promise<string[]> => {
+    if (!file) return [];
+    try {
+      const text = await file.text();
+      return formatStringToLinks(text);
+    } catch (exception) {
+      console.warn(exception);
+      return [];
+    }
+  };
+
+  const clearUploader = () => {
+    if (cleanUploaderMethod.value) cleanUploaderMethod.value();
+  };
+  const setCleanMethod = (uploader: Ref<InstanceType<typeof NUpload> | undefined>) => {
+    cleanUploaderMethod.value = uploader.value?.clear;
+  };
+
+  const { callNotification: popInvalidLinksNotification } = useNotificationManager({
+    type: 'error',
+    title: 'No valid links found!',
+    content: NoValidLinksError,
+  });
+
+  const parseInputValue = () => {
+    const links = formatStringToLinks(textareaData.value);
+
+    if (links.length > 0) {
+      updateLinksList(links);
+    } else {
+      popInvalidLinksNotification();
+    }
+  };
+  const resetInput = () => {
+    textareaData.value = '';
   };
 
   return {
@@ -105,9 +148,16 @@ export const useImageDownloaderStore = defineStore('ImagesDownloaderStore', () =
     amountOfLinks,
     totalFetchedImages,
     loadedWithoutError,
+    cleanUploaderMethod,
+    textareaData,
     useImageDownloader,
     clearLinksList,
     updateImagesListFromLinks,
     updateLinksList,
+    clearUploader,
+    setCleanMethod,
+    getLinksFromFile,
+    parseInputValue,
+    resetInput,
   };
 });

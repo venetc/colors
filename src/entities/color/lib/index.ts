@@ -6,8 +6,10 @@ const colorScrapper = new ColorThief();
 
 type GetPalette = (args: { img: HTMLImageElement; colorCount?: number; quality?: number }) => RGB[];
 
+export type ColorHex = Brand<Hex, 'ColorHex'>;
+
 export interface Color {
-  hex: string;
+  hex: ColorHex;
   rgb: string;
   rgbArray: RGB;
   hsl: string;
@@ -15,11 +17,8 @@ export interface Color {
   brightness: number;
 }
 
-export const getPalette: GetPalette = ({
-  img,
-  colorCount = 6,
-  quality = 2,
-}) => {
+export const getPalette: GetPalette = (args) => {
+  const { img, colorCount = 6, quality = 2 } = args;
   return colorScrapper.getPalette(img, colorCount, quality);
 };
 
@@ -27,7 +26,7 @@ export function generateColorData(payload: RGB): Color {
   const rgbArray = payload.map(number => number > 255 ? 255 : number) as RGB;
 
   const rgb = `rgb(${rgbArray[0]}, ${rgbArray[1]}, ${rgbArray[2]})`;
-  const hex = rgbToHex(rgbArray);
+  const hex = rgbToHex(rgbArray) as ColorHex;
   const hslArray = rgbToHSL(rgbArray);
   const hsl = hslToCss(hslArray);
   const brightness = getBrightness(rgbArray);

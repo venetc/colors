@@ -1,4 +1,5 @@
-import type { ImageFromFile } from '@/entities/image';
+import { generateId } from '@/shared/lib/nanoid';
+import type { ImageFromFile, ImageId } from '@/entities/image';
 
 type CreateImageFromFileArgs = Pick<ImageFromFile, 'fileName' | 'blobSrc'>;
 
@@ -8,10 +9,13 @@ export function createImageFromFile(payload: CreateImageFromFileArgs): ImageFrom
     blobSrc,
   } = payload;
 
+  const id = generateId() as ImageId;
+
   return {
     origin: 'file',
-    croppedSrc: undefined,
+    croppedSrc: null,
     fileName,
     blobSrc,
+    id,
   };
 }

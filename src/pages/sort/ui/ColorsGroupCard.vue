@@ -4,23 +4,30 @@ import type { ButtonProps } from 'naive-ui';
 import { NButton, NPopconfirm } from 'naive-ui';
 import { toRefs } from 'vue';
 import { Download, Palette, RotateCcw, Trash2 } from 'lucide-vue-next';
-import type { ImageColor } from '@/entities/color';
-import type { ColorScheme } from '@/features/color/sort-colors';
+import type { ColorHex } from '@/entities/color';
+import { useSortedColorsStore } from '@/features/color/sort-colors';
+import type { ColorScheme, PivotId, SchemeId } from '@/features/color/sort-colors';
 import { getContrastTextColor } from '@/shared/lib/color';
 
-const props = defineProps<{ uuid: string; scheme: ColorScheme }>();
+const props = defineProps<{
+  id: SchemeId;
+  scheme: ColorScheme;
+}>();
 const emit = defineEmits<{
-  onDelete: [token: string];
-  onColorPick: [hex: string];
-  onDrop: [color: ImageColor];
+  onDelete: [id: SchemeId];
+  onLeadColorPick: [hex: ColorHex];
+  onColorDrop: [event: DragEvent, id: SchemeId];
+  onColorDragStart: [event: DragEvent, pivotId: PivotId, id: SchemeId];
 }>();
 
 const {
-  uuid,
+  id,
   scheme,
 } = toRefs(props);
 
-function positiveButtonPropsHandler(schemeToken: string): ButtonProps {
+const sortedColorsStore = useSortedColorsStore();
+
+function positiveButtonPropsHandler(schemeToken: SchemeId): ButtonProps {
   return {
     size: 'tiny',
     type: 'success',
@@ -33,29 +40,46 @@ const negativeButtonProps: ButtonProps = {
   type: 'error',
 };
 
-const colorChangeHandler = useThrottleFn((e: Event) => {
+const leadColorChangeHandler = useThrottleFn((e: Event) => {
   if (!(e.target instanceof HTMLInputElement)) return;
 
-  const hex = e.target.value;
+  const hex = e.target.value as ColorHex;
 
-  emit('onColorPick', hex);
+  emit('onLeadColorPick', hex);
 }, 50);
 
-function onDrop(event: DragEvent) {
-  if (!event.dataTransfer) return;
-  const data = event.dataTransfer.getData('text');
+function beforeLeave(el: Element) {
+  /* TODO костыль, убрать */
+  if (!(el instanceof HTMLElement)) return;
+  const {
+    marginLeft,
+    marginTop,
+    width,
+    height,
+  } = window.getComputedStyle(el);
 
-  const color = JSON.parse(data) as ImageColor;
-
-  emit('onDrop', color);
+  el.style.left = `${el.offsetLeft - Number.parseFloat(marginLeft)}px`;
+  el.style.top = `${el.offsetTop - Number.parseFloat(marginTop)}px`;
+  el.style.width = width;
+  el.style.height = height;
 }
+
+function dropHandler(event: DragEvent) {
+  emit('onColorDrop', event, id.value);
+}
+
+function dragStartHandler(event: DragEvent, pivotId: PivotId) {
+  emit('onColorDragStart', event, pivotId, id.value);
+}
+
+// sortedColorsStore.dragStartHandler({ event: $event, originSchemaId: id, pivotId })
 </script>
 
 <template>
   <div
     class="color-card group/card p-2 items-stretch auto-rows-[2.5rem] grid gap-1.5 place-items-start grid-cols-[repeat(26,_2.5rem)] w-fit rounded-md hover:shadow-xl shadow-md transition-shadow bg-slate-50 relative group/card"
     @dragover="(e:Event) => e.preventDefault()"
-    @drop="onDrop"
+    @drop="dropHandler"
   >
     <div
       class="group/cover w-full h-full col-start-[21] col-span-6 row-start-1 row-span-3 grid place-items-center"
@@ -63,7 +87,7 @@ function onDrop(event: DragEvent) {
       <div class="w-full h-full rounded-xl border relative p-1.5 bg-slate-100">
         <div class="w-full h-full rounded-xl border relative p-2 grid place-items-center">
           <div
-            class="relative z-10 text-xl"
+            class="relative z-10 text-xl select-none"
             :style="{ color: getContrastTextColor(scheme.leadColor.hex) }"
           >
             {{ scheme.leadColor.hex }}
@@ -75,7 +99,7 @@ function onDrop(event: DragEvent) {
             <NPopconfirm
               class="!font-mono"
               :showIcon="false"
-              :positiveButtonProps="positiveButtonPropsHandler(uuid)"
+              :positiveButtonProps="positiveButtonPropsHandler(id)"
               :negativeButtonProps="negativeButtonProps"
               :showArrow="true"
               placement="top"
@@ -98,8 +122,8 @@ function onDrop(event: DragEvent) {
                 :value="scheme.leadColor.hex"
                 type="color"
                 class="opacity-0 absolute w-full h-full cursor-pointer bottom-0 left-0 z-10"
-                @change="colorChangeHandler"
-                @input="colorChangeHandler"
+                @change="leadColorChangeHandler"
+                @input="leadColorChangeHandler"
               >
               <NButton
                 type="info"
@@ -114,7 +138,7 @@ function onDrop(event: DragEvent) {
             <NPopconfirm
               class="!font-mono"
               :showIcon="false"
-              :positiveButtonProps="positiveButtonPropsHandler(uuid)"
+              :positiveButtonProps="positiveButtonPropsHandler(id)"
               :negativeButtonProps="negativeButtonProps"
               :showArrow="true"
               placement="top"
@@ -151,11 +175,38 @@ function onDrop(event: DragEvent) {
       <Download :size="26" />
     </div>
 
-    <div
-      v-for="color in scheme.colors"
-      :key="color.hex"
-      class="w-full h-full rounded self-center"
-      :style="{ backgroundColor: color.hex }"
-    />
+    <TransitionGroup
+      v-else
+      name="colors-list"
+      appear
+      @beforeLeave="beforeLeave"
+    >
+      <div
+        v-for="[pivotId, color] in scheme.colors"
+        :key="pivotId"
+        class="w-10 h-10 rounded border-2 border-black self-center"
+        :style="{ backgroundColor: color.handpicked?.hex ?? color.original.hex }"
+        draggable="true"
+        @dragstart="dragStartHandler($event, pivotId)"
+      />
+    </TransitionGroup>
   </div>
 </template>
+
+<style scoped>
+.colors-list-move,
+.colors-list-enter-active,
+.colors-list-leave-active {
+  transition: all 0.3s ease;
+}
+
+.colors-list-enter-from,
+.colors-list-leave-to {
+  opacity: 0;
+  transform: scaleX(0%);
+}
+
+.colors-list-leave-active {
+  position: absolute;
+}
+</style>

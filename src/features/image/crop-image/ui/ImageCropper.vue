@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import { watchDebounced } from '@vueuse/core';
-import { nextTick, onMounted, ref, toRefs } from 'vue';
-import type { Coordinates } from '../model';
+import { computed, inject, onMounted, ref, toRefs } from 'vue';
+
+import type { ExposedCropperData } from '../model';
 import { ratioClass, useImageCropper } from '../model';
+import { cropperInfrastructureData } from '@/features/image/crop-image';
+import type { Coordinates } from '@/features/image/crop-image';
 import type { Img } from '@/entities/image';
 
 interface Props {
@@ -13,17 +15,6 @@ const props = defineProps<Props>();
 const emit = defineEmits<{
   onCrop: [croppedSrc: string];
   onResize: [];
-  onDataChange: [
-    data: {
-      currentPointers: number;
-      undoPointers: number;
-      redoPointers: number;
-      isDrawingMode: boolean;
-      isEditing: boolean;
-      isCropped: boolean;
-      canvasIsHidden: boolean;
-    },
-  ];
 }>();
 
 const { image } = toRefs(props);
@@ -31,27 +22,7 @@ const { image } = toRefs(props);
 const parentElement = ref<HTMLElement | undefined>();
 const imageElement = ref<HTMLImageElement | undefined>();
 const canvasElement = ref<HTMLCanvasElement | undefined>();
-
-function cropCallback(croppedSrc: string) {
-  emit('onCrop', croppedSrc);
-}
-
-const cropperParams = {
-  currentPointers: ref<Coordinates[]>([]),
-  undoPointers: ref<Coordinates[]>([]),
-  redoPointers: ref<Coordinates[]>([]),
-  isDrawingMode: ref(false),
-  isEditing: ref(true),
-  isCropped: ref(!!image.value.croppedSrc),
-  canvasIsHidden: ref(false),
-  image,
-  canvasElement,
-  imageElement,
-  parentElement,
-  cropCallback,
-};
-
-const cropperData = useImageCropper(cropperParams);
+const currentPointers = ref<Coordinates[]>([]);
 
 const {
   init,
@@ -60,41 +31,19 @@ const {
   mouseMove,
   reset,
   crop,
-  toggleDrawing,
   undo,
   redo,
-  isDrawingMode,
-} = cropperData;
-
-/* TODO Refactor */
-watchDebounced([
-  () => cropperParams.currentPointers.value.length,
-  () => cropperParams.undoPointers.value.length,
-  () => cropperParams.redoPointers.value.length,
-  () => cropperParams.isDrawingMode.value,
-  () => cropperParams.isEditing.value,
-  () => cropperParams.isCropped.value,
-  () => cropperParams.canvasIsHidden.value,
-], ([currentPointers, undoPointers, redoPointers, isDrawingMode, isEditing, isCropped, canvasIsHidden]) => {
-  emit('onDataChange', {
-    currentPointers,
-    undoPointers,
-    redoPointers,
-    isDrawingMode,
-    isEditing,
-    isCropped,
-    canvasIsHidden,
-  });
-}, {
-  debounce: 50,
-  maxWait: 500,
+  toggleDrawing,
+} = useImageCropper({
+  currentPointers,
+  image,
+  canvasElement,
+  imageElement,
+  parentElement,
+  cropCallback,
 });
 
-onMounted(async () => {
-  await nextTick(init);
-});
-
-defineExpose({
+const exposedCropperData: ExposedCropperData = {
   init,
   mouseUp,
   mouseDown,
@@ -104,22 +53,46 @@ defineExpose({
   undo,
   redo,
   toggleDrawing,
-  isDrawingMode,
-});
+};
+
+defineExpose(exposedCropperData);
+
+const cropperInfraData = inject(cropperInfrastructureData);
 
 function transitionEndHandler(e: TransitionEvent) {
   if (e.propertyName === 'height' || e.propertyName === 'width') {
     reset();
     emit('onResize');
-    cropperParams.canvasIsHidden.value = false;
+    cropperInfraData?.setIsCanvasHiddenFlag(false);
   }
 }
 
 function transitionStartHandler(e: TransitionEvent) {
   if (e.propertyName === 'height' || e.propertyName === 'width') {
-    cropperParams.canvasIsHidden.value = true;
+    cropperInfraData?.setIsCanvasHiddenFlag(true);
   }
 }
+
+function cropCallback(croppedSrc: string) {
+  emit('onCrop', croppedSrc);
+}
+
+onMounted(init);
+
+const shouldShowCanvas = computed(() => {
+  const isCropped = cropperInfraData?.isImageCroppedFlag.value;
+  const isEditing = cropperInfraData?.isEditingModeFlag.value;
+  const canvasIsHidden = cropperInfraData?.isCanvasHiddenFlag.value;
+
+  return (isCropped || isEditing) && !canvasIsHidden;
+});
+
+const shouldShowPointers = computed(() => {
+  const isDrawingMode = cropperInfraData?.isDrawingModeFlag.value;
+  const canvasIsHidden = cropperInfraData?.isCanvasHiddenFlag.value;
+
+  return !isDrawingMode && !canvasIsHidden;
+});
 </script>
 
 <template>
@@ -136,25 +109,25 @@ function transitionStartHandler(e: TransitionEvent) {
         <img
           ref="imageElement"
           :src="image.blobSrc"
-          class="absolute top-0 left-0 w-full h-full object-cover block"
-          :class="[(cropperParams.isCropped.value || cropperParams.isEditing.value) && !cropperParams.canvasIsHidden.value ? 'opacity-5 delay-500' : 'pointer-events-auto delay-0']"
+          class="absolute top-0 left-0 w-full h-full object-cover block select-none"
+          :class="[shouldShowCanvas ? 'opacity-5 delay-500' : 'pointer-events-auto delay-0']"
           alt="#"
           crossorigin="anonymous"
         >
         <canvas
           ref="canvasElement"
           class="absolute top-0 left-0 w-full h-full object-cover block"
-          :class="[(cropperParams.isCropped.value || cropperParams.isEditing.value) && !cropperParams.canvasIsHidden.value ? 'pointer-events-auto opacity-100 delay-500' : 'pointer-events-none opacity-0 delay-0']"
+          :class="[shouldShowCanvas ? 'pointer-events-auto opacity-100 delay-500' : 'pointer-events-none opacity-0 delay-0']"
           @pointerdown="mouseDown"
           @pointerup="mouseUp"
           @pointermove="mouseMove"
         />
         <div
-          v-if="!cropperParams.isDrawingMode.value && !cropperParams.canvasIsHidden.value"
+          v-if="shouldShowPointers"
           class="absolute w-full h-full pointer-events-none top-0 left-0"
         >
           <span
-            v-for="point in cropperParams.currentPointers.value"
+            v-for="point in currentPointers"
             :key="`${point.x},${point.y}`"
             class="crop-pointer"
             :style="{ top: `${point.y}px`, left: `${point.x}px` }"

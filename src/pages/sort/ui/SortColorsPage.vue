@@ -4,9 +4,11 @@ import { NButton, NIcon } from 'naive-ui';
 import { storeToRefs } from 'pinia';
 import { onMounted } from 'vue';
 import GroupCard from './ColorsGroupCard.vue';
-import type { ImageColor } from '@/entities/color';
+import { generatePivotId, useSortedColorsStore } from '@/features/color/sort-colors';
+import type { ColorHex } from '@/entities/color';
 import { useColorsStore } from '@/entities/color';
-import { useSortedColorsStore } from '@/features/color/sort-colors';
+import type { SchemeId } from '@/features/color/sort-colors';
+
 import {
   generateColorsBetween,
   getBrightness,
@@ -18,19 +20,11 @@ import {
 } from '@/shared/lib/color';
 
 const sortedColorsStore = useSortedColorsStore();
-const {
-  generateColorObjects,
-  addColorScheme,
-  deleteColorSchemeByToken,
-} = sortedColorsStore;
-const {
-  colorSchemes,
-} = storeToRefs(sortedColorsStore);
+
+const { colorSchemes } = storeToRefs(sortedColorsStore);
 
 const colorsStore = useColorsStore();
 const { colors } = storeToRefs(colorsStore);
-
-onMounted(generateColorObjects);
 
 const isDev = import.meta.env.DEV;
 
@@ -57,7 +51,7 @@ function generateBoxShadow(centerColor: string): string {
 }
 
 function beforeLeave(el: Element) {
-  /* TODO обнови зависимости под конец, пес */
+  /* TODO костыль, убрать */
   if (!(el instanceof HTMLElement)) return;
   const {
     marginLeft,
@@ -74,11 +68,11 @@ function beforeLeave(el: Element) {
 
 const _newScheme = [{
   title: 'Add new group',
-  handler: addColorScheme,
+  handler: sortedColorsStore.addColorScheme,
 }];
 
-function leadColorChangeHandler(hex: string, uuid: string) {
-  const targetScheme = colorSchemes.value.get(uuid);
+function leadColorChangeHandler(hex: ColorHex, id: SchemeId) {
+  const targetScheme = colorSchemes.value.get(id);
   if (!targetScheme) return;
 
   const rgbArray = hexToRGB(hex);
@@ -97,23 +91,7 @@ function leadColorChangeHandler(hex: string, uuid: string) {
   };
 }
 
-function dragStartHandler(event: DragEvent, color: ImageColor) {
-  if (!event.dataTransfer) return;
-
-  event.dataTransfer.clearData();
-
-  event.dataTransfer.setData('text/plain', JSON.stringify({ color }));
-}
-
-function dropToScheme(color: ImageColor, uuid: string) {
-  const target = colorSchemes.value.get(uuid);
-
-  console.log({ color, target });
-
-  // if (!target) return;
-
-  // target.colors.add(color.selected ?? color.original);
-}
+onMounted(sortedColorsStore.invalidateSchemes);
 </script>
 
 <template>
@@ -145,24 +123,28 @@ function dropToScheme(color: ImageColor, uuid: string) {
       <div
         class="custom-scroll w-fit overflow-auto rounded-xl border-cyan pb-10 scroll-space"
         dir="rtl"
+        @dragover="(e:Event) => e.preventDefault()"
+        @drop="sortedColorsStore.dropHandler({ event: $event })"
       >
         <div
           dir="ltr"
           class="py-3.5 pl-7 pr-3.5 grid gap-3.5"
         >
           <div
-            v-for="[sourceToken, colorsArray] in colors"
-            :key="sourceToken"
+            v-for="[imageId, colorCollection] in colors"
+            :key="imageId"
             class="shadow-md rounded-md p-2 grid gap-1.5 place-items-start grid-cols-[repeat(2,_2.5rem)] w-fit"
           >
             <div
-              v-for="color in colorsArray"
-              :key="color.selected?.hex ?? color.original.hex"
-              class="w-10 h-10 rounded border-2 border-black "
+              v-for="(imageColor, index) in colorCollection"
+              :key="`${imageColor.imageId}_${imageColor.original.hex}`"
+              class="w-10 h-10 rounded border-2 border-black"
               draggable="true"
-              :style="{ backgroundColor: color.selected?.hex ?? color.original.hex }"
-              @dragstart="dragStartHandler($event, color)"
-            />
+              :style="{ backgroundColor: imageColor.handpicked?.hex ?? imageColor.original.hex }"
+              @dragstart="sortedColorsStore.dragStartHandler({ event: $event, pivotId: generatePivotId(imageId, index, imageColor) })"
+            >
+              {{ imageColor.isSorted ? 'S' : null }}
+            </div>
           </div>
         </div>
       </div>
@@ -176,13 +158,14 @@ function dropToScheme(color: ImageColor, uuid: string) {
             @beforeLeave="beforeLeave"
           >
             <GroupCard
-              v-for="[uuid, scheme] in colorSchemes"
-              :key="uuid"
-              :uuid="uuid"
+              v-for="[id, scheme] in colorSchemes"
+              :id="id"
+              :key="id"
               :scheme="scheme"
-              @onDrop="dropToScheme($event, uuid)"
-              @onDelete="deleteColorSchemeByToken"
-              @onColorPick="leadColorChangeHandler($event, uuid)"
+              @onColorDrop="(event, targetSchemaId) => sortedColorsStore.dropHandler({ event, targetSchemaId })"
+              @onColorDragStart="(event, pivotId, originSchemaId) => sortedColorsStore.dragStartHandler({ originSchemaId, pivotId, event })"
+              @onDelete="sortedColorsStore.deleteColorSchemeByToken"
+              @onColorPick=" leadColorChangeHandler($event, id)"
             />
 
             <div

@@ -1,16 +1,20 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
-import { ref } from 'vue';
+import { computed, provide, ref } from 'vue';
 import { NButton, NPopover, NSwitch } from 'naive-ui';
 import { Crop, Lasso, Redo2, RotateCcw, Scaling, Undo2, X } from 'lucide-vue-next';
+
 import { useImageEditorStore } from '../model';
+import { useEditColors } from '@/features/color/edit-colors';
 import { ColorsEditor, useColorsStore } from '@/entities/color';
 import type { ExposedCropperData } from '@/features/image/crop-image';
 import {
   ImageCropper,
+  cropperInfrastructureData,
   ratioSelectHandler,
   ratios,
   selectedRatio,
+  useCropperInfraData,
 } from '@/features/image/crop-image';
 
 const emit = defineEmits<{
@@ -19,11 +23,13 @@ const emit = defineEmits<{
 }>();
 
 const imageEditorStore = useImageEditorStore();
+const editColorsModel = useEditColors();
+
 const {
   isEditorActive,
   activeImage,
-  activeImageToken,
 } = storeToRefs(imageEditorStore);
+
 const {
   setEditorState,
   setActiveImage,
@@ -35,19 +41,20 @@ const { amountOfColors } = colorsStore;
 
 const cropper = ref<InstanceType<typeof ImageCropper> & ExposedCropperData>();
 
-const cropperData = ref({
-  currentPointers: 0,
-  undoPointers: 0,
-  redoPointers: 0,
-  isDrawingMode: false,
-  isEditing: true,
-  isCropped: false,
-  canvasIsHidden: false,
-});
+const cropperInfraData = useCropperInfraData();
 
-function setCropperData(payload: typeof cropperData.value) {
-  cropperData.value = payload;
-}
+provide(cropperInfrastructureData, cropperInfraData);
+
+const notEnoughPointersToCrop = computed(() => (cropperInfraData?.currentPointersAmount.value < 3));
+const cantUndo = computed(() => (cropperInfraData.isDrawingModeFlag.value || cropperInfraData.undoPointersAmount.value < 1));
+const cantRedo = computed(() => (cropperInfraData.isDrawingModeFlag.value || cropperInfraData.redoPointersAmount.value <= 0));
+const hasSomeColors = computed(() => {
+  const image = activeImage.value;
+
+  if (!image) return false;
+
+  return amountOfColors(image.id) > 0;
+});
 </script>
 
 <template>
@@ -55,7 +62,7 @@ function setCropperData(payload: typeof cropperData.value) {
     name="fade"
   >
     <div
-      v-if="isEditorActive && activeImage && activeImageToken"
+      v-if="isEditorActive && activeImage"
       class="fixed w-full h-full top-0 left-0 flex flex-nowrap items-center justify-center z-30"
     >
       <div
@@ -68,8 +75,7 @@ function setCropperData(payload: typeof cropperData.value) {
           ref="cropper"
           :image="activeImage"
           @onCrop="setImageCroppedSrc"
-          @onResize="setImageCroppedSrc"
-          @onDataChange="setCropperData($event)"
+          @onResize="setImageCroppedSrc(null)"
         />
       </div>
       <div
@@ -83,9 +89,10 @@ function setCropperData(payload: typeof cropperData.value) {
             <NSwitch
               size="medium"
               :round="false"
-              :disabled="!cropperData.isEditing"
-              :value="cropper.isDrawingMode.value"
-              @update:value="setImageCroppedSrc(); cropper.toggleDrawing()"
+              :disabled="!cropperInfraData.isEditingModeFlag.value"
+              :value="cropperInfraData.isDrawingModeFlag.value"
+              :defaultValue="cropperInfraData.isDrawingModeFlag.value"
+              @update:value="setImageCroppedSrc(null); cropper.toggleDrawing()"
             >
               <template #icon>
                 <Lasso :size="16" />
@@ -95,7 +102,7 @@ function setCropperData(payload: typeof cropperData.value) {
               type="primary"
               class="!font-mono"
               size="tiny"
-              :disabled="cropperData.currentPointers < 3"
+              :disabled="notEnoughPointersToCrop"
               @click="cropper.crop"
             >
               <span class="px-1.5">
@@ -109,7 +116,7 @@ function setCropperData(payload: typeof cropperData.value) {
               type="error"
               class="!font-mono"
               size="tiny"
-              :disabled="cropperData.isDrawingMode || cropperData.undoPointers < 1"
+              :disabled="cantUndo"
               @click="cropper.undo"
             >
               <span class="px-1.5">
@@ -120,7 +127,7 @@ function setCropperData(payload: typeof cropperData.value) {
               type="error"
               class="!font-mono"
               size="tiny"
-              :disabled="cropperData.isDrawingMode || cropperData.redoPointers <= 0"
+              :disabled="cantRedo"
               @click="cropper.redo"
             >
               <span class="px-1.5">
@@ -132,7 +139,7 @@ function setCropperData(payload: typeof cropperData.value) {
             type="error"
             class="!font-mono"
             size="tiny"
-            @click="setImageCroppedSrc(); cropper.reset()"
+            @click="setImageCroppedSrc(null); cropper.reset()"
           >
             <span class="px-1.5">
               <RotateCcw :size="16" />
@@ -141,12 +148,15 @@ function setCropperData(payload: typeof cropperData.value) {
         </div>
 
         <div
-          v-if="amountOfColors(activeImageToken) > 0"
+          v-if="hasSomeColors"
           class="bg-gradient-to-br from-slate-100/25 to-slate-400/25 rounded-lg shadow-lg px-2 py-2 flex flex-col gap-2 w-full transition-all"
         >
           <ColorsEditor
-            :imageToken="activeImageToken"
-            :compact="true"
+            compact
+            :colors="editColorsModel.getColorsByImageId(activeImage.id)"
+            @onDelete="editColorsModel.removeColor(activeImage.id, $event)"
+            @onColorPick="editColorsModel.handpickColor"
+            @onResetHandpicked="editColorsModel.clearHandpickedColor"
           />
         </div>
 

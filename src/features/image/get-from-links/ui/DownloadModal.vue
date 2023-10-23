@@ -14,22 +14,17 @@ import {
   useThemeVars,
 } from 'naive-ui';
 import { ExternalLink, Sparkles, Trash2 } from 'lucide-vue-next';
-import { useImageDownloaderStore } from '../model';
+import { useGetImageFromLinks } from '../model';
 import { valueToPercent } from '@/shared/lib/number';
 import { ellipsisString } from '@/shared/lib/string';
 
-const imageDownloaderStore = useImageDownloaderStore();
-const {
-  useImageDownloader,
-  clearLinksList,
-  updateImagesListFromLinks,
-} = imageDownloaderStore;
+const getImageFromLinksModel = useGetImageFromLinks();
 const {
   amountOfLinks,
   imagesFailedToFetch,
   loadedWithoutError,
   totalFetchedImages,
-} = storeToRefs(imageDownloaderStore);
+} = storeToRefs(getImageFromLinksModel);
 
 const showModal = computed(() => amountOfLinks.value > 0 || imagesFailedToFetch.value.size > 0);
 
@@ -42,19 +37,20 @@ const percentage = computed(() => (~~valueToPercent(totalFetchedImages.value, 0,
 
 function clearAndCloseModal() {
   imagesFailedToFetch.value.clear();
-  clearLinksList();
+  getImageFromLinksModel.clearUploader();
+  getImageFromLinksModel.clearLinksList();
   totalFetchedImages.value = 0;
 }
 
 function completeLinksUpload() {
-  updateImagesListFromLinks();
+  getImageFromLinksModel.updateImagesListFromLinks();
   clearAndCloseModal();
 }
 
 const {
   isLoading,
   loadImages,
-} = useImageDownloader({ onSuccess: completeLinksUpload });
+} = getImageFromLinksModel.useImageDownloader({ onSuccess: completeLinksUpload });
 </script>
 
 <template>

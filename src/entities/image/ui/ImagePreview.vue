@@ -6,7 +6,7 @@ import { type Img } from '../model';
 
 const props = defineProps<{ image: Img }>();
 const emit = defineEmits<{
-  onLoad: [src: string];
+  onLoad: [image: Img];
 }>();
 
 const { image } = toRefs(props);
@@ -31,7 +31,7 @@ function loadImage() {
     _imageSrc.value = img.src;
 
     isLoading.value = false;
-    emit('onLoad', targetSrc.value);
+    emit('onLoad', image.value);
     /* ??? */
     img.removeAttribute('src');
     /* ??? */
