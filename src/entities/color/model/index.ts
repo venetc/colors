@@ -10,22 +10,31 @@ export interface ImageColor {
   handpicked: Color | null;
 }
 
+export type ColorCollection = Map<number, ImageColor | null>;
+
 export const useColorsStore = defineStore('Entities/Color', () => {
-  const colors = ref(new Map<ImageId, ImageColor[]>());
+  const colors = ref(new Map<ImageId, ColorCollection>());
 
   const amountOfColors = (imageId: ImageId) => {
     const target = colors.value.get(imageId);
     if (!target) return 0;
 
-    return target.length;
+    return [...target.values()].filter(color => color !== null).length;
   };
   const resetColorsStore = () => {
     colors.value.clear();
   };
+  const getColorFromPool = (imageId: ImageId, colorIndex: number) => {
+    const targetColorsFromPool = colors.value.get(imageId);
 
+    if (!targetColorsFromPool) return;
+
+    return targetColorsFromPool.get(colorIndex);
+  };
   return {
     colors,
     amountOfColors,
     resetColorsStore,
+    getColorFromPool,
   };
 });

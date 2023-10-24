@@ -2,16 +2,17 @@
 import { RotateCcw, X } from 'lucide-vue-next';
 import type { ButtonProps } from 'naive-ui';
 import { NButton, NPopconfirm, NPopover } from 'naive-ui';
-import { toRefs } from 'vue';
+import { computed, toRefs } from 'vue';
 import EyeDropper from '../ui/EyeDropper.vue';
 import ColorInput from '../ui/ColorInput.vue';
 import ColorCell from '../ui/ColorCell.vue';
-import type { Color, ImageColor } from '@/entities/color';
+import { beforeLeaveWorkaround } from '@/shared/lib/crutch';
+import type { Color, ColorCollection, ImageColor } from '@/entities/color';
 
-const props = defineProps<{ colors?: ImageColor[]; compact?: boolean }>();
+const props = defineProps<{ colors?: ColorCollection; compact?: boolean }>();
 const emits = defineEmits<{
-  onDelete: [imageColor: ImageColor];
-  onColorPick: [newColor: Color, colorToReset: ImageColor];
+  onDelete: [index: number];
+  onColorPick: [newColor: Color, index: number];
   onResetHandpicked: [imageColor: ImageColor];
 }>();
 
@@ -20,11 +21,11 @@ const {
   colors,
 } = toRefs(props);
 
-function positiveButtonPropsHandler(color: ImageColor): ButtonProps {
+function positiveButtonPropsHandler(indexKey: number): ButtonProps {
   return {
     size: 'tiny',
     type: 'success',
-    onClick: () => emits('onDelete', color),
+    onClick: () => emits('onDelete', indexKey),
   };
 }
 
@@ -32,6 +33,12 @@ const negativeButtonProps: ButtonProps = {
   size: 'tiny',
   type: 'error',
 };
+
+const _colors = computed(() => {
+  if (!colors?.value) return [] as Array<[number, ImageColor]>;
+
+  return [...colors.value.entries()].filter(([_, value]) => (value !== null)) as Array<[number, ImageColor]>;
+});
 </script>
 
 <template>
@@ -39,71 +46,74 @@ const negativeButtonProps: ButtonProps = {
     v-if="colors"
     name="colors-list"
     appear
+    @beforeLeave="beforeLeaveWorkaround"
   >
     <div
-      v-for="imageColor in colors"
-      :key="imageColor.original.hex"
+      v-for="[indexKey, imageColor] in _colors"
+      :key="indexKey"
     >
-      <NPopover
-        trigger="hover"
-        class="!font-mono rounded-lg"
-        :placement="compact ? 'left' : 'bottom'"
-        raw
-        :showArrow="false"
-        :duration="200"
-      >
-        <template #trigger>
-          <div :class="[compact ? 'w-[88px] h-9' : 'w-8 h-12 xl:w-12 xl:h-12']">
-            <ColorCell :color="imageColor" />
-          </div>
-        </template>
-
-        <div
-          class="flex flex-nowrap gap-1 items-start content-start px-2 py-1.5"
-          :class="[compact ? 'bg-gradient-to-br from-slate-100/25 to-slate-400/25 rounded-lg shadow-lg mr-1.5' : 'rounded shadow bg-white']"
+      <template v-if="imageColor">
+        <NPopover
+          trigger="hover"
+          class="!font-mono rounded-lg"
+          :placement="compact ? 'left' : 'bottom'"
+          raw
+          :showArrow="false"
+          :duration="200"
         >
-          <EyeDropper @onColorPick="emits('onColorPick', $event, imageColor)" />
+          <template #trigger>
+            <div :class="[compact ? 'w-[88px] h-9' : 'w-8 h-12 xl:w-12 xl:h-12']">
+              <ColorCell :color="imageColor" />
+            </div>
+          </template>
 
-          <ColorInput
-            :defaultColor="imageColor.handpicked?.hex ?? imageColor.original.hex"
-            @onColorPick="emits('onColorPick', $event, imageColor)"
-          />
-
-          <NButton
-            :disabled="!imageColor.handpicked"
-            type="error"
-            size="tiny"
-            @click="emits('onResetHandpicked', imageColor)"
+          <div
+            class="flex flex-nowrap gap-1 items-start content-start  rounded"
+            :class="[compact ? 'bg-gradient-to-br from-slate-100/25 to-slate-400/25 shadow-lg mr-1.5 px-2 py-1.5' : 'shadow bg-white flex-col px-1.5 py-1.5']"
           >
-            <template #icon>
-              <RotateCcw :size="16" />
-            </template>
-          </NButton>
+            <EyeDropper @onColorPick="emits('onColorPick', $event, indexKey)" />
 
-          <NPopconfirm
-            class="!font-mono"
-            :class="[compact ? 'bg-gradient-to-br from-slate-100/25 to-slate-400/25 rounded-lg shadow-lg px-2 py-1.5 !text-sm !text-white !mb-2.5 -mr-1.5' : '']"
-            :showIcon="false"
-            :positiveButtonProps="positiveButtonPropsHandler(imageColor)"
-            :negativeButtonProps="negativeButtonProps"
-            :raw="compact"
-            :showArrow="!compact"
-            :placement="compact ? 'top-end' : 'top'"
-          >
-            <template #trigger>
-              <NButton
-                type="error"
-                size="tiny"
-              >
-                <template #icon>
-                  <X :size="16" />
-                </template>
-              </NButton>
-            </template>
-            Remove color?
-          </NPopconfirm>
-        </div>
-      </NPopover>
+            <ColorInput
+              :defaultColor="imageColor.handpicked?.hex ?? imageColor.original.hex"
+              @onColorPick="emits('onColorPick', $event, indexKey)"
+            />
+
+            <NButton
+              :disabled="!imageColor.handpicked"
+              type="error"
+              size="tiny"
+              @click="emits('onResetHandpicked', imageColor)"
+            >
+              <template #icon>
+                <RotateCcw :size="16" />
+              </template>
+            </NButton>
+
+            <NPopconfirm
+              class="!font-mono"
+              :class="[compact ? 'bg-gradient-to-br from-slate-100/25 to-slate-400/25 rounded-lg shadow-lg px-2 py-1.5 !text-sm !text-white !mb-2.5 -mr-1.5' : '']"
+              :showIcon="false"
+              :positiveButtonProps="positiveButtonPropsHandler(indexKey)"
+              :negativeButtonProps="negativeButtonProps"
+              :raw="compact"
+              :showArrow="!compact"
+              :placement="compact ? 'top-end' : 'top'"
+            >
+              <template #trigger>
+                <NButton
+                  type="error"
+                  size="tiny"
+                >
+                  <template #icon>
+                    <X :size="16" />
+                  </template>
+                </NButton>
+              </template>
+              Remove color?
+            </NPopconfirm>
+          </div>
+        </NPopover>
+      </template>
     </div>
   </TransitionGroup>
 </template>

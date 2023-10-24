@@ -52,7 +52,7 @@ function closeEditor() {
 
 onUnmounted(closeEditor);
 
-function xxx(imageId: MaybeRef<ImageId>) {
+function loadHandler(imageId: MaybeRef<ImageId>) {
   const id = unref(imageId);
 
   const image = images.value.get(id);
@@ -81,14 +81,14 @@ function xxx(imageId: MaybeRef<ImageId>) {
         v-for="[, image] in images"
         :key="image.id"
         :image="image"
-        @onLoad="xxx"
+        @onLoad="loadHandler"
       >
-        <div class="flex flex-nowrap items-stretch justify-between py-2 px-2 before:w-[26px]">
-          <div class="flex justify-center items-center gap-2 h-12">
+        <div class="flex flex-nowrap justify-between py-2 px-2 before:w-[26px]">
+          <div class="flex items-center gap-2 h-12 relative">
             <ColorsEditor
               :colors="editColorsModel.getColorsByImageId(image.id)"
               @onDelete="editColorsModel.removeColor(image.id, $event)"
-              @onColorPick="editColorsModel.handpickColor"
+              @onColorPick="(newColor, indexKey) => editColorsModel.handpickColor(newColor, indexKey, image.id)"
               @onResetHandpicked="editColorsModel.clearHandpickedColor"
             />
           </div>

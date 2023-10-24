@@ -2,10 +2,10 @@
 import { useThrottleFn } from '@vueuse/core';
 import type { ButtonProps } from 'naive-ui';
 import { NButton, NPopconfirm } from 'naive-ui';
-import { toRefs } from 'vue';
+import { computed, toRefs } from 'vue';
 import { Download, Palette, RotateCcw, Trash2 } from 'lucide-vue-next';
+import { beforeLeaveWorkaround } from '@/shared/lib/crutch';
 import type { ColorHex } from '@/entities/color';
-import { useSortedColorsStore } from '@/features/color/sort-colors';
 import type { ColorScheme, PivotId, SchemeId } from '@/features/color/sort-colors';
 import { getContrastTextColor } from '@/shared/lib/color';
 
@@ -15,6 +15,7 @@ const props = defineProps<{
 }>();
 const emit = defineEmits<{
   onDelete: [id: SchemeId];
+  onClear: [id: SchemeId];
   onLeadColorPick: [hex: ColorHex];
   onColorDrop: [event: DragEvent, id: SchemeId];
   onColorDragStart: [event: DragEvent, pivotId: PivotId, id: SchemeId];
@@ -25,13 +26,11 @@ const {
   scheme,
 } = toRefs(props);
 
-const sortedColorsStore = useSortedColorsStore();
-
-function positiveButtonPropsHandler(schemeToken: SchemeId): ButtonProps {
+function positiveButtonPropsHandler(mode: 'delete' | 'clear'): ButtonProps {
   return {
     size: 'tiny',
     type: 'success',
-    onClick: () => emit('onDelete', schemeToken),
+    onClick: () => mode === 'delete' ? emit('onDelete', id.value) : emit('onClear', id.value),
   };
 }
 
@@ -48,22 +47,6 @@ const leadColorChangeHandler = useThrottleFn((e: Event) => {
   emit('onLeadColorPick', hex);
 }, 50);
 
-function beforeLeave(el: Element) {
-  /* TODO костыль, убрать */
-  if (!(el instanceof HTMLElement)) return;
-  const {
-    marginLeft,
-    marginTop,
-    width,
-    height,
-  } = window.getComputedStyle(el);
-
-  el.style.left = `${el.offsetLeft - Number.parseFloat(marginLeft)}px`;
-  el.style.top = `${el.offsetTop - Number.parseFloat(marginTop)}px`;
-  el.style.width = width;
-  el.style.height = height;
-}
-
 function dropHandler(event: DragEvent) {
   emit('onColorDrop', event, id.value);
 }
@@ -72,12 +55,22 @@ function dragStartHandler(event: DragEvent, pivotId: PivotId) {
   emit('onColorDragStart', event, pivotId, id.value);
 }
 
-// sortedColorsStore.dragStartHandler({ event: $event, originSchemaId: id, pivotId })
+const sortedColors = computed(() => {
+  return [...scheme.value.colors.entries()].sort((a, b) => {
+    const [, imageColorA] = a;
+    const [, imageColorB] = b;
+
+    const colorA = imageColorA.handpicked ?? imageColorA.original;
+    const colorB = imageColorB.handpicked ?? imageColorB.original;
+
+    return colorB.luminance - colorA.luminance;
+  });
+});
 </script>
 
 <template>
   <div
-    class="color-card group/card p-2 items-stretch auto-rows-[2.5rem] grid gap-1.5 place-items-start grid-cols-[repeat(26,_2.5rem)] w-fit rounded-md hover:shadow-xl shadow-md transition-shadow bg-slate-50 relative group/card"
+    class="color-card p-3 items-stretch auto-rows-[2.5rem] grid gap-1.5 place-items-start grid-cols-[repeat(26,_2.5rem)] w-fit rounded-md hover:shadow-xl shadow-md transition-shadow bg-slate-50 relative group/card"
     @dragover="(e:Event) => e.preventDefault()"
     @drop="dropHandler"
   >
@@ -99,7 +92,7 @@ function dragStartHandler(event: DragEvent, pivotId: PivotId) {
             <NPopconfirm
               class="!font-mono"
               :showIcon="false"
-              :positiveButtonProps="positiveButtonPropsHandler(id)"
+              :positiveButtonProps="positiveButtonPropsHandler('clear')"
               :negativeButtonProps="negativeButtonProps"
               :showArrow="true"
               placement="top"
@@ -138,7 +131,7 @@ function dragStartHandler(event: DragEvent, pivotId: PivotId) {
             <NPopconfirm
               class="!font-mono"
               :showIcon="false"
-              :positiveButtonProps="positiveButtonPropsHandler(id)"
+              :positiveButtonProps="positiveButtonPropsHandler('delete')"
               :negativeButtonProps="negativeButtonProps"
               :showArrow="true"
               placement="top"
@@ -158,7 +151,7 @@ function dragStartHandler(event: DragEvent, pivotId: PivotId) {
           </div>
 
           <div
-            class="w-full h-full absolute top-0 left-0 rounded-md transition-all duration-300 z-0"
+            class="w-full h-full absolute top-0 left-0 rounded-md transition-all ease-linear duration-100 z-0"
             :style="{ backgroundColor: scheme.leadColor.hex }"
           />
         </div>
@@ -179,10 +172,10 @@ function dragStartHandler(event: DragEvent, pivotId: PivotId) {
       v-else
       name="colors-list"
       appear
-      @beforeLeave="beforeLeave"
+      @beforeLeave="beforeLeaveWorkaround"
     >
       <div
-        v-for="[pivotId, color] in scheme.colors"
+        v-for="[pivotId, color] in sortedColors"
         :key="pivotId"
         class="w-10 h-10 rounded border-2 border-black self-center"
         :style="{ backgroundColor: color.handpicked?.hex ?? color.original.hex }"
@@ -203,7 +196,7 @@ function dragStartHandler(event: DragEvent, pivotId: PivotId) {
 .colors-list-enter-from,
 .colors-list-leave-to {
   opacity: 0;
-  transform: scaleX(0%);
+  transform: rotateY(90deg);
 }
 
 .colors-list-leave-active {

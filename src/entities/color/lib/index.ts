@@ -1,5 +1,5 @@
 import ColorThief from 'colorthief';
-import { getBrightness, hslToCss, rgbToHSL, rgbToHex } from '@/shared/lib/color';
+import { getBrightness, getLuminance, hslToCss, rgbToHSL, rgbToHex } from '@/shared/lib/color';
 import type { HSL, RGB } from '@/shared/lib/color';
 
 const colorScrapper = new ColorThief();
@@ -14,6 +14,7 @@ export interface Color {
   rgbArray: RGB;
   hsl: string;
   hslArray: HSL;
+  luminance: number;
   brightness: number;
 }
 
@@ -29,6 +30,7 @@ export function generateColorData(payload: RGB): Color {
   const hex = rgbToHex(rgbArray) as ColorHex;
   const hslArray = rgbToHSL(rgbArray);
   const hsl = hslToCss(hslArray);
+  const luminance = getLuminance(rgbArray);
   const brightness = getBrightness(rgbArray);
 
   return {
@@ -37,6 +39,7 @@ export function generateColorData(payload: RGB): Color {
     rgbArray,
     hsl,
     hslArray,
+    luminance,
     brightness,
   };
 }

@@ -2,6 +2,8 @@ import type { Tuple } from './types';
 
 export type RGB = Tuple<number, 3>;
 export type HSL = Tuple<number, 3>;
+export type XYZ = Tuple<number, 3>;
+export type LAB = Tuple<number, 3>;
 
 interface GenerateColorsBetweenParams {
   startColor: string;
@@ -132,11 +134,48 @@ export function hslToRGB(hsl: HSL): RGB {
   return [r, g, b];
 }
 
+/**
+ * @description я ебал в рот это все еще раз расписывать, читай тут
+ * {@link https://en.wikipedia.org/wiki/SRGB }
+ *  */
+
+export function rgbChannelToSRGB(channelValue: number) {
+  const RATIO = channelValue / 255;
+  const EX = 0.04045;
+  const PHI = 12.92;
+  const ALPHA = 0.055;
+  const GAMMA = 2.4;
+
+  return RATIO < EX ? RATIO / PHI : ((RATIO + ALPHA) / (1 + ALPHA)) ** GAMMA;
+}
+
+export function srgbChannelToRGB(channelValue: number) {
+  const LINEAR_INTENSITY = 0.0031308;
+  const GAMMA = 2.4;
+  const ALPHA = 0.055;
+  const PHI = 12.92;
+
+  return (channelValue > LINEAR_INTENSITY ? (1 + ALPHA) * (channelValue ** (1 / GAMMA)) - ALPHA : PHI * channelValue) * 255;
+}
+
+/**
+ * @description Вычисляем светлоту цвета по формуле L = 0.2126 * R + 0.7152 * G + 0.0722 * B
+ *  */
+export function getLuminance(rgb: RGB): number {
+  const sRGB = [
+    rgbChannelToSRGB(rgb[0]),
+    rgbChannelToSRGB(rgb[1]),
+    rgbChannelToSRGB(rgb[2]),
+  ];
+
+  return 0.2126 * sRGB[0] + 0.7152 * sRGB[1] + 0.0722 * sRGB[2];
+}
+
+/**
+ * @description Вычисляем яркости цвета по формуле Y = (299 R + 587 G + 114 B) / 1000 и нормализуем
+ *  */
 export function getBrightness(rgb: RGB): number {
-  /**
-   * Вычисляем яркость цвета по формуле Y = 0.2126 R + 0.7152 G + 0.0722 B
-   *  */
-  return 0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2];
+  return (299 * rgb[0] + 587 * rgb[1] + 114 * rgb[2]) / 1000 / 255;
 }
 
 export function shadeHexColor(color: string, decimal: number): string {
@@ -150,7 +189,7 @@ export function shadeHexColor(color: string, decimal: number): string {
 }
 
 /**
- * @description Формула относительной яркости.
+ * @description Формула относительной светлоты.
  * @description Y = 0.2126R + 0.7152G + 0.0722B.
  * {@link https://en.wikipedia.org/wiki/Relative_luminance }
  * */
@@ -158,20 +197,149 @@ export function getContrastTextColor(bgColor: string) {
   // Преобразуем hex-строку в RGB-значения
   const rgb = hexToRGB(bgColor);
 
-  const brightness = getBrightness(rgb);
+  const luminance = getLuminance(rgb);
 
   /**
    * Значение 128 соответствует середине диапазона яркости от 0 до 255, где 0 - это абсолютный черный цвет,
    * а 255 - абсолютный белый цвет. Таким образом, если яркость заданного цвета больше 128, то он более светлый,
    * и для контраста с ним следует использовать черный цвет текста.
    * */
-  const BRIGHTNESS_BREAKPOINT = 170;
+  const LUMINANCE_BREAKPOINT = 170;
 
-  return brightness > BRIGHTNESS_BREAKPOINT ? '#000000' : '#FFFFFF';
+  return luminance > LUMINANCE_BREAKPOINT ? '#000000' : '#FFFFFF';
 }
 
 export function generateRandomRgb(): RGB {
   return Array
     .from({ length: 3 })
     .map(() => (Math.floor(Math.random() * (255 + 1)))) as RGB;
+}
+
+export function xyzToD50(xyz: XYZ): XYZ {
+  const [x, y, z] = xyz;
+  return [
+    x * 1.0478112 + y * 0.0228866 + z * -0.050127,
+    x * 0.0295424 + y * 0.9904844 + z * -0.0170491,
+    x * -0.0092345 + y * 0.0150436 + z * 0.7521316,
+  ];
+}
+
+/**
+ * {@description} матрицы тут
+ *
+ * {@link http://www.brucelindbloom.com/index.html?Eqn_RGB_XYZ_Matrix.html}
+ * */
+export function rgbToXyz(rgb: RGB): XYZ {
+  const sRed = rgbChannelToSRGB(rgb[0]);
+  const sGreen = rgbChannelToSRGB(rgb[1]);
+  const sBlue = rgbChannelToSRGB(rgb[2]);
+
+  return xyzToD50([
+    (sRed * 0.4124564 + sGreen * 0.3575761 + sBlue * 0.1804375) * 100,
+    (sRed * 0.2126729 + sGreen * 0.7151522 + sBlue * 0.072175) * 100,
+    (sRed * 0.0193339 + sGreen * 0.119192 + sBlue * 0.9503041) * 100,
+  ]);
+}
+
+/**
+ * {@link http://www.brucelindbloom.com/index.html?Eqn_XYZ_to_Lab.html}
+ *
+ * {@link http://www.brucelindbloom.com/index.html?Eqn_ChromAdapt.html}
+ *  */
+export function xyzToLab(xyz: XYZ): LAB {
+  const [_x, _y, _z] = xyz;
+
+  const e = 216 / 24389;
+  const k = 24389 / 27;
+
+  /* D50 */
+  let x = _x / 96.422;
+  let y = _y / 100;
+  let z = _z / 82.521;
+
+  x = x > e ? Math.cbrt(x) : (k * x + 16) / 116;
+  y = y > e ? Math.cbrt(y) : (k * y + 16) / 116;
+  z = z > e ? Math.cbrt(z) : (k * z + 16) / 116;
+
+  return [
+    116 * y - 16,
+    500 * (x - y),
+    200 * (y - z),
+  ];
+}
+
+export function getDeltaE00(color1: LAB, color2: LAB) {
+  const [l1, a1, b1] = color1;
+  const [l2, a2, b2] = color2;
+
+  const rad2deg = 180 / Math.PI;
+  const deg2rad = Math.PI / 180;
+
+  // dc -> delta c;
+  // ml -> median l;
+  const c1 = (a1 ** 2 + b1 ** 2) ** 0.5;
+  const c2 = (a2 ** 2 + b2 ** 2) ** 0.5;
+  const mc = (c1 + c2) / 2;
+  const ml = (l1 + l2) / 2;
+
+  // reuse
+  const c7 = mc ** 7;
+  const g = 0.5 * (1 - (c7 / (c7 + 25 ** 7)) ** 0.5);
+
+  const a11 = a1 * (1 + g);
+  const a22 = a2 * (1 + g);
+
+  const c11 = (a11 ** 2 + b1 ** 2) ** 0.5;
+  const c22 = (a22 ** 2 + b2 ** 2) ** 0.5;
+  const mc1 = (c11 + c22) / 2;
+
+  let h1 = a11 === 0 && b1 === 0 ? 0 : Math.atan2(b1, a11) * rad2deg;
+  let h2 = a22 === 0 && b2 === 0 ? 0 : Math.atan2(b2, a22) * rad2deg;
+
+  if (h1 < 0) h1 += 360;
+  if (h2 < 0) h2 += 360;
+
+  let dh = h2 - h1;
+  const dhAbs = Math.abs(h2 - h1);
+
+  if (dhAbs > 180 && h2 <= h1) {
+    dh += 360;
+  } else if (dhAbs > 180 && h2 > h1) {
+    dh -= 360;
+  }
+
+  let H = h1 + h2;
+
+  if (dhAbs <= 180) {
+    H /= 2;
+  } else {
+    H = (h1 + h2 < 360 ? H + 360 : H - 360) / 2;
+  }
+
+  const T
+    = 1
+    - 0.17 * Math.cos(deg2rad * (H - 30))
+    + 0.24 * Math.cos(deg2rad * 2 * H)
+    + 0.32 * Math.cos(deg2rad * (3 * H + 6))
+    - 0.2 * Math.cos(deg2rad * (4 * H - 63));
+
+  const dL = l2 - l1;
+  const dC = c22 - c11;
+  const dH = 2 * Math.sin((deg2rad * dh) / 2) * (c11 * c22) ** 0.5;
+
+  const sL = 1 + (0.015 * (ml - 50) ** 2) / (20 + (ml - 50) ** 2) ** 0.5;
+  const sC = 1 + 0.045 * mc1;
+  const sH = 1 + 0.015 * mc1 * T;
+
+  const dTheta = 30 * Math.exp(-1 * ((H - 275) / 25) ** 2);
+  const Rc = 2 * (c7 / (c7 + 25 ** 7)) ** 0.5;
+  const Rt = -Rc * Math.sin(deg2rad * 2 * dTheta);
+
+  return (
+    ((dL / sL) ** 2
+      + (dC / sC) ** 2
+      + (dH / sH) ** 2
+      + (Rt * dC * dH) / (sC * sH))
+    ** 0.5
+  );
 }

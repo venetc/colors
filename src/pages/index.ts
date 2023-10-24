@@ -3,6 +3,7 @@ import { defineAsyncComponent } from 'vue';
 import { storeToRefs } from 'pinia';
 import { ColorsPageHeader } from './colors';
 import { SortPageHeader } from './sort';
+import { useColorsStore } from '@/entities/color';
 import { useImagesStore } from '@/entities/image';
 
 export const routes: Array<RouteRecordRaw> = [
@@ -36,6 +37,12 @@ export const routes: Array<RouteRecordRaw> = [
     components: {
       default: () => import(/* webpackChunkName: "SortColorsPage" */'./sort'),
       header: () => import(/* webpackChunkName: "SortPageHeader" */'../widgets/header'),
+    },
+    beforeEnter: () => {
+      const colorsStore = useColorsStore();
+      const { colors } = storeToRefs(colorsStore);
+
+      if (colors.value.size < 1) return { path: '/' };
     },
     props: {
       header: { content: SortPageHeader },

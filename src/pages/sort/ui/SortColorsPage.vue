@@ -1,70 +1,32 @@
 <script setup lang="ts">
-import { Plus, Trash2 } from 'lucide-vue-next';
-import { NButton, NIcon } from 'naive-ui';
+import { Group, Plus, RotateCcw, Sparkles, Ungroup } from 'lucide-vue-next';
 import { storeToRefs } from 'pinia';
-import { onMounted } from 'vue';
+import { computed, onBeforeMount, onMounted, ref } from 'vue';
+import { NButton } from 'naive-ui';
 import GroupCard from './ColorsGroupCard.vue';
-import { generatePivotId, useSortedColorsStore } from '@/features/color/sort-colors';
+import { ColorGroupsList, ColorsList } from './organisms';
+import { beforeLeaveWorkaround } from '@/shared/lib/crutch';
+import { useSortedColorsStore } from '@/features/color/sort-colors';
 import type { ColorHex } from '@/entities/color';
 import { useColorsStore } from '@/entities/color';
 import type { SchemeId } from '@/features/color/sort-colors';
 
 import {
-  generateColorsBetween,
   getBrightness,
+  getLuminance,
   hexToRGB,
   hslToCss,
   rgbToCss,
   rgbToHSL,
-  shadeHexColor,
 } from '@/shared/lib/color';
 
+const colorsStore = useColorsStore();
 const sortedColorsStore = useSortedColorsStore();
 
 const { colorSchemes } = storeToRefs(sortedColorsStore);
-
-const colorsStore = useColorsStore();
 const { colors } = storeToRefs(colorsStore);
 
 const isDev = import.meta.env.DEV;
-
-const SHADES_COUNT = 10;
-
-function createBoxShadowLine(result: string, colors: string, index: number, array: string[]) {
-  result += `0px 0px 0px ${index}px ${colors}`;
-
-  if (index !== array.length - 1) result += ', ';
-
-  return result;
-}
-
-// @ts-expect-error TEMP
-function generateBoxShadow(centerColor: string): string {
-  const DARKEST = shadeHexColor(centerColor, 1.05);
-  const range = generateColorsBetween({
-    startColor: centerColor,
-    endColor: DARKEST,
-    count: SHADES_COUNT,
-  });
-
-  return range.reduce(createBoxShadowLine, '');
-}
-
-function beforeLeave(el: Element) {
-  /* TODO костыль, убрать */
-  if (!(el instanceof HTMLElement)) return;
-  const {
-    marginLeft,
-    marginTop,
-    width,
-    height,
-  } = window.getComputedStyle(el);
-
-  el.style.left = `${el.offsetLeft - Number.parseFloat(marginLeft)}px`;
-  el.style.top = `${el.offsetTop - Number.parseFloat(marginTop)}px`;
-  el.style.width = width;
-  el.style.height = height;
-}
 
 const _newScheme = [{
   title: 'Add new group',
@@ -79,19 +41,38 @@ function leadColorChangeHandler(hex: ColorHex, id: SchemeId) {
   const rgb = rgbToCss(rgbArray);
   const hslArray = rgbToHSL(rgbArray);
   const hsl = hslToCss(hslArray);
+  const luminance = getLuminance(rgbArray);
   const brightness = getBrightness(rgbArray);
 
   targetScheme.leadColor = {
     hex,
-    brightness,
+    luminance,
     hsl,
     rgb,
     rgbArray,
     hslArray,
+    brightness,
   };
 }
 
 onMounted(sortedColorsStore.invalidateSchemes);
+
+onBeforeMount(() => {
+  if (colorSchemes.value.size > 0) return;
+
+  for (let i = 0; i < 2; i++) {
+    sortedColorsStore.addColorScheme();
+  }
+});
+
+const showGroups = ref(true);
+const showGroupsIcon = computed(() => {
+  return showGroups.value ? Ungroup : Group;
+});
+
+function colorsViewToggleHandler() {
+  showGroups.value = !showGroups.value;
+}
 </script>
 
 <template>
@@ -99,63 +80,89 @@ onMounted(sortedColorsStore.invalidateSchemes);
     v-if="isDev"
     class="pt-5"
   >
-    <div class="flex flex-row font-mono w-full items-center pb-4">
-      <div class="w-2/12 mr-1">
-        111
-      </div>
-      <div class="w-10/12 ml-1 px-6 gap-3 flex flex-nowrap">
+    <div class="flex flex-row font-mono w-full items-center">
+      <div class="w-f flex flex-nowrap gap-3 mr-1">
         <NButton
-          strong
-          secondary
-          circle
-          type="error"
-          @click="colorSchemes.clear()"
+          size="small"
+          type="info"
+          class="!font-mono"
+          @click="colorsViewToggleHandler"
         >
           <template #icon>
-            <NIcon>
-              <Trash2 />
-            </NIcon>
+            <Transition
+              name="fade"
+              mode="out-in"
+            >
+              <component :is="showGroupsIcon" />
+            </Transition>
+          </template>
+          <template #default>
+            <Transition
+              name="fade"
+              mode="out-in"
+            >
+              <span v-if="showGroups">Split</span>
+              <span v-else>Group</span>
+            </Transition>
+          </template>
+        </NButton>
+        <NButton
+          size="small"
+          type="error"
+          class="!font-mono"
+          @click="sortedColorsStore.resetSorting"
+        >
+          <template #icon>
+            <RotateCcw />
+          </template>
+          <template #default>
+            Reset
+          </template>
+        </NButton>
+        <NButton
+          size="small"
+          type="success"
+          class="!font-mono"
+          @click="sortedColorsStore.autoSort"
+        >
+          <template #icon>
+            <Sparkles />
+          </template>
+          <template #default>
+            Autosort
           </template>
         </NButton>
       </div>
     </div>
-    <div class="flex flex-row justify-between font-mono text-xs overflow-hidden h-full max-h-[calc(100vh-120px)]">
+    <div class="flex flex-row justify-between font-mono text-xs h-full max-h-[calc(100vh-120px)]">
       <div
-        class="custom-scroll w-fit overflow-auto rounded-xl border-cyan pb-10 scroll-space"
+        class="custom-scroll pt-5 w-fit overflow-auto rounded-xl border-cyan scroll-space"
         dir="rtl"
         @dragover="(e:Event) => e.preventDefault()"
         @drop="sortedColorsStore.dropHandler({ event: $event })"
       >
-        <div
-          dir="ltr"
-          class="py-3.5 pl-7 pr-3.5 grid gap-3.5"
+        <Transition
+          name="fade"
+          mode="out-in"
         >
-          <div
-            v-for="[imageId, colorCollection] in colors"
-            :key="imageId"
-            class="shadow-md rounded-md p-2 grid gap-1.5 place-items-start grid-cols-[repeat(2,_2.5rem)] w-fit"
-          >
-            <div
-              v-for="(imageColor, index) in colorCollection"
-              :key="`${imageColor.imageId}_${imageColor.original.hex}`"
-              class="w-10 h-10 rounded border-2 border-black"
-              draggable="true"
-              :style="{ backgroundColor: imageColor.handpicked?.hex ?? imageColor.original.hex }"
-              @dragstart="sortedColorsStore.dragStartHandler({ event: $event, pivotId: generatePivotId(imageId, index, imageColor) })"
-            >
-              {{ imageColor.isSorted ? 'S' : null }}
-            </div>
-          </div>
-        </div>
+          <ColorGroupsList
+            v-if="showGroups"
+            :colors="colors"
+          />
+          <ColorsList
+            v-else
+            :colors="colors"
+          />
+        </Transition>
       </div>
       <div
-        class="custom-scroll overflow-auto rounded-xl border-cyan pb-10 scroll-space"
+        class="custom-scroll pt-5 overflow-auto rounded-xl border-cyan scroll-space"
         dir="ltr"
       >
-        <div class="cards-container py-3.5 pr-7 pl-3.5 flex flex-col items-center gap-3.5 relative">
+        <div class="cards-container pb-3.5 pr-7 flex flex-col items-center gap-5 relative">
           <TransitionGroup
             name="cards-list"
-            @beforeLeave="beforeLeave"
+            @beforeLeave="beforeLeaveWorkaround"
           >
             <GroupCard
               v-for="[id, scheme] in colorSchemes"
@@ -164,8 +171,9 @@ onMounted(sortedColorsStore.invalidateSchemes);
               :scheme="scheme"
               @onColorDrop="(event, targetSchemaId) => sortedColorsStore.dropHandler({ event, targetSchemaId })"
               @onColorDragStart="(event, pivotId, originSchemaId) => sortedColorsStore.dragStartHandler({ originSchemaId, pivotId, event })"
-              @onDelete="sortedColorsStore.deleteColorSchemeByToken"
-              @onColorPick=" leadColorChangeHandler($event, id)"
+              @onDelete="sortedColorsStore.deleteColorSchemeById"
+              @onLeadColorPick=" leadColorChangeHandler($event, id)"
+              @onClear="sortedColorsStore.clearColorSchemeById"
             />
 
             <div

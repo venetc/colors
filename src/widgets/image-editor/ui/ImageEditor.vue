@@ -6,6 +6,7 @@ import { Crop, Lasso, Redo2, RotateCcw, Scaling, Undo2, X } from 'lucide-vue-nex
 
 import { useImageEditorStore } from '../model';
 import { useEditColors } from '@/features/color/edit-colors';
+import type { Color } from '@/entities/color';
 import { ColorsEditor, useColorsStore } from '@/entities/color';
 import type { ExposedCropperData } from '@/features/image/crop-image';
 import {
@@ -55,6 +56,18 @@ const hasSomeColors = computed(() => {
 
   return amountOfColors(image.id) > 0;
 });
+
+function colorPickHandler(newColor: Color, indexKey: number) {
+  if (!activeImage.value) return;
+  editColorsModel.handpickColor(newColor, indexKey, activeImage.value.id);
+}
+
+function colorsResetHandler() {
+  if (!activeImage.value) return;
+  if (activeImage.value.croppedSrc) return;
+
+  editColorsModel.readColorsFromImage(activeImage.value.id);
+}
 </script>
 
 <template>
@@ -139,7 +152,7 @@ const hasSomeColors = computed(() => {
             type="error"
             class="!font-mono"
             size="tiny"
-            @click="setImageCroppedSrc(null); cropper.reset()"
+            @click=" colorsResetHandler(); setImageCroppedSrc(null); cropper.reset()"
           >
             <span class="px-1.5">
               <RotateCcw :size="16" />
@@ -155,7 +168,7 @@ const hasSomeColors = computed(() => {
             compact
             :colors="editColorsModel.getColorsByImageId(activeImage.id)"
             @onDelete="editColorsModel.removeColor(activeImage.id, $event)"
-            @onColorPick="editColorsModel.handpickColor"
+            @onColorPick="colorPickHandler"
             @onResetHandpicked="editColorsModel.clearHandpickedColor"
           />
         </div>

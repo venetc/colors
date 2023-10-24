@@ -1,15 +1,14 @@
 import type { PivotId } from './model';
-import type { ColorHex, ImageColor } from '@/entities/color';
 import type { ImageId } from '@/entities/image';
 
-export function generatePivotId(imageId: ImageId, index: number, imageColor: ImageColor): PivotId {
-  return `${imageId}__${index}__${imageColor.original.hex}`;
+export function generatePivotId(imageId: ImageId, index: number): PivotId {
+  return `${imageId}__${index}`;
 }
 
 export function readPivotId(pivotId: PivotId) {
-  const [imageId, index, colorHex] = pivotId.split('__') as [ImageId, string, ColorHex];
+  const [imageId, index] = pivotId.split('__') as [ImageId, string];
 
   const colorIndex = +index;
 
-  return { imageId, colorIndex, colorHex };
+  return { imageId, colorIndex };
 }

@@ -10,11 +10,20 @@ export interface CoreImageProps {
   id: ImageId;
 }
 
-export type ImageFromFile = CoreImageProps & { origin: 'file'; fileName: string };
-export type ImageFromLink = CoreImageProps & { origin: 'link'; originalSrc: string };
+export type ImageFromFile = CoreImageProps & {
+  origin: 'file';
+  fileName: string;
+};
+export type ImageFromLink = CoreImageProps & {
+  origin: 'link';
+  originalSrc: string;
+};
 export type Img = ImageFromFile | ImageFromLink;
 export type BlobCache = Map<string, string>;
-export type BlobCacheItem = File | { blobSrc: string; originSrc: string };
+export type BlobCacheItem = File | {
+  blobSrc: string;
+  originSrc: string;
+};
 
 export const useImagesStore = defineStore('Entities/Image', () => {
   const downloadOrigin = ref<'images' | 'txt' | 'links' | undefined>();
@@ -66,6 +75,9 @@ export const useImagesStore = defineStore('Entities/Image', () => {
     cache.value.forEach(URL.revokeObjectURL);
     cache.value.clear();
   };
+  const getImageById = (imageId: ImageId) => {
+    return images.value.get(imageId);
+  };
 
   return {
     images,
@@ -76,5 +88,6 @@ export const useImagesStore = defineStore('Entities/Image', () => {
     addBlobToCache,
     removeBlobFromCache,
     clearCache,
+    getImageById,
   };
 });
