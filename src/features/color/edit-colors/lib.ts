@@ -19,5 +19,6 @@ export function _appendBlankHandpickedColor(color: Color, imageId: ImageId): Ima
     isSorted: false,
     original: color,
     handpicked: null,
+    schemeId: null,
   };
 }

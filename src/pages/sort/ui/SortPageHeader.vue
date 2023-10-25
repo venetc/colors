@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { MoveLeft } from 'lucide-vue-next';
+import { MoveLeft, MoveRight } from 'lucide-vue-next';
 import { NButton } from 'naive-ui';
 </script>
 
@@ -17,6 +17,29 @@ import { NButton } from 'naive-ui';
       >
         <template #icon>
           <MoveLeft />
+        </template>
+      </NButton>
+    </RouterLink>
+
+    <div class="select-none font-mono">
+      Drag&Drop color cells in and out of groups.
+    </div>
+
+    <RouterLink
+      v-slot="{ navigate }"
+      :to="{ name: 'Sort' }"
+      custom
+    >
+      <NButton
+        size="medium"
+        text
+        class="!font-mono"
+        iconPlacement="right"
+        @click="navigate"
+      >
+        Get your data!
+        <template #icon>
+          <MoveRight />
         </template>
       </NButton>
     </RouterLink>

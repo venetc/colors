@@ -159,7 +159,11 @@ export function srgbChannelToRGB(channelValue: number) {
 }
 
 /**
- * @description Вычисляем светлоту цвета по формуле L = 0.2126 * R + 0.7152 * G + 0.0722 * B
+ * @description Вычисляем светлоту цвета по формуле
+ *
+ * @description Y = 0.2126R + 0.7152G + 0.0722B.
+ *
+ * {@link https://en.wikipedia.org/wiki/Relative_luminance }
  *  */
 export function getLuminance(rgb: RGB): number {
   const sRGB = [
@@ -192,19 +196,13 @@ export function shadeHexColor(color: string, decimal: number): string {
  * @description Формула относительной светлоты.
  * @description Y = 0.2126R + 0.7152G + 0.0722B.
  * {@link https://en.wikipedia.org/wiki/Relative_luminance }
+ *
+ * @description Значение 0.5 соответствует середине диапазона светлоты от 0 до 1, где 0 - это абсолютный черный цвет, а 1 - абсолютный белый цвет. Таким образом, если светлота заданного цвета больше 0.5, то он более светлый, и для контраста с ним следует использовать черный цвет текста.
  * */
-export function getContrastTextColor(bgColor: string) {
-  // Преобразуем hex-строку в RGB-значения
-  const rgb = hexToRGB(bgColor);
+export function getContrastTextColor(bgColor: RGB) {
+  const luminance = getLuminance(bgColor);
 
-  const luminance = getLuminance(rgb);
-
-  /**
-   * Значение 128 соответствует середине диапазона яркости от 0 до 255, где 0 - это абсолютный черный цвет,
-   * а 255 - абсолютный белый цвет. Таким образом, если яркость заданного цвета больше 128, то он более светлый,
-   * и для контраста с ним следует использовать черный цвет текста.
-   * */
-  const LUMINANCE_BREAKPOINT = 170;
+  const LUMINANCE_BREAKPOINT = 0.5;
 
   return luminance > LUMINANCE_BREAKPOINT ? '#000000' : '#FFFFFF';
 }
@@ -268,6 +266,10 @@ export function xyzToLab(xyz: XYZ): LAB {
   ];
 }
 
+/**
+ * {@link https://zschuessler.github.io/DeltaE/learn/#toc-delta-e-2000}
+ *  */
+
 export function getDeltaE00(color1: LAB, color2: LAB) {
   const [l1, a1, b1] = color1;
   const [l2, a2, b2] = color2;
@@ -275,8 +277,6 @@ export function getDeltaE00(color1: LAB, color2: LAB) {
   const rad2deg = 180 / Math.PI;
   const deg2rad = Math.PI / 180;
 
-  // dc -> delta c;
-  // ml -> median l;
   const c1 = (a1 ** 2 + b1 ** 2) ** 0.5;
   const c2 = (a2 ** 2 + b2 ** 2) ** 0.5;
   const mc = (c1 + c2) / 2;

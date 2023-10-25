@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { computed, nextTick, ref, toRefs, watch } from 'vue';
+import { computed, nextTick, onMounted, ref, toRefs, watch } from 'vue';
 import { useElementVisibility } from '@vueuse/core';
 import { NSkeleton } from 'naive-ui';
 import { type Img } from '../model';
 
 const props = defineProps<{ image: Img }>();
 const emit = defineEmits<{
-  onLoad: [image: Img];
+  onLoad: [imageElement: HTMLImageElement | undefined];
 }>();
 
 const { image } = toRefs(props);
@@ -29,12 +29,8 @@ function loadImage() {
 
   img.onload = () => {
     _imageSrc.value = img.src;
-
+    img.remove();
     isLoading.value = false;
-    emit('onLoad', image.value);
-    /* ??? */
-    img.removeAttribute('src');
-    /* ??? */
   };
 
   img.src = targetSrc.value;
@@ -47,7 +43,13 @@ const unwatchInitialVisibility = watch(targetIsVisible, (isVisible) => {
   unwatchInitialVisibility();
 });
 
-watch(targetSrc, () => nextTick(loadImage));
+onMounted(() => {
+  watch(targetSrc, () => nextTick(loadImage));
+});
+
+function loadHandler() {
+  emit('onLoad', imageRef.value);
+}
 </script>
 
 <template>
@@ -69,6 +71,9 @@ watch(targetSrc, () => nextTick(loadImage));
       crossorigin="anonymous"
       height="320"
       class="absolute w-full h-full object-cover"
+      loading="lazy"
+      decoding="async"
+      @load="loadHandler"
     >
   </div>
 </template>

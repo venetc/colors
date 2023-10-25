@@ -33,7 +33,7 @@ const flatColors = computed(() => {
 <template>
   <div
     dir="ltr"
-    class="pb-3.5 pl-9 pt-4 pr-3.5 grid gap-1.5 place-items-start grid-cols-[repeat(2,_2.5rem)]"
+    class="pb-3.5 pl-9 pt-4 pr-3.5 grid gap-1.5 place-items-start grid-cols-[repeat(2,_2.5rem)] 2xl:grid-cols-[repeat(2,_2.5rem)] xl:grid-cols-[repeat(2,_2rem)] lg:grid-cols-[repeat(2,_1.5rem)]"
   >
     <ColorGroupCell
       v-for="[imageId, colorIndex, imageColor] in flatColors"

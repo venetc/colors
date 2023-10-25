@@ -26,8 +26,6 @@ const sortedColorsStore = useSortedColorsStore();
 const { colorSchemes } = storeToRefs(sortedColorsStore);
 const { colors } = storeToRefs(colorsStore);
 
-const isDev = import.meta.env.DEV;
-
 const _newScheme = [{
   title: 'Add new group',
   handler: sortedColorsStore.addColorScheme,
@@ -60,7 +58,7 @@ onMounted(sortedColorsStore.invalidateSchemes);
 onBeforeMount(() => {
   if (colorSchemes.value.size > 0) return;
 
-  for (let i = 0; i < 2; i++) {
+  for (let i = 0; i < 3; i++) {
     sortedColorsStore.addColorScheme();
   }
 });
@@ -76,67 +74,14 @@ function colorsViewToggleHandler() {
 </script>
 
 <template>
-  <section
-    v-if="isDev"
-    class="pt-5"
-  >
-    <div class="flex flex-row font-mono w-full items-center">
-      <div class="w-f flex flex-nowrap gap-3 mr-1">
-        <NButton
-          size="small"
-          type="info"
-          class="!font-mono"
-          @click="colorsViewToggleHandler"
-        >
-          <template #icon>
-            <Transition
-              name="fade"
-              mode="out-in"
-            >
-              <component :is="showGroupsIcon" />
-            </Transition>
-          </template>
-          <template #default>
-            <Transition
-              name="fade"
-              mode="out-in"
-            >
-              <span v-if="showGroups">Split</span>
-              <span v-else>Group</span>
-            </Transition>
-          </template>
-        </NButton>
-        <NButton
-          size="small"
-          type="error"
-          class="!font-mono"
-          @click="sortedColorsStore.resetSorting"
-        >
-          <template #icon>
-            <RotateCcw />
-          </template>
-          <template #default>
-            Reset
-          </template>
-        </NButton>
-        <NButton
-          size="small"
-          type="success"
-          class="!font-mono"
-          @click="sortedColorsStore.autoSort"
-        >
-          <template #icon>
-            <Sparkles />
-          </template>
-          <template #default>
-            Autosort
-          </template>
-        </NButton>
-      </div>
-    </div>
-    <div class="flex flex-row justify-between font-mono text-xs h-full max-h-[calc(100vh-120px)]">
+  <section class="flex flex-col justify-between">
+    <div
+      class="flex flex-row justify-between font-mono text-xs h-full max-h-[calc(100vh-40px)]"
+      @dragover="(e:Event) => e.preventDefault()"
+      @drop.self="sortedColorsStore.dropHandler({ event: $event })"
+    >
       <div
-        class="custom-scroll pt-5 w-fit overflow-auto rounded-xl border-cyan scroll-space"
+        class="custom-scroll will-change-transform pt-5 w-fit overflow-auto rounded-xl border-cyan scroll-space"
         dir="rtl"
         @dragover="(e:Event) => e.preventDefault()"
         @drop="sortedColorsStore.dropHandler({ event: $event })"
@@ -156,10 +101,10 @@ function colorsViewToggleHandler() {
         </Transition>
       </div>
       <div
-        class="custom-scroll pt-5 overflow-auto rounded-xl border-cyan scroll-space"
+        class="custom-scroll will-change-transform pt-5 overflow-auto rounded-xl border-cyan scroll-space"
         dir="ltr"
       >
-        <div class="cards-container pb-3.5 pr-7 flex flex-col items-center gap-5 relative">
+        <div class="cards-container pb-16 pr-7 flex flex-col items-center gap-5 relative">
           <TransitionGroup
             name="cards-list"
             @beforeLeave="beforeLeaveWorkaround"
@@ -179,7 +124,7 @@ function colorsViewToggleHandler() {
             <div
               v-for="cta in _newScheme"
               :key="cta.title"
-              class="cursor-pointer p-2 auto-rows-[2.5rem] grid gap-1.5 justify-items-center items-center grid-cols-[repeat(26,_2.5rem)] border-2 border-dashed w-full transition-all rounded-md text-[rgba(32,_128,_240,_0.15)] hover:text-[rgba(32,_128,_240,_0.25)] active:text-[rgba(32,_128,_240,_0.5)] border-[rgba(32,_128,_240,_0.15)] hover:border-[rgba(32,_128,_240,_0.25)] active:border-[rgba(32,_128,_240,_0.5)]"
+              class="cursor-pointer p-2 auto-rows-[2.5rem] 2xl:auto-rows-[2.5rem] xl:auto-rows-[2rem] lg:auto-rows-[1.5rem] grid gap-1.5 justify-items-center items-center grid-cols-[repeat(26,_2.5rem)] 2xl:grid-cols-[repeat(26,_2.5rem)] xl:grid-cols-[repeat(26,_2rem)] lg:grid-cols-[repeat(26,_1.5rem)] border-2  border-dashed w-full transition-all rounded-md text-[rgba(32,_128,_240,_0.15)] hover:text-[rgba(32,_128,_240,_0.25)] active:text-[rgba(32,_128,_240,_0.5)] border-[rgba(32,_128,_240,_0.15)] hover:border-[rgba(32,_128,_240,_0.25)] active:border-[rgba(32,_128,_240,_0.5)]"
               @click="cta.handler"
             >
               <Plus
@@ -191,12 +136,60 @@ function colorsViewToggleHandler() {
         </div>
       </div>
     </div>
-  </section>
-  <section
-    v-else
-    class="flex items-center justify-center font-mono text-3xl"
-  >
-    <div>¯\_(ツ)_/¯</div>
+    <div
+      class="p-2 flex flex-nowrap items-center justify-center gap-3 rounded-md shadow-md bg-slate-100 fixed z-20 font-mono bottom-3 left-1/2 -translate-x-1/2"
+    >
+      <NButton
+        size="small"
+        type="info"
+        class="!font-mono"
+        @click="colorsViewToggleHandler"
+      >
+        <template #icon>
+          <Transition
+            name="fade"
+            mode="out-in"
+          >
+            <component :is="showGroupsIcon" />
+          </Transition>
+        </template>
+        <template #default>
+          <Transition
+            name="fade"
+            mode="out-in"
+          >
+            <span v-if="showGroups">Split</span>
+            <span v-else>Group</span>
+          </Transition>
+        </template>
+      </NButton>
+      <NButton
+        size="small"
+        type="error"
+        class="!font-mono"
+        @click="sortedColorsStore.resetSorting"
+      >
+        <template #icon>
+          <RotateCcw />
+        </template>
+        <template #default>
+          Reset
+        </template>
+      </NButton>
+      <NButton
+        size="small"
+        type="success"
+        class="!font-mono"
+        @click="sortedColorsStore.autoSort"
+      >
+        <template #icon>
+          <Sparkles />
+        </template>
+        <template #default>
+          AutoSort
+        </template>
+      </NButton>
+    </div>
   </section>
 </template>
 

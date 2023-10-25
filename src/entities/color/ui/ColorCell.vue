@@ -9,13 +9,13 @@ const { color } = toRefs(props);
 <template>
   <div class="w-full h-full relative group/cell cursor-pointer">
     <div
-      class="border-black border-2 border-opacity-100 absolute w-full h-full top-0 left-0 rounded transition-all"
+      class="border-black border-2 2xl:border-2 xl:border-2 lg:border border-opacity-100 absolute w-full h-full top-0 left-0 rounded transition-all"
       :class="{ 'group-hover/cell:-translate-y-1 group-hover/cell:-translate-x-1': color.handpicked }"
       :style="{ backgroundColor: color.original.hex }"
     />
 
     <div
-      class="border-black border-2 border-opacity-100 absolute w-full h-full top-0 left-0 rounded transition-all"
+      class="border-black border-2 2xl:border-2 xl:border-2 lg:border border-opacity-100 absolute w-full h-full top-0 left-0 rounded transition-all"
       :class="{ 'group-hover/cell:translate-y-1 group-hover/cell:translate-x-1': color.handpicked }"
       :style="{ backgroundColor: color.handpicked ? color.handpicked.hex : 'transparent' }"
     />

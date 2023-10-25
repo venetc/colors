@@ -11,7 +11,7 @@ const { colors } = toRefs(props);
 <template>
   <div
     dir="ltr"
-    class="pb-3.5 pl-7 pr-3.5 grid gap-5"
+    class="pb-16 pl-7 pr-3.5 grid gap-5"
   >
     <ColorGroup
       v-for="[imageId, colorCollection] in colors"

@@ -21,10 +21,7 @@ const emit = defineEmits<{
   onColorDragStart: [event: DragEvent, pivotId: PivotId, id: SchemeId];
 }>();
 
-const {
-  id,
-  scheme,
-} = toRefs(props);
+const { id, scheme } = toRefs(props);
 
 function positiveButtonPropsHandler(mode: 'delete' | 'clear'): ButtonProps {
   return {
@@ -70,7 +67,7 @@ const sortedColors = computed(() => {
 
 <template>
   <div
-    class="color-card p-3 items-stretch auto-rows-[2.5rem] grid gap-1.5 place-items-start grid-cols-[repeat(26,_2.5rem)] w-fit rounded-md hover:shadow-xl shadow-md transition-shadow bg-slate-50 relative group/card"
+    class="color-card p-3 items-stretch auto-rows-[2.5rem] 2xl:auto-rows-[2.5rem] xl:auto-rows-[2rem] lg:auto-rows-[1.5rem] grid gap-1.5 place-items-start w-fit rounded-md hover:shadow-xl shadow-md transition-shadow bg-slate-50 relative group/card 2xl:grid-cols-[repeat(26,_2.5rem)] xl:grid-cols-[repeat(26,_2rem)] lg:grid-cols-[repeat(26,_1.5rem)] grid-cols-[repeat(26,_2.5rem)]"
     @dragover="(e:Event) => e.preventDefault()"
     @drop="dropHandler"
   >
@@ -81,7 +78,7 @@ const sortedColors = computed(() => {
         <div class="w-full h-full rounded-xl border relative p-2 grid place-items-center">
           <div
             class="relative z-10 text-xl select-none"
-            :style="{ color: getContrastTextColor(scheme.leadColor.hex) }"
+            :style="{ color: getContrastTextColor(scheme.leadColor.rgbArray) }"
           >
             {{ scheme.leadColor.hex }}
           </div>
@@ -162,7 +159,7 @@ const sortedColors = computed(() => {
       v-if="!scheme.colors.size"
       class="flex flex-col items-center justify-center gap-1 text-xl text-slate-400 transition-all col-[1_/_span_20] row-span-3 w-full border-2 border-dashed rounded-md border-slate-300 opacity-0 hover:opacity-100"
     >
-      <div>
+      <div class="select-none">
         Drag and drop colors here
       </div>
       <Download :size="26" />
@@ -177,7 +174,7 @@ const sortedColors = computed(() => {
       <div
         v-for="[pivotId, color] in sortedColors"
         :key="pivotId"
-        class="w-10 h-10 rounded border-2 border-black self-center"
+        class="w-10 h-10 2xl:w-10 2xl:h-10 xl:w-8 xl:h-8 lg:w-6 lg:h-6 rounded border-2 2xl:border-2 xl:border-2 lg:border border-black self-center"
         :style="{ backgroundColor: color.handpicked?.hex ?? color.original.hex }"
         draggable="true"
         @dragstart="dragStartHandler($event, pivotId)"

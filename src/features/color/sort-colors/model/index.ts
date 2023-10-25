@@ -3,7 +3,6 @@ import { nextTick, ref } from 'vue';
 import { generatePivotId, readPivotId } from '@/features/color/sort-colors';
 import { useColorsStore } from '@/entities/color';
 import type { ImageId } from '@/entities/image';
-import type { LAB } from '@/shared/lib/color';
 import {
   generateRandomRgb,
   getBrightness,
@@ -62,6 +61,7 @@ export const useSortedColorsStore = defineStore('SortedColorsStore', () => {
       if (!color) return;
 
       color.isSorted = false;
+      color.schemeId = null;
     });
 
     targetScheme.colors.clear();
@@ -113,11 +113,12 @@ export const useSortedColorsStore = defineStore('SortedColorsStore', () => {
     colorSchemes.value.delete(id);
   };
 
-  const dragStartHandler = async ({
-    event,
-    pivotId,
-    originSchemaId,
-  }: DragStartPayload) => {
+  const dragStartHandler = async (args: DragStartPayload) => {
+    const {
+      event,
+      pivotId,
+      originSchemaId,
+    } = args;
     await nextTick();
     if (!event.dataTransfer) return;
 
@@ -133,71 +134,81 @@ export const useSortedColorsStore = defineStore('SortedColorsStore', () => {
 
     event.dataTransfer.setData('text/plain', JSON.stringify(payload));
   };
-  const dropHandler = async ({
-    event,
-    targetSchemaId,
-  }: DropPayload) => {
+
+  const dropHandler = async (args: DropPayload) => {
+    const {
+      event,
+      targetSchemaId,
+    } = args;
     await nextTick();
 
     if (!event.dataTransfer) return;
 
-    const colorTransferData = JSON.parse(event.dataTransfer.getData('text')) as {
-      pivotId: PivotId;
-      originSchemaId: SchemeId | null;
-    };
+    try {
+      const colorTransferData = JSON.parse(event.dataTransfer.getData('text')) as {
+        pivotId: PivotId;
+        originSchemaId: SchemeId | null;
+      };
 
-    const {
-      pivotId,
-      originSchemaId,
-    } = colorTransferData;
+      const {
+        pivotId,
+        originSchemaId,
+      } = colorTransferData;
 
-    if (targetSchemaId === originSchemaId) return;
+      if (targetSchemaId === originSchemaId) return;
 
-    const {
-      imageId,
-      colorIndex: i,
-    } = readPivotId(pivotId);
+      const {
+        imageId,
+        colorIndex: i,
+      } = readPivotId(pivotId);
 
-    const index = +i;
+      const index = +i;
 
-    const imageColor = colors.value.get(imageId);
-    if (!imageColor) return;
+      const imageColor = colors.value.get(imageId);
+      if (!imageColor) return;
 
-    const targetColor = imageColor.get(index);
-    if (!targetColor) return;
+      const targetColor = imageColor.get(index);
+      if (!targetColor) return;
 
-    const alreadySorted = targetColor.isSorted;
+      const alreadySorted = targetColor.isSorted;
 
-    if (alreadySorted && targetSchemaId && !originSchemaId) {
-      colorSchemes.value.forEach((scheme, schemeId) => {
-        const alreadyInScheme = scheme.colors.get(pivotId);
-        const notTargetScheme = targetSchemaId !== schemeId;
-        if (alreadyInScheme && notTargetScheme) scheme.colors.delete(pivotId);
-      });
+      if (alreadySorted && targetSchemaId && !originSchemaId) {
+        colorSchemes.value.forEach((scheme, schemeId) => {
+          const alreadyInScheme = scheme.colors.get(pivotId);
+          const notTargetScheme = targetSchemaId !== schemeId;
+          if (alreadyInScheme && notTargetScheme) scheme.colors.delete(pivotId);
+        });
+      }
+
+      if (!targetSchemaId) {
+        targetColor.isSorted = false;
+        targetColor.schemeId = null;
+      }
+
+      if (originSchemaId) {
+        const originSchema = colorSchemes.value.get(originSchemaId);
+        if (!originSchema) return;
+
+        originSchema.colors.delete(pivotId);
+      }
+
+      if (targetSchemaId) {
+        const target = colorSchemes.value.get(targetSchemaId);
+        if (!target) return;
+
+        target.colors.set(pivotId, targetColor);
+        targetColor.isSorted = true;
+        targetColor.schemeId = targetSchemaId;
+      }
+    } catch (e) {
+      console.log(e);
+    } finally {
+      event.dataTransfer.clearData();
     }
-
-    if (!targetSchemaId) targetColor.isSorted = false;
-
-    if (originSchemaId) {
-      const originSchema = colorSchemes.value.get(originSchemaId);
-      if (!originSchema) return;
-
-      originSchema.colors.delete(pivotId);
-    }
-
-    if (targetSchemaId) {
-      const target = colorSchemes.value.get(targetSchemaId);
-      if (!target) return;
-
-      target.colors.set(pivotId, targetColor);
-      targetColor.isSorted = true;
-    }
-
-    event.dataTransfer.clearData();
   };
 
   const invalidateSchemes = () => {
-    colorSchemes.value.forEach((scheme) => {
+    colorSchemes.value.forEach((scheme, schemeId) => {
       scheme.colors.forEach((colorFromScheme, pivotId) => {
         const {
           imageId,
@@ -229,6 +240,7 @@ export const useSortedColorsStore = defineStore('SortedColorsStore', () => {
 
         if (sameOriginalHex && sameHandpickedHex) {
           colorFromPool.isSorted = true;
+          colorFromPool.schemeId = schemeId;
         } else {
           scheme.colors.delete(pivotId);
         }
@@ -241,7 +253,10 @@ export const useSortedColorsStore = defineStore('SortedColorsStore', () => {
 
     const colorFromPool = colorsStore.getColorFromPool(imageId, colorIndex);
 
-    if (colorFromPool) colorFromPool.isSorted = false;
+    if (colorFromPool) {
+      colorFromPool.isSorted = false;
+      colorFromPool.schemeId = null;
+    }
 
     colorSchemes.value.forEach((scheme) => {
       scheme.colors.delete(pivotId);
@@ -275,6 +290,7 @@ export const useSortedColorsStore = defineStore('SortedColorsStore', () => {
         if (!targetColor) return;
 
         targetColor.isSorted = false;
+        targetColor.schemeId = null;
 
         colorScheme.delete(pivotId);
       });
@@ -284,6 +300,7 @@ export const useSortedColorsStore = defineStore('SortedColorsStore', () => {
       collection.forEach((color) => {
         if (!color) return;
         color.isSorted = false;
+        color.schemeId = null;
       });
     });
   };
@@ -302,27 +319,33 @@ export const useSortedColorsStore = defineStore('SortedColorsStore', () => {
         const _color = imageColor.handpicked ?? imageColor.original;
         const colorLab = xyzToLab(rgbToXyz(_color.rgbArray));
 
-        const collectedData: Array<{ similarity: number; schemeId: SchemeId; lab: LAB }> = [];
+        let closestScheme: { similarity: number; schemeId: SchemeId } | undefined;
 
         colorSchemes.value.forEach((scheme, schemeId) => {
           const lab = xyzToLab(rgbToXyz(scheme.leadColor.rgbArray));
 
           const deltaE = getDeltaE00(colorLab, lab);
 
-          collectedData.push({ similarity: deltaE, schemeId, lab });
+          if (!closestScheme || deltaE <= closestScheme.similarity) closestScheme = {
+            similarity: deltaE,
+            schemeId,
+          };
         });
 
-        const sortedData = collectedData.sort((a, b) => a.similarity - b.similarity);
+        if (!closestScheme) return;
 
-        const closestScheme = sortedData[0].schemeId;
-
-        const targetScheme = colorSchemes.value.get(closestScheme);
+        const targetScheme = colorSchemes.value.get(closestScheme.schemeId);
         if (!targetScheme) return;
 
-        void nextTick(() => {
-          targetScheme.colors.set(pivotId, imageColor);
-          imageColor.isSorted = true;
-        });
+        const oldScheme = imageColor.schemeId;
+        if (oldScheme && oldScheme !== closestScheme.schemeId) {
+          const schemeToUpdate = colorSchemes.value.get(oldScheme);
+          if (schemeToUpdate) schemeToUpdate.colors.delete(pivotId);
+        }
+
+        targetScheme.colors.set(pivotId, imageColor);
+        imageColor.isSorted = true;
+        imageColor.schemeId = closestScheme.schemeId;
       });
     });
   };

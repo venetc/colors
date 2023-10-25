@@ -19,7 +19,7 @@ export interface Color {
 }
 
 export const getPalette: GetPalette = (args) => {
-  const { img, colorCount = 6, quality = 2 } = args;
+  const { img, colorCount = 6, quality = 3 } = args;
   return colorScrapper.getPalette(img, colorCount, quality);
 };
 

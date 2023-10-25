@@ -49,6 +49,7 @@ provide(cropperInfrastructureData, cropperInfraData);
 const notEnoughPointersToCrop = computed(() => (cropperInfraData?.currentPointersAmount.value < 3));
 const cantUndo = computed(() => (cropperInfraData.isDrawingModeFlag.value || cropperInfraData.undoPointersAmount.value < 1));
 const cantRedo = computed(() => (cropperInfraData.isDrawingModeFlag.value || cropperInfraData.redoPointersAmount.value <= 0));
+const cantResetColors = computed(() => ((activeImage.value && editColorsModel.cantResetColor(activeImage.value.id)) ?? true));
 const hasSomeColors = computed(() => {
   const image = activeImage.value;
 
@@ -65,9 +66,17 @@ function colorPickHandler(newColor: Color, indexKey: number) {
 function colorsResetHandler() {
   if (!activeImage.value) return;
   if (activeImage.value.croppedSrc) return;
+  if (cantResetColors.value) return;
 
   editColorsModel.readColorsFromImage(activeImage.value.id);
 }
+
+const cantResetEditor = computed(() => {
+  if (!activeImage.value) return true;
+  const noCroppedImage = activeImage.value.croppedSrc === null;
+
+  return cantResetColors.value && noCroppedImage && notEnoughPointersToCrop.value;
+});
 </script>
 
 <template>
@@ -152,6 +161,7 @@ function colorsResetHandler() {
             type="error"
             class="!font-mono"
             size="tiny"
+            :disabled="cantResetEditor"
             @click=" colorsResetHandler(); setImageCroppedSrc(null); cropper.reset()"
           >
             <span class="px-1.5">
@@ -216,7 +226,7 @@ function colorsResetHandler() {
             class="!font-mono"
             size="tiny"
             iconPlacement="left"
-            @click="setEditorState('closed'); setActiveImage(undefined); emit('onClose')"
+            @click="setEditorState('closed'); setActiveImage(null); emit('onClose')"
           >
             Close
             <template #icon>

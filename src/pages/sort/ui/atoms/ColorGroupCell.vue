@@ -12,7 +12,7 @@ const sortedColorsStore = useSortedColorsStore();
 </script>
 
 <template>
-  <div class="w-10 h-10 relative">
+  <div class="w-10 h-10 relative 2xl:w-10 2xl:h-10 xl:w-8 xl:h-8 lg:w-6 lg:h-6">
     <Transition
       mode="out-in"
       name="color"
@@ -29,11 +29,13 @@ const sortedColorsStore = useSortedColorsStore();
       </div>
       <div
         v-else
-        class="absolute top-0 left-0 w-full h-full rounded border-2 border-black"
+        class="absolute top-0 left-0 w-full h-full rounded border-2 2xl:border-2 xl:border-2 lg:border border-black text-xs"
         draggable="true"
         :style="{ backgroundColor: imageColor.handpicked?.hex ?? imageColor.original.hex }"
         @dragstart="sortedColorsStore.dragStartHandler({ event: $event, pivotId: generatePivotId(imageId, colorIndex) })"
-      />
+      >
+        {{ imageColor.schemeId }}
+      </div>
     </Transition>
   </div>
 </template>

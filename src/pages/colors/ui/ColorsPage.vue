@@ -2,76 +2,72 @@
 import { RotateCcw, Settings2 } from 'lucide-vue-next';
 import { NButton } from 'naive-ui';
 import { storeToRefs } from 'pinia';
-import type { MaybeRef } from 'vue';
-import { nextTick, onUnmounted, unref } from 'vue';
+import { nextTick, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useHeaderStore } from '@/widgets/header/model';
 import { ColorsEditor, useColorsStore } from '@/entities/color';
 import { ImageEditor, useImageEditorStore } from '@/widgets/image-editor';
 import type { ImageId, Img } from '@/entities/image';
 import { ImageCard, useImagesStore } from '@/entities/image';
-import { useEditColors } from '@/features/color/edit-colors';
+import { ReadColorsModal, useEditColors } from '@/features/color/edit-colors';
 
-const colorsStore = useColorsStore();
-const imagesStore = useImagesStore();
-const imageEditorStore = useImageEditorStore();
+const colorsModel = useColorsStore();
+const imagesModel = useImagesStore();
+const imageEditorModel = useImageEditorStore();
 const editColorsModel = useEditColors();
-const appHeaderStore = useHeaderStore();
+const appHeaderModel = useHeaderStore();
 
-const { images } = storeToRefs(imagesStore);
-const { colors } = storeToRefs(colorsStore);
-const { isHeaderActive } = storeToRefs(appHeaderStore);
-const { isEditorActive } = storeToRefs(imageEditorStore);
-
-const router = useRouter();
-router.beforeEach((to, _, next) => {
-  if (to.name === 'Main') colorsStore.resetColorsStore();
-  next();
-});
-
-function cantResetColor(image: Img) {
-  const someAreHandpicked = editColorsModel.checkIfSomeColorsAreHandpicked(image.id);
-  const someAreDeleted = colorsStore.amountOfColors(image.id) < editColorsModel.MIN_COLORS;
-
-  return !someAreDeleted && !someAreHandpicked;
-}
+const { images } = storeToRefs(imagesModel);
+const { colors } = storeToRefs(colorsModel);
+const { isHeaderActive } = storeToRefs(appHeaderModel);
+const { isEditorActive } = storeToRefs(imageEditorModel);
 
 function openEditor(image: Img, id: ImageId) {
-  imageEditorStore.setActiveImage(image);
-  imageEditorStore.setActiveImageId(id);
-  imageEditorStore.setEditorState('opened');
+  imageEditorModel.setActiveImage(image);
+  imageEditorModel.setActiveImageId(id);
+  imageEditorModel.setEditorState('opened');
   isHeaderActive.value = false;
 }
 
 function closeEditor() {
-  imageEditorStore.setEditorState('closed');
-  imageEditorStore.setActiveImage(undefined);
-  imageEditorStore.setActiveImageId(undefined);
+  imageEditorModel.setEditorState('closed');
+  imageEditorModel.setActiveImage(null);
+  imageEditorModel.setActiveImageId(null);
   isHeaderActive.value = true;
 }
 
 onUnmounted(closeEditor);
 
-function loadHandler(imageId: MaybeRef<ImageId>) {
-  const id = unref(imageId);
+function loadHandler(imageId: ImageId, imageElement: HTMLImageElement | undefined) {
+  if (!imageElement) return;
 
-  const image = images.value.get(id);
+  const image = images.value.get(imageId);
 
   if (!image) return;
 
-  const imageHasNoColors = !colors.value.get(id);
+  const imageHasNoColors = !colors.value.get(imageId);
 
-  if (imageHasNoColors || isEditorActive.value) editColorsModel.readColorsFromImage(id);
+  if (imageHasNoColors || isEditorActive.value) editColorsModel.readColorsFromImage(imageId, imageElement);
 
   if (imageHasNoColors) {
     const src = image.croppedSrc;
-    image.croppedSrc = null;
 
     nextTick(() => {
       src && URL.revokeObjectURL(src);
+      image.croppedSrc = null;
     });
   }
 }
+
+const router = useRouter();
+router.beforeEach((to, _, next) => {
+  if (to.name === 'Main') colorsModel.resetColorsStore();
+  if (to.name === 'Sort' && images.value.size > colors.value.size) {
+    editColorsModel.setColorReadModalIsActive(true);
+    return;
+  }
+  next();
+});
 </script>
 
 <template>
@@ -97,7 +93,7 @@ function loadHandler(imageId: MaybeRef<ImageId>) {
             class="flex flex-col flex-nowrap justify-between opacity-0 group-hover/card:opacity-100 transition-all duration-300"
           >
             <NButton
-              :disabled="cantResetColor(image)"
+              :disabled="editColorsModel.cantResetColor(image.id)"
               size="tiny"
               type="error"
               @click="editColorsModel.readColorsFromImage(image.id)"
@@ -121,5 +117,7 @@ function loadHandler(imageId: MaybeRef<ImageId>) {
     </div>
 
     <ImageEditor @onClose="closeEditor" />
+
+    <ReadColorsModal />
   </section>
 </template>
