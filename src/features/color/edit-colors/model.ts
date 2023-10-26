@@ -55,8 +55,7 @@ export const useEditColors = defineStore('Features/Color/EditColors', () => {
       const image = new Image();
       image.src = src;
       image.crossOrigin = 'anonymous';
-      image.width = image.naturalWidth;
-      image.height = image.naturalHeight;
+      image.width = image.height = 500;
 
       if (image.complete) {
         const uniqueColors = generateColors(imageId, image);

@@ -1,13 +1,13 @@
 export function isEmptyArray(value: unknown) {
   return Array.isArray(value) && value.length === 0;
 }
-export function isObject<T = unknown>(value: unknown): value is Record<string, T> {
-  const type = typeof value;
-  return value != null && (type === 'object' || type === 'function') && !Array.isArray(value);
-}
-export function isEmptyObject(value: object) {
+
+export const isObject = (val: unknown): val is object => toString.call(val) === '[object Object]';
+
+export function isEmptyObject(value: object): value is Record<string, never> {
   return isObject(value) && Object.keys(value).length === 0;
 }
+
 export function isEmpty(value: unknown) {
   if (value == null || value === '')
     return true;
@@ -17,6 +17,7 @@ export function isEmpty(value: unknown) {
     return isEmptyObject(value);
   return false;
 }
+
 export function isNumber(value: unknown): value is number {
   return typeof value === 'number' && !Number.isNaN(value);
 }

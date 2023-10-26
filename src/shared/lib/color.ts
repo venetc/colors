@@ -56,7 +56,7 @@ export function rgbToCss(rgb: RGB): string {
 }
 
 export function hslToCss(hsl: HSL): string {
-  return `hsl(${hsl[0]}, ${hsl[1]}%, ${hsl[2]}%)`;
+  return `hsl(${Math.round(hsl[0])}, ${Math.round(hsl[1])}%, ${Math.round(hsl[2])}%)`;
 }
 
 export function rgbToHSL(rgb: RGB): HSL {
@@ -176,7 +176,10 @@ export function getLuminance(rgb: RGB): number {
 }
 
 /**
- * @description Вычисляем яркости цвета по формуле Y = (299 R + 587 G + 114 B) / 1000 и нормализуем
+ * @description Вычисление и нормализация яркости YIQ по формуле
+ * @description Y = (299 * R + 587 * G + 114 * B) / 1000
+ *
+ * {@link https://www.w3.org/WAI/ER/WD-AERT/#color-contrast}
  *  */
 export function getBrightness(rgb: RGB): number {
   return (299 * rgb[0] + 587 * rgb[1] + 114 * rgb[2]) / 1000 / 255;
@@ -193,18 +196,19 @@ export function shadeHexColor(color: string, decimal: number): string {
 }
 
 /**
- * @description Формула относительной светлоты.
- * @description Y = 0.2126R + 0.7152G + 0.0722B.
- * {@link https://en.wikipedia.org/wiki/Relative_luminance }
+ * @description Вычисляем контрастный цвет для текста.
+ * @description Y = 299 * R + 587 * G + 114 * B.
  *
- * @description Значение 0.5 соответствует середине диапазона светлоты от 0 до 1, где 0 - это абсолютный черный цвет, а 1 - абсолютный белый цвет. Таким образом, если светлота заданного цвета больше 0.5, то он более светлый, и для контраста с ним следует использовать черный цвет текста.
+ * {@link https://www.w3.org/WAI/ER/WD-AERT/#color-contrast }
+ *
+ * @description Значение 0.5 соответствует середине диапазона яркости от 0 до 1, где 0 - это абсолютный черный цвет, а 1 - абсолютный белый цвет. Таким образом, если яркость заданного цвета больше 0.49019607843, то он более светлый, и для контраста с ним следует использовать черный цвет текста.
  * */
 export function getContrastTextColor(bgColor: RGB) {
-  const luminance = getLuminance(bgColor);
+  const brightness = getLuminance(bgColor);
 
-  const LUMINANCE_BREAKPOINT = 0.5;
+  const BRIGHTNESS_BREAKPOINT = 0.49019607843;
 
-  return luminance > LUMINANCE_BREAKPOINT ? '#000000' : '#FFFFFF';
+  return brightness > BRIGHTNESS_BREAKPOINT ? '#000000' : '#FFFFFF';
 }
 
 export function generateRandomRgb(): RGB {

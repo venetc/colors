@@ -3,6 +3,7 @@ import { defineAsyncComponent } from 'vue';
 import { storeToRefs } from 'pinia';
 import { ColorsPageHeader } from './colors';
 import { SortPageHeader } from './sort';
+import { SavePageHeader } from './save';
 import { useColorsStore } from '@/entities/color';
 import { useImagesStore } from '@/entities/image';
 
@@ -46,6 +47,23 @@ export const routes: Array<RouteRecordRaw> = [
     },
     props: {
       header: { content: SortPageHeader },
+    },
+  },
+  {
+    path: '/save',
+    name: 'Save',
+    components: {
+      default: () => import(/* webpackChunkName: "SaveColorsPage" */'./save'),
+      header: () => import(/* webpackChunkName: "SavePageHeader" */'../widgets/header'),
+    },
+    beforeEnter: () => {
+      const colorsStore = useColorsStore();
+      const { colors } = storeToRefs(colorsStore);
+
+      if (colors.value.size < 1) return { path: '/' };
+    },
+    props: {
+      header: { content: SavePageHeader },
     },
   },
 ];

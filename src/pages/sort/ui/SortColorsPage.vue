@@ -12,7 +12,6 @@ import { useColorsStore } from '@/entities/color';
 import type { SchemeId } from '@/features/color/sort-colors';
 
 import {
-  getBrightness,
   getLuminance,
   hexToRGB,
   hslToCss,
@@ -40,7 +39,6 @@ function leadColorChangeHandler(hex: ColorHex, id: SchemeId) {
   const hslArray = rgbToHSL(rgbArray);
   const hsl = hslToCss(hslArray);
   const luminance = getLuminance(rgbArray);
-  const brightness = getBrightness(rgbArray);
 
   targetScheme.leadColor = {
     hex,
@@ -49,7 +47,6 @@ function leadColorChangeHandler(hex: ColorHex, id: SchemeId) {
     rgb,
     rgbArray,
     hslArray,
-    brightness,
   };
 }
 

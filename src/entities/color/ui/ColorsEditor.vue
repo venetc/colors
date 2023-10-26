@@ -16,10 +16,7 @@ const emits = defineEmits<{
   onResetHandpicked: [imageColor: ImageColor];
 }>();
 
-const {
-  compact,
-  colors,
-} = toRefs(props);
+const { compact, colors } = toRefs(props);
 
 function positiveButtonPropsHandler(indexKey: number): ButtonProps {
   return {

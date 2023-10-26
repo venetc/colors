@@ -14,8 +14,12 @@ const emit = defineEmits<{
 
 const { defaultColor } = toRefs(props);
 
-const _color = ref<string>(defaultColor.value);
+const _color = ref<string>();
 const debouncedColor = refThrottled(_color, 200);
+
+watch(defaultColor, () => {
+  _color.value = defaultColor.value;
+});
 
 watch(debouncedColor, (colorValue) => {
   if (colorValue && (colorValue !== defaultColor.value)) {
@@ -23,7 +27,7 @@ watch(debouncedColor, (colorValue) => {
 
     emit('onColorPick', color);
   }
-}, { immediate: false });
+});
 </script>
 
 <template>

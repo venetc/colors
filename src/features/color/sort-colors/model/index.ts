@@ -5,7 +5,6 @@ import { useColorsStore } from '@/entities/color';
 import type { ImageId } from '@/entities/image';
 import {
   generateRandomRgb,
-  getBrightness,
   getDeltaE00,
   getLuminance,
   hslToCss,
@@ -78,7 +77,6 @@ export const useSortedColorsStore = defineStore('SortedColorsStore', () => {
       const rgb = rgbToCss(rgbArray);
       const hslArray = rgbToHSL(rgbArray);
       const luminance = getLuminance(rgbArray);
-      const brightness = getBrightness(rgbArray);
 
       const leadColor: Color = {
         rgb,
@@ -87,7 +85,6 @@ export const useSortedColorsStore = defineStore('SortedColorsStore', () => {
         rgbArray,
         hslArray,
         luminance,
-        brightness,
       };
 
       const id = generateId() as SchemeId;
