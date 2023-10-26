@@ -53,17 +53,25 @@ export const useEditColors = defineStore('Features/Color/EditColors', () => {
     } else {
       const src = imageFromStore.croppedSrc ?? imageFromStore.blobSrc;
       const image = new Image();
+      image.src = src;
       image.crossOrigin = 'anonymous';
+      image.width = image.naturalWidth;
+      image.height = image.naturalHeight;
 
-      image.addEventListener('load', () => {
+      if (image.complete) {
         const uniqueColors = generateColors(imageId, image);
-
         if (uniqueColors) colors.value.set(imageFromStore.id, uniqueColors);
 
         image.remove();
-      }, { once: true });
+      } else {
+        image.addEventListener('load', () => {
+          const uniqueColors = generateColors(imageId, image);
 
-      image.src = src;
+          if (uniqueColors) colors.value.set(imageFromStore.id, uniqueColors);
+
+          image.remove();
+        }, { once: true });
+      }
     }
   };
   const handpickColor = (newColor: Color, indexKey: number, imageId: ImageId) => {
@@ -138,5 +146,4 @@ export const useEditColors = defineStore('Features/Color/EditColors', () => {
     cantResetColor,
     setColorReadModalIsActive,
   };
-},
-);
+});

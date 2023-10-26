@@ -268,6 +268,8 @@ export function xyzToLab(xyz: XYZ): LAB {
 
 /**
  * {@link https://zschuessler.github.io/DeltaE/learn/#toc-delta-e-2000}
+ *
+ * {@link https://en.wikipedia.org/wiki/Color_difference#CIEDE2000}
  *  */
 
 export function getDeltaE00(color1: LAB, color2: LAB) {

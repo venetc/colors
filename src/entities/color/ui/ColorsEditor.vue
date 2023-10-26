@@ -60,6 +60,7 @@ const _colors = computed(() => {
           raw
           :showArrow="false"
           :duration="200"
+          displayDirective="show"
         >
           <template #trigger>
             <div :class="[compact ? 'w-[88px] h-9' : 'w-8 h-12 xl:w-12 xl:h-12']">

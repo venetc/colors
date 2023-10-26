@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { refThrottled } from '@vueuse/core';
 import { NButton } from 'naive-ui';
-import { onMounted, ref, toRefs, watch } from 'vue';
+import { ref, toRefs, watch } from 'vue';
 import { Palette } from 'lucide-vue-next';
 import { generateColorData } from '../lib';
 import type { Color } from '../lib';
@@ -14,12 +14,8 @@ const emit = defineEmits<{
 
 const { defaultColor } = toRefs(props);
 
-const _color = ref<string>();
+const _color = ref<string>(defaultColor.value);
 const debouncedColor = refThrottled(_color, 200);
-
-onMounted(() => {
-  _color.value = defaultColor.value;
-});
 
 watch(debouncedColor, (colorValue) => {
   if (colorValue && (colorValue !== defaultColor.value)) {
@@ -27,7 +23,7 @@ watch(debouncedColor, (colorValue) => {
 
     emit('onColorPick', color);
   }
-});
+}, { immediate: false });
 </script>
 
 <template>
