@@ -2,6 +2,8 @@
 import { storeToRefs } from 'pinia';
 import { computed, ref } from 'vue';
 import { NSwitch } from 'naive-ui';
+import { camelToSnake } from '@/shared/lib/string';
+import type { HSL } from '@/shared/lib/color.ts';
 import { isEmptyObject } from '@/shared/lib/assertions';
 import type { ImageId, Img } from '@/entities/image';
 import { useImagesStore } from '@/entities/image';
@@ -28,13 +30,15 @@ interface ImageObject {
 const colorConfig = ref<Record<keyof Color, { isIncluded: boolean; label: string }>>({
   hex: { isIncluded: true, label: 'Hex' },
   rgb: { isIncluded: true, label: 'RGB' },
-  rgbArray: { isIncluded: true, label: 'RGB Array' },
   hsl: { isIncluded: true, label: 'HSL' },
-  hslArray: { isIncluded: true, label: 'HSL Array' },
   luminance: { isIncluded: true, label: 'Luminance' },
+  rgbArray: { isIncluded: true, label: 'RGB Array' },
+  hslArray: { isIncluded: true, label: 'HSL Array' },
 });
 
-// const imagesToArray = (_images: typeof images) => ([..._images.value.entries()]);
+const syntaxConfig = ref({
+  snakeCase: { isActive: false, label: 'Snake case' },
+});
 
 function formatImageColors(imageObjects: ImageObject[], [imageId, img]: [ImageId, Img]): ImageObject[] {
   const image = img.origin === 'file' ? img.fileName : img.originalSrc;
@@ -51,23 +55,23 @@ function formatImageColors(imageObjects: ImageObject[], [imageId, img]: [ImageId
       const colorData: MaybeStringValue<Color> = {
         hex: targetColor.hex,
         rgb: targetColor.rgb,
-        rgbArray: JSON.stringify(targetColor.rgbArray),
         hsl: targetColor.hsl,
-        hslArray: JSON.stringify(targetColor.hslArray.map(Math.round)),
         luminance: targetColor.luminance,
+        rgbArray: targetColor.rgbArray,
+        hslArray: targetColor.hslArray.map(Math.round) as HSL,
       };
 
       const appendProperty = (prop: keyof Color) => {
-        return colorConfig.value[prop].isIncluded && { [prop]: colorData[prop] };
+        return colorConfig.value[prop].isIncluded && { [syntaxConfig.value.snakeCase.isActive ? camelToSnake(prop) : prop]: colorData[prop] };
       };
 
       const partialColor: MaybeStringValueColor = {
         ...appendProperty('hex'),
         ...appendProperty('rgb'),
-        ...appendProperty('rgbArray'),
         ...appendProperty('hsl'),
-        ...appendProperty('hslArray'),
         ...appendProperty('luminance'),
+        ...appendProperty('rgbArray'),
+        ...appendProperty('hslArray'),
       };
 
       if (isEmptyObject(partialColor)) return partialImageColors;
@@ -87,26 +91,42 @@ function formatImageColors(imageObjects: ImageObject[], [imageId, img]: [ImageId
 const imagesText = computed(() => {
   const _images = [...images.value.entries()].reduce(formatImageColors, []);
 
-  return JSON.stringify(_images, null, 2);
+  const formatted = JSON.stringify(_images, null, 2);
+
+  console.log(_images);
+
+  return formatted;
 });
 </script>
 
 <template>
   <section>
-    <div class="my-3">
+    <div class="my-3 flex flex-col flex-nowrap gap-1.5">
       <div
         v-for="switcher in colorConfig"
         :key="switcher.label"
-        class="flex flex-nowrap items-center gap-3 text-black"
+        class="flex flex-nowrap items-center gap-2 text-black font-mono text-xs"
       >
+        <NSwitch
+          v-model:value="switcher.isIncluded"
+          size="small"
+          :round="false"
+        />
         <div>{{ switcher.label }}</div>
-        <NSwitch v-model:value="switcher.isIncluded" />
+      </div>
+      <div
+        v-for="switcher in syntaxConfig"
+        :key="switcher.label"
+        class="flex flex-nowrap items-center gap-2 text-black font-mono text-xs"
+      >
+        <NSwitch
+          v-model:value="switcher.isActive"
+          size="small"
+          :round="false"
+        />
+        <div>{{ switcher.label }}</div>
       </div>
     </div>
     <pre>{{ imagesText }}</pre>
   </section>
 </template>
-
-<style scoped>
-
-</style>

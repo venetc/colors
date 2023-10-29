@@ -38,16 +38,14 @@ function closeEditor() {
 
 onUnmounted(closeEditor);
 
-function loadHandler(imageId: ImageId, imageElement: HTMLImageElement | undefined) {
-  if (!imageElement) return;
-
+function loadHandler(imageId: ImageId) {
   const image = images.value.get(imageId);
 
   if (!image) return;
 
   const imageHasNoColors = !colors.value.get(imageId);
 
-  if (imageHasNoColors || isEditorActive.value) editColorsModel.readColorsFromImage(imageId, imageElement);
+  if (imageHasNoColors || isEditorActive.value) editColorsModel.readColorsFromImage(imageId);
 
   if (imageHasNoColors) {
     const src = image.croppedSrc;

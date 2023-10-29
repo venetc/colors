@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, ref, toRefs, watch } from 'vue';
 import { useElementVisibility } from '@vueuse/core';
-import { NSkeleton } from 'naive-ui';
-import { type Img } from '../model';
+import { NImage, NSkeleton } from 'naive-ui';
+import type { ImageId, Img } from '../model';
 
 const props = defineProps<{ image: Img }>();
 const emit = defineEmits<{
-  onLoad: [imageElement: HTMLImageElement | undefined];
+  onLoad: [id: ImageId];
 }>();
 
 const { image } = toRefs(props);
@@ -48,7 +48,7 @@ onMounted(() => {
 });
 
 function loadHandler() {
-  emit('onLoad', imageRef.value);
+  emit('onLoad', image.value.id);
 }
 </script>
 
@@ -62,18 +62,19 @@ function loadHandler() {
       class="absolute"
       height="100%"
     />
-
-    <img
+    <NImage
       v-else
       ref="imageRef"
       :src="_imageSrc"
       :alt="_imageSrc"
-      crossorigin="anonymous"
+      :imgProps="{
+        crossorigin: 'anonymous',
+        decoding: 'async',
+      }"
       height="320"
       class="absolute w-full h-full object-cover"
-      loading="lazy"
-      decoding="async"
+      objectFit="cover"
       @load="loadHandler"
-    >
+    />
   </div>
 </template>

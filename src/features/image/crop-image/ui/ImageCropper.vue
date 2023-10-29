@@ -1,23 +1,35 @@
 <script setup lang="ts">
+import { useDebounceFn } from '@vueuse/core';
 import { computed, inject, onMounted, ref, toRefs } from 'vue';
-
 import type { ExposedCropperData } from '../model';
-import { ratioClass, useImageCropper } from '../model';
+import { useImageCropper } from '../model';
 import { cropperInfrastructureData } from '@/features/image/crop-image';
 import type { Coordinates } from '@/features/image/crop-image';
 import type { Img } from '@/entities/image';
 
 interface Props {
   image: Img;
+  size: { width: number; height: number };
 }
 
 const props = defineProps<Props>();
 const emit = defineEmits<{
   onCrop: [croppedSrc: string];
   onResize: [];
+  onInit: [{
+    minWidth: number;
+    minHeight: number;
+    scaledWidth: number;
+    scaledHeight: number;
+    parentWidth: number;
+    parentHeight: number;
+  }];
 }>();
 
-const { image } = toRefs(props);
+const {
+  image,
+  size,
+} = toRefs(props);
 
 const parentElement = ref<HTMLElement | undefined>();
 const imageElement = ref<HTMLImageElement | undefined>();
@@ -59,9 +71,11 @@ defineExpose(exposedCropperData);
 
 const cropperInfraData = inject(cropperInfrastructureData);
 
+const debouncedReset = useDebounceFn(reset, 100);
+
 function transitionEndHandler(e: TransitionEvent) {
   if (e.propertyName === 'height' || e.propertyName === 'width') {
-    reset();
+    debouncedReset();
     emit('onResize');
     cropperInfraData?.setIsCanvasHiddenFlag(false);
   }
@@ -101,8 +115,8 @@ const shouldShowPointers = computed(() => {
       <div
         v-if="image"
         ref="parentElement"
-        class="relative transition-all duration-300 overflow-hidden bg-white backdrop-blur-3xl bg-opacity-5 shadow-lg rounded-lg"
-        :class="ratioClass"
+        class="relative transition-all ease-linear duration-75 overflow-hidden bg-white backdrop-blur-3xl bg-opacity-5 shadow-lg rounded-lg will-change-[width,height]"
+        :style="{ width: `${size.width}%`, height: `${size.height}%` }"
         @transitionend="transitionEndHandler"
         @transitionstart="transitionStartHandler"
       >

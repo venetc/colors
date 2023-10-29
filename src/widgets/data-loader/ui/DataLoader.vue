@@ -7,7 +7,8 @@ import { useRouter } from 'vue-router';
 import { ImagesDownloaderByImageFiles, useGetImageFromFile } from '@/features/image/get-from-image-file';
 import {
   ImageLinksTextarea,
-  ImagesDownloadModal, ImagesDownloaderByTxtFiles,
+  ImagesDownloadModal,
+  ImagesDownloaderByTxtFiles,
   useGetImageFromLinks,
 } from '@/features/image/get-from-links';
 import { useImagesStore } from '@/entities/image';
@@ -16,7 +17,11 @@ const getImageFromFileModel = useGetImageFromFile();
 const getImageFromLinksModel = useGetImageFromLinks();
 const imagesStore = useImagesStore();
 
-const { images, cache, downloadOrigin } = storeToRefs(imagesStore);
+const {
+  images,
+  cache,
+  downloadOrigin,
+} = storeToRefs(imagesStore);
 const { textareaData } = storeToRefs(getImageFromLinksModel);
 
 const { push } = useRouter();
@@ -38,9 +43,34 @@ function resetAll() {
 }
 
 const tabs = [
-  { name: 'images', icon: markRaw(FileImage), content: markRaw(ImagesDownloaderByImageFiles), description: 'Upload images', style: null },
-  { name: 'txt', icon: markRaw(FileText), content: markRaw(ImagesDownloaderByTxtFiles), description: 'Upload txt', style: null },
-  { name: 'links', icon: markRaw(ClipboardList), content: markRaw(ImageLinksTextarea), description: 'Paste links', style: { minHeight: '190px', height: '100%' } },
+  {
+    name: 'images',
+    icon: markRaw(FileImage),
+    content: markRaw(ImagesDownloaderByImageFiles),
+    description: 'Upload images',
+    style: {
+      minHeight: '190px',
+    },
+  },
+  {
+    name: 'txt',
+    icon: markRaw(FileText),
+    content: markRaw(ImagesDownloaderByTxtFiles),
+    description: 'Upload txt',
+    style: {
+      minHeight: '190px',
+    },
+  },
+  {
+    name: 'links',
+    icon: markRaw(ClipboardList),
+    content: markRaw(ImageLinksTextarea),
+    description: 'Paste links',
+    style: {
+      minHeight: '190px',
+      height: '190px',
+    },
+  },
 ] as const;
 
 const activeTab = ref<'images' | 'txt' | 'links'>(downloadOrigin.value ?? tabs[0].name);
@@ -55,7 +85,7 @@ onMounted(saveDownloadOrigin);
 </script>
 
 <template>
-  <div class="transition flex flex-col flex-nowrap gap-6">
+  <div class="transition">
     <NTabs
       v-model:value="activeTab"
       type="segment"
@@ -95,6 +125,7 @@ onMounted(saveDownloadOrigin);
       <NSpace
         v-if="activeTab === 'links' && textareaData.length && images.size < 1"
         justify="end"
+        class="mt-3"
       >
         <NButton
           size="medium"
@@ -119,10 +150,17 @@ onMounted(saveDownloadOrigin);
           Read links
         </NButton>
       </NSpace>
+    </Transition>
 
+    <Transition
+      mode="out-in"
+      name="fade"
+      appear
+    >
       <NSpace
-        v-else-if="images.size > 0"
+        v-if="images.size > 0"
         justify="end"
+        class="mt-3"
       >
         <NButton
           size="medium"
@@ -139,9 +177,7 @@ onMounted(saveDownloadOrigin);
           size="medium"
           type="success"
           class="!font-mono"
-          @click="push({
-            name: 'Colors',
-          }); cache.clear()"
+          @click="push({ name: 'Colors' }); cache.clear()"
         >
           <template #icon>
             <Sparkles :size="16" />

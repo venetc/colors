@@ -136,7 +136,10 @@ export function hslToRGB(hsl: HSL): RGB {
 
 /**
  * @description я ебал в рот это все еще раз расписывать, читай тут
+ *
  * {@link https://en.wikipedia.org/wiki/SRGB }
+ *
+ * {@link https://www.w3.org/TR/WCAG21/relative-luminance.html }
  *  */
 
 export function rgbChannelToSRGB(channelValue: number) {

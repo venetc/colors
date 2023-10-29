@@ -5,6 +5,7 @@ import { NButton, NPopover, NSwitch } from 'naive-ui';
 import { Crop, Lasso, Redo2, RotateCcw, Scaling, Undo2, X } from 'lucide-vue-next';
 
 import { useImageEditorStore } from '../model';
+import RatioSliders from './RatioSliders.vue';
 import { useEditColors } from '@/features/color/edit-colors';
 import type { Color } from '@/entities/color';
 import { ColorsEditor, useColorsStore } from '@/entities/color';
@@ -12,9 +13,6 @@ import type { ExposedCropperData } from '@/features/image/crop-image';
 import {
   ImageCropper,
   cropperInfrastructureData,
-  ratioSelectHandler,
-  ratios,
-  selectedRatio,
   useCropperInfraData,
 } from '@/features/image/crop-image';
 
@@ -77,6 +75,20 @@ const cantResetEditor = computed(() => {
 
   return cantResetColors.value && noCroppedImage && notEnoughPointersToCrop.value;
 });
+
+const widthPercent = ref(100);
+const heightPercent = ref(100);
+
+function setInitialDimension(dims: {
+  minWidth: number;
+  minHeight: number;
+  scaledWidth: number;
+  scaledHeight: number;
+  parentWidth: number;
+  parentHeight: number;
+}) {
+  console.log(dims);
+}
 </script>
 
 <template>
@@ -96,8 +108,10 @@ const cantResetEditor = computed(() => {
         <ImageCropper
           ref="cropper"
           :image="activeImage"
+          :size="{ width: widthPercent, height: heightPercent }"
           @onCrop="setImageCroppedSrc"
           @onResize="setImageCroppedSrc(null)"
+          @onInit="setInitialDimension"
         />
       </div>
       <div
@@ -187,9 +201,10 @@ const cantResetEditor = computed(() => {
           class="bg-gradient-to-br from-slate-100/25 to-slate-400/25 rounded-lg shadow-lg px-2 py-2 flex flex-col gap-2"
         >
           <NPopover
+            displayDirective="show"
             trigger="hover"
             class="!font-mono"
-            placement="left"
+            placement="left-start"
             raw
             :showArrow="false"
             :style="{ marginRight: '0.75rem' }"
@@ -208,9 +223,13 @@ const cantResetEditor = computed(() => {
             </template>
 
             <div
-              class="flex flex-col gap-2 bg-gradient-to-br from-slate-100/25 to-slate-400/25 rounded-lg shadow-lg pl-2 pr-3.5 py-2 flex-nowrap"
+              class="bg-gradient-to-br from-slate-100/25 to-slate-400/25 rounded-lg shadow-lg py-2 px-3.5 flex-nowrap w-56"
             >
-              <div
+              <RatioSliders
+                v-model:width="widthPercent"
+                v-model:height="heightPercent"
+              />
+              <!--              <div
                 v-for="variant in ratios"
                 :key="variant.label"
                 class="text-white text-sm cursor-pointer flex flex-nowrap justify-between items-center gap-1 transition-all"
@@ -218,7 +237,7 @@ const cantResetEditor = computed(() => {
                 @click="ratioSelectHandler(variant)"
               >
                 {{ variant.label }}
-              </div>
+              </div> -->
             </div>
           </NPopover>
           <NButton

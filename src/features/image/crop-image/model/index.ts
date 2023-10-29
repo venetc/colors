@@ -184,17 +184,15 @@ export function useImageCropper(params: CropperParams) {
     cropperInfraData?.setCurrentPointersAmount(currentPointers.value.length);
   };
 
-  const reset = async () => {
-    await nextTick(() => {
-      empty();
-      if (imageObj.value) URL.revokeObjectURL(imageObj.value.src);
-      imageObj.value = null;
-      resultImage.value = null;
-      isCropped.value = false;
-      cropperInfraData?.setIsImageCroppedFlag(isCropped.value);
-      positionOld.value = position.value = null;
-      init();
-    });
+  const reset = () => {
+    empty();
+    if (imageObj.value) URL.revokeObjectURL(imageObj.value.src);
+    imageObj.value = null;
+    resultImage.value = null;
+    isCropped.value = false;
+    cropperInfraData?.setIsImageCroppedFlag(isCropped.value);
+    positionOld.value = position.value = null;
+    init();
   };
 
   const savePointer = (point: Coordinates) => {
@@ -472,7 +470,7 @@ export function useImageCropper(params: CropperParams) {
   };
 
   const edit = () => {
-    if (!isCropped.value) void reset();
+    if (!isCropped.value) reset();
     isEditing.value = !isEditing.value;
     cropperInfraData?.setIsEditingModeFlag(isEditing.value);
     if (!isEditing.value) {
@@ -483,7 +481,7 @@ export function useImageCropper(params: CropperParams) {
 
   const toggleDrawing = () => {
     if (!isEditing.value) return;
-    if (isCropped.value || !(isCropped.value && isDrawingMode.value)) void reset();
+    if (isCropped.value || !(isCropped.value && isDrawingMode.value)) reset();
 
     isDrawingMode.value = !isDrawingMode.value;
     cropperInfraData?.setIsDrawingModeFlag(isDrawingMode.value);

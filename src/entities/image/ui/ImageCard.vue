@@ -6,13 +6,13 @@ import type { ImageId, Img } from '../model';
 
 const props = defineProps<{ image: Img }>();
 const emit = defineEmits<{
-  onLoad: [imageId: ImageId, imageElement: HTMLImageElement | undefined];
+  onLoad: [imageId: ImageId];
 }>();
 
 const { image } = toRefs(props);
 
-function loadHandler(imageElement: HTMLImageElement | undefined) {
-  emit('onLoad', image.value.id, imageElement);
+function loadHandler(imageId: ImageId) {
+  emit('onLoad', imageId);
 }
 </script>
 
