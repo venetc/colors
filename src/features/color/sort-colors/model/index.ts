@@ -1,17 +1,12 @@
 import { defineStore, storeToRefs } from 'pinia';
 import { nextTick, ref } from 'vue';
-import { generatePivotId, readPivotId } from '@/features/color/sort-colors';
+import { createColorScheme, generatePivotId, readPivotId } from '../lib';
 import { useColorsStore } from '@/entities/color';
 import type { ImageId } from '@/entities/image';
 import {
-  generateRandomRgb,
-  getDeltaE00,
-  getLuminance,
-  hslToCss,
-  rgbToCss, rgbToHSL, rgbToHex, rgbToXyz, xyzToLab,
+  getDeltaE00, rgbToXyz, xyzToLab,
 } from '@/shared/lib/color';
-import type { Color, ColorHex, ImageColor } from '@/entities/color';
-import { generateId } from '@/shared/lib/nanoid';
+import type { Color, ImageColor } from '@/entities/color';
 
 export type SchemeId = Brand<Id, 'SchemeId'>;
 export type PivotId = `${ImageId}__${number}`;
@@ -66,36 +61,13 @@ export const useSortedColorsStore = defineStore('SortedColorsStore', () => {
     targetScheme.colors.clear();
   };
   const addColorScheme = () => {
-    const rgbArray = generateRandomRgb();
-    const hex = rgbToHex(rgbArray) as ColorHex;
+    const newScheme = createColorScheme();
 
     const values = [...colorSchemes.value.values()];
-    const alreadyInMap = values.some(color => color.leadColor.hex === hex);
+    const alreadyInMap = values.some(color => color.leadColor.hex === newScheme.leadColor.hex);
 
     if (!alreadyInMap) {
-      const hsl = hslToCss(rgbArray);
-      const rgb = rgbToCss(rgbArray);
-      const hslArray = rgbToHSL(rgbArray);
-      const luminance = getLuminance(rgbArray);
-
-      const leadColor: Color = {
-        rgb,
-        hex,
-        hsl,
-        rgbArray,
-        hslArray,
-        luminance,
-      };
-
-      const id = generateId() as SchemeId;
-
-      const result: ColorScheme = {
-        leadColor,
-        id,
-        colors: new Map<PivotId, ImageColor>(),
-      };
-
-      colorSchemes.value.set(id, result);
+      colorSchemes.value.set(newScheme.id, newScheme);
     } else {
       addColorScheme();
     }

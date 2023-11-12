@@ -18,6 +18,7 @@ export function toSlug(str: string) {
   s = s.replace(/[^a-z0-9-]+/g, '');
   return s;
 }
+
 /**
  * It takes a string, finds any capital letters that are preceded by a lowercase letter, and replaces
  * them with a hyphen and the capital letter
@@ -29,7 +30,13 @@ export const camelToKebab = (str: string) => str.replace(/[\w]([A-Z])/g, group =
  * lowercase letter followed by an underscore and the capital letter
  * @param {string} str - string - The string to convert
  */
-export const camelToSnake = (str: string) => str.replace(/[\w]([A-Z])/g, group => `${(group[0] as string)}_${(group[1] as string)}`).toLowerCase();
+export const camelToSnake = <T extends string>(str: T): CamelToSnakeCase<T> => str.replace(/[\w]([A-Z])/g, group => `${(group[0] as string)}_${(group[1])}`).toLowerCase() as CamelToSnakeCase<T>;
+export type CamelToSnakeCase<S extends string> =
+  S extends `${infer T}${infer U}`
+    ? `${T extends Capitalize<T>
+      ? '_'
+      : ''}${Lowercase<T>}${CamelToSnakeCase<U>}`
+    : S;
 /**
  * "Replace all instances of a dash followed by a word character with the word character capitalized."
  * @param {string} str - The string to convert.
@@ -52,6 +59,7 @@ export const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.sli
  * @param {string} str - The string to uncapitalize.
  */
 export const uncapitalize = (str: string) => str.charAt(0).toLowerCase() + str.slice(1);
+
 /**
  * Replace all occurrences in a string.
  *
@@ -72,6 +80,7 @@ export function replaceAllOccurrences(initialString: string, variables: Record<s
   }
   return initialString;
 }
+
 export function generateUUID() {
   let ms = new Date().getTime();
 
@@ -93,11 +102,13 @@ export function generateUUID() {
 
   return template.replace(/[xy]/g, replacer);
 }
+
 export function formatStringToLinks(rawString: string) {
   const array = rawString.match(/(https?:\/\/[\S\s]+?\.(?:png|jpe?g))/gi);
 
   return array ?? [];
 }
+
 export function ellipsisString(s: string, max = 42) {
   if (s.length <= max) return s;
   return `${s.slice(0, (max / 2 + 4))}...${s.slice(s.length - (max / 2 - 4), s.length)}`;

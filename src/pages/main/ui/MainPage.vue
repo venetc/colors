@@ -20,7 +20,7 @@ const { images } = storeToRefs(imagesStore);
     />
 
     <DataLoader
-      class="loader-container bg-white/10 self-start p-3 rounded-md shadow-md row-start-1 col-span-8 col-start-3 lg:col-span-6 lg:col-start-4 xl:col-span-6 xl:col-start-4 2xl:col-span-4 2xl:col-start-5"
+      class="loader-container bg-white/50 self-start p-3 rounded-md shadow-md row-start-1 col-span-8 col-start-3 lg:col-span-6 lg:col-start-4 xl:col-span-6 xl:col-start-4 2xl:col-span-4 2xl:col-start-5"
       :class="{
         '2xl:-translate-x-[calc(100%_+_1.25rem)] lg:-translate-x-[calc(50%_+_0.65rem)] -translate-x-1/2': images.size > 0,
       }"

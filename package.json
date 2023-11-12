@@ -10,6 +10,7 @@
     "lint:script": "eslint --ext .ts,vue --ignore-path .gitignore ."
   },
   "dependencies": {
+    "@highlightjs/vue-plugin": "^2.1.0",
     "@vueuse/core": "^10.5.0",
     "colorthief": "^2.2.0",
     "lucide-vue-next": "^0.279.0",

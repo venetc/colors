@@ -2,7 +2,7 @@ import { createApp, markRaw } from 'vue';
 import type { Router } from 'vue-router';
 import type { PiniaPluginContext } from 'pinia';
 import { AppRoot } from '@/app';
-import { pinia, router } from '@/app/providers';
+import { highlight, pinia, router } from '@/app/providers';
 import '@/style.css';
 
 declare module 'pinia' {
@@ -22,4 +22,5 @@ document.head.appendChild(meta);
 createApp(AppRoot)
   .use(pinia)
   .use(router)
+  .use(highlight)
   .mount('#app');

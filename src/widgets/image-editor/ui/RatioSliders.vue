@@ -9,7 +9,10 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits(['update:width', 'update:height']);
-const { width, height } = useVModels(props, emit);
+const {
+  width,
+  height,
+} = useVModels(props, emit);
 
 const formatTooltip = (value: number) => `${value}%`;
 
@@ -53,7 +56,3 @@ const railStyle = {
     </NSlider>
   </div>
 </template>
-
-<style scoped>
-
-</style>

@@ -1,14 +1,15 @@
 <script setup lang="ts">
+import { Group, Image } from 'lucide-vue-next';
 import { storeToRefs } from 'pinia';
-import { computed, ref } from 'vue';
-import { NSwitch } from 'naive-ui';
-import { camelToSnake } from '@/shared/lib/string';
-import type { HSL } from '@/shared/lib/color.ts';
-import { isEmptyObject } from '@/shared/lib/assertions';
-import type { ImageId, Img } from '@/entities/image';
+import { markRaw, ref, toValue } from 'vue';
+import { NCard, NImage, NScrollbar, NTab, NTabs } from 'naive-ui';
+import { useExportConfig, useExportData } from '@/features/export-data/generate-export-data';
 import { useImagesStore } from '@/entities/image';
-import type { Color, ImageColor } from '@/entities/color';
+import type { ColorCollection, ImageColor } from '@/entities/color';
 import { useColorsStore } from '@/entities/color';
+import { ExportDataConfig } from '@/widgets/export-data-config';
+
+import DataPane from '@/pages/save/ui/DataPane.vue';
 
 const colorModel = useColorsStore();
 const imagesModel = useImagesStore();
@@ -16,117 +17,114 @@ const imagesModel = useImagesStore();
 const { colors } = storeToRefs(colorModel);
 const { images } = storeToRefs(imagesModel);
 
-type MaybeStringValue<T> = {
-  [key in keyof T]: T[key] | string;
-};
+const config = useExportConfig();
+const colorDataConfig = toValue(config.colorDataConfig);
+const syntaxConfig = toValue(config.syntaxConfig);
 
-type MaybeStringValueColor = Partial<MaybeStringValue<Color>>;
+const { exportData } = useExportData({
+  images,
+  colors,
+  config,
+});
 
-interface ImageObject {
-  image: string;
-  colors: MaybeStringValueColor[];
+const tabs = [
+  {
+    name: 'colors',
+    label: 'Images colors',
+    icon: markRaw(Image),
+  },
+  {
+    name: 'groups',
+    label: 'Grouped images',
+    icon: markRaw(Group),
+  },
+];
+
+const activeTab = ref(tabs[0].name);
+
+function getNonEmptyColors(colorCollection: ColorCollection) {
+  return [...colorCollection.entries()].filter(([_, value]) => (value !== null)) as Array<[number, ImageColor]>;
 }
-
-const colorConfig = ref<Record<keyof Color, { isIncluded: boolean; label: string }>>({
-  hex: { isIncluded: true, label: 'Hex' },
-  rgb: { isIncluded: true, label: 'RGB' },
-  hsl: { isIncluded: true, label: 'HSL' },
-  luminance: { isIncluded: true, label: 'Luminance' },
-  rgbArray: { isIncluded: true, label: 'RGB Array' },
-  hslArray: { isIncluded: true, label: 'HSL Array' },
-});
-
-const syntaxConfig = ref({
-  snakeCase: { isActive: false, label: 'Snake case' },
-});
-
-function formatImageColors(imageObjects: ImageObject[], [imageId, img]: [ImageId, Img]): ImageObject[] {
-  const image = img.origin === 'file' ? img.fileName : img.originalSrc;
-
-  const imageColors = colors.value.get(imageId);
-  if (!imageColors) return imageObjects;
-
-  const formattedColors: MaybeStringValueColor[] = [...imageColors.values()]
-    .reduce((partialImageColors: MaybeStringValueColor[], imageColor: ImageColor | null) => {
-      if (!imageColor) return partialImageColors;
-
-      const targetColor = imageColor.handpicked ?? imageColor.original;
-
-      const colorData: MaybeStringValue<Color> = {
-        hex: targetColor.hex,
-        rgb: targetColor.rgb,
-        hsl: targetColor.hsl,
-        luminance: targetColor.luminance,
-        rgbArray: targetColor.rgbArray,
-        hslArray: targetColor.hslArray.map(Math.round) as HSL,
-      };
-
-      const appendProperty = (prop: keyof Color) => {
-        return colorConfig.value[prop].isIncluded && { [syntaxConfig.value.snakeCase.isActive ? camelToSnake(prop) : prop]: colorData[prop] };
-      };
-
-      const partialColor: MaybeStringValueColor = {
-        ...appendProperty('hex'),
-        ...appendProperty('rgb'),
-        ...appendProperty('hsl'),
-        ...appendProperty('luminance'),
-        ...appendProperty('rgbArray'),
-        ...appendProperty('hslArray'),
-      };
-
-      if (isEmptyObject(partialColor)) return partialImageColors;
-
-      partialImageColors.push(partialColor);
-
-      return partialImageColors;
-    }, []);
-
-  const result: ImageObject = { image, colors: formattedColors };
-
-  imageObjects.push(result);
-
-  return imageObjects;
-}
-
-const imagesText = computed(() => {
-  const _images = [...images.value.entries()].reduce(formatImageColors, []);
-
-  const formatted = JSON.stringify(_images, null, 2);
-
-  console.log(_images);
-
-  return formatted;
-});
 </script>
 
 <template>
-  <section>
-    <div class="my-3 flex flex-col flex-nowrap gap-1.5">
-      <div
-        v-for="switcher in colorConfig"
-        :key="switcher.label"
-        class="flex flex-nowrap items-center gap-2 text-black font-mono text-xs"
-      >
-        <NSwitch
-          v-model:value="switcher.isIncluded"
-          size="small"
-          :round="false"
-        />
-        <div>{{ switcher.label }}</div>
+  <section class="py-6 flex flex-nowrap justify-between items-start">
+    <div class="bg-white/75 rounded-md shadow-md p-3 w-96">
+      <ExportDataConfig
+        v-model:colorDataConfig="colorDataConfig"
+        v-model:syntaxConfig="syntaxConfig"
+      />
+    </div>
+    <div class="bg-white/75 rounded-md shadow-md py-3">
+      <div class="max-w-2xl mx-auto mb-3">
+        <NTabs
+          v-model:value="activeTab"
+          type="segment"
+          justifyContent="center"
+          animated
+          class="font-mono"
+        >
+          <NTab
+            v-for="tab in tabs"
+            :key="tab.name"
+            :name="tab.name"
+          >
+            <div class="flex justify-center items-center gap-x-[6px]">
+              <Component
+                :is="tab.icon"
+                :size="21"
+                :stroke-width="1.5"
+              />
+              <span class="font-mono">{{ tab.label }}</span>
+            </div>
+          </NTab>
+        </NTabs>
       </div>
-      <div
-        v-for="switcher in syntaxConfig"
-        :key="switcher.label"
-        class="flex flex-nowrap items-center gap-2 text-black font-mono text-xs"
-      >
-        <NSwitch
-          v-model:value="switcher.isActive"
-          size="small"
-          :round="false"
-        />
-        <div>{{ switcher.label }}</div>
+      <div class="overflow-hidden">
+        <DataPane>
+          <template #left>
+            <NScrollbar class="border rounded-md shadow-inner">
+              <div class="grid grid-cols-3 gap-3 p-3">
+                <NCard
+                  v-for="[imageId, colorCollection] in colors"
+                  :key="imageId"
+                  contentStyle="padding: 0;"
+                  hoverable
+                  class="!rounded-md !overflow-hidden"
+                >
+                  <template #cover>
+                    <div class="relative w-full aspect-[1.55/1]">
+                      <NImage
+                        class="absolute w-full h-full chess-bg"
+                        :src="images.get(imageId)?.croppedSrc ?? images.get(imageId)?.blobSrc"
+                        objectFit="cover"
+                        :imgProps="{ crossorigin: 'anonymous', style: { width: '100%', height: '100%' } }"
+                      />
+                    </div>
+                  </template>
+                  <div class="flex flex-nowrap h-10">
+                    <div
+                      v-for="([staticIndex, color], index) in getNonEmptyColors(colorCollection)"
+                      :key="staticIndex"
+                      :style="{ backgroundColor: color.handpicked?.hex ?? color.original.hex }"
+                      class="text-xs font-mono flex items-center justify-center w-full border-b border-t border-black"
+                      :class="[
+                        index === 0 ? 'rounded-bl-md border-l' : null,
+                        index === getNonEmptyColors(colorCollection).length - 1 ? 'rounded-br-md border-r' : null,
+                      ]"
+                    >
+                      {{ color.handpicked?.hex ?? color.original.hex }}
+                    </div>
+                  </div>
+                </NCard>
+              </div>
+            </NScrollbar>
+          </template>
+          <template #right>
+            2
+          </template>
+        </DataPane>
       </div>
     </div>
-    <pre>{{ imagesText }}</pre>
   </section>
 </template>
