@@ -5,3 +5,5 @@ declare module 'colorthief' {
     getPalette: (img: HTMLImageElement | null, colorCount: number = 10, quality: number = 10) => RGBColor[];
   }
 }
+
+declare module 'vue-virtual-scroller';

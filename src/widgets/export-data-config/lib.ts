@@ -1,10 +1,12 @@
 import type { Ref } from 'vue';
 import { ref } from 'vue';
+import type { ColorScheme, PivotId, SchemeId } from '@/features/color/sort-colors';
+import { createColorScheme } from '@/features/color/sort-colors';
 import { generateColorData } from '@/entities/color';
 import { generateRandomRgb } from '@/shared/lib/color';
 import { createImageFromFile } from '@/features/image/get-from-image-file';
 import { createImageFromLink } from '@/features/image/get-from-links';
-import type { ColorCollection } from '@/entities/color';
+import type { ColorCollection, ImageColor } from '@/entities/color';
 import type { ImageId, Img } from '@/entities/image';
 
 const DEMO_IMAGE_1: Img = createImageFromFile({
@@ -19,25 +21,48 @@ const DEMO_IMAGES_PAYLOAD: Array<[ImageId, Img]> = [
   [DEMO_IMAGE_1.id, DEMO_IMAGE_1],
   [DEMO_IMAGE_2.id, DEMO_IMAGE_2],
 ];
-export const DEMO_IMAGES: Ref<Map<ImageId, Img>> = ref(new Map(DEMO_IMAGES_PAYLOAD));
+const DEMO_FILE_IMAGES_PAYLOAD: Array<[ImageId, Img]> = [
+  [DEMO_IMAGE_1.id, DEMO_IMAGE_1],
+];
+const DEMO_LINK_IMAGES_PAYLOAD: Array<[ImageId, Img]> = [
+  [DEMO_IMAGE_2.id, DEMO_IMAGE_2],
+];
 
-const DEMO_COLOR_COLLECTION_1: ColorCollection = new Map(Array.from({ length: 2 }).map((_, index) => [index, {
+export const DEMO_IMAGES: Ref<Map<ImageId, Img>> = ref(new Map(DEMO_IMAGES_PAYLOAD));
+export const DEMO_FILE_IMAGES: Ref<Map<ImageId, Img>> = ref(new Map(DEMO_FILE_IMAGES_PAYLOAD));
+export const DEMO_LINK_IMAGES: Ref<Map<ImageId, Img>> = ref(new Map(DEMO_LINK_IMAGES_PAYLOAD));
+
+const DEMO_SCHEME = createColorScheme();
+
+const DEMO_IMAGE_COLOR_1: ImageColor = {
   imageId: DEMO_IMAGE_1.id,
   original: generateColorData(generateRandomRgb()),
   handpicked: null,
-  isSorted: false,
-  schemeId: null,
-}]));
-const DEMO_COLOR_COLLECTION_2: ColorCollection = new Map(Array.from({ length: 2 }).map((_, index) => [index, {
+  isSorted: true,
+  schemeId: DEMO_SCHEME.id,
+};
+const DEMO_IMAGE_COLOR_2: ImageColor = {
   imageId: DEMO_IMAGE_2.id,
   original: generateColorData(generateRandomRgb()),
   handpicked: generateColorData(generateRandomRgb()),
-  isSorted: false,
-  schemeId: null,
-}]));
+  isSorted: true,
+  schemeId: DEMO_SCHEME.id,
+};
+
+DEMO_SCHEME.colors.set(`${DEMO_IMAGE_COLOR_1.imageId}_${0}` as PivotId, DEMO_IMAGE_COLOR_1);
+DEMO_SCHEME.colors.set(`${DEMO_IMAGE_COLOR_2.imageId}_${1}` as PivotId, DEMO_IMAGE_COLOR_2);
+
+const DEMO_COLOR_COLLECTION_1: ColorCollection = new Map(Array.from({ length: 2 }).map((_, index) => [index, DEMO_IMAGE_COLOR_1]));
+const DEMO_COLOR_COLLECTION_2: ColorCollection = new Map(Array.from({ length: 2 }).map((_, index) => [index, DEMO_IMAGE_COLOR_2]));
 const DEMO_COLORS_PAYLOAD: Array<[ImageId, ColorCollection]> = [
   [DEMO_IMAGE_1.id, DEMO_COLOR_COLLECTION_1],
   [DEMO_IMAGE_2.id, DEMO_COLOR_COLLECTION_2],
 ];
 
 export const DEMO_COLORS: Ref<Map<ImageId, ColorCollection>> = ref(new Map(DEMO_COLORS_PAYLOAD));
+
+const DEMO_SCHEMES_PAYLOAD: Array<[SchemeId, ColorScheme]> = [
+  [DEMO_SCHEME.id, DEMO_SCHEME],
+];
+
+export const DEMO_SCHEMES: Ref<Map<SchemeId, ColorScheme>> = ref(new Map(DEMO_SCHEMES_PAYLOAD));

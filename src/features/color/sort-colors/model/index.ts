@@ -3,9 +3,7 @@ import { nextTick, ref } from 'vue';
 import { createColorScheme, generatePivotId, readPivotId } from '../lib';
 import { useColorsStore } from '@/entities/color';
 import type { ImageId } from '@/entities/image';
-import {
-  getDeltaE00, rgbToXyz, xyzToLab,
-} from '@/shared/lib/color';
+import { getDeltaE00, rgbToXyz, xyzToLab } from '@/shared/lib/color';
 import type { Color, ImageColor } from '@/entities/color';
 
 export type SchemeId = Brand<Id, 'SchemeId'>;
@@ -19,8 +17,8 @@ export interface ColorScheme {
 
 interface DragStartPayload {
   event: DragEvent;
-  originSchemaId?: SchemeId;
   pivotId: PivotId;
+  originSchemaId?: SchemeId;
 }
 
 interface DropPayload {
@@ -60,6 +58,7 @@ export const useSortedColorsStore = defineStore('SortedColorsStore', () => {
 
     targetScheme.colors.clear();
   };
+
   const addColorScheme = () => {
     const newScheme = createColorScheme();
 
@@ -72,6 +71,7 @@ export const useSortedColorsStore = defineStore('SortedColorsStore', () => {
       addColorScheme();
     }
   };
+
   const deleteColorSchemeById = (id: SchemeId) => {
     const targetScheme = colorSchemes.value.get(id);
 

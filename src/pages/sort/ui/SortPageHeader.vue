@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import { MoveLeft, MoveRight } from 'lucide-vue-next';
 import { NButton } from 'naive-ui';
-
-const isDev = import.meta.env.DEV;
 </script>
 
 <template>
@@ -28,7 +26,6 @@ const isDev = import.meta.env.DEV;
     </div>
 
     <RouterLink
-      v-if="isDev"
       v-slot="{ navigate }"
       :to="{ name: 'Save' }"
       custom

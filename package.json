@@ -11,7 +11,8 @@
   },
   "dependencies": {
     "@highlightjs/vue-plugin": "^2.1.0",
-    "@vueuse/core": "^10.5.0",
+    "@vueuse/components": "^10.6.1",
+    "@vueuse/core": "^10.6.1",
     "colorthief": "^2.2.0",
     "lucide-vue-next": "^0.279.0",
     "nanoid": "^5.0.2",

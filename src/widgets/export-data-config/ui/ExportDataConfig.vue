@@ -2,40 +2,42 @@
 import { useVModels } from '@vueuse/core';
 import type { ScrollbarProps } from 'naive-ui';
 import { NCollapseTransition, NScrollbar, NSwitch } from 'naive-ui';
-import { ref } from 'vue';
-import { DEMO_COLORS, DEMO_IMAGES } from '../lib';
-import { HighlightComponent } from '@/entities/export-data';
+import type { Ref } from 'vue';
+import { ref, toRefs } from 'vue';
+import { DEMO_COLORS, DEMO_FILE_IMAGES, DEMO_LINK_IMAGES, DEMO_SCHEMES } from '../lib';
+import HighlightComponent from '@/entities/export-data/ui/HighlightComponent.vue';
 import type {
   ColorDataConfig,
-  ExportDataComposableArgs,
+  ExportDataOrigin,
   SyntaxConfig,
 } from '@/features/export-data/generate-export-data';
 import {
-  ExportDataFilters,
-  useExportData,
+  ExportDataFilters, useExportData,
 } from '@/features/export-data/generate-export-data';
 
 const props = defineProps<{
   colorDataConfig: ColorDataConfig;
   syntaxConfig: SyntaxConfig;
+  origin: 'images' | 'txt' | 'links' | undefined;
+  currentTab: Ref<'colors' | 'groups'>;
 }>();
 
 const emit = defineEmits(['update:colorDataConfig', 'update:syntaxConfig']);
+
+const { origin, currentTab } = toRefs(props);
+
 const {
   colorDataConfig,
   syntaxConfig,
 } = useVModels(props, emit);
 
-const payload: ExportDataComposableArgs = {
-  images: DEMO_IMAGES,
+const demoOrigin: ExportDataOrigin = {
+  images: origin.value === 'images' ? DEMO_FILE_IMAGES : DEMO_LINK_IMAGES,
   colors: DEMO_COLORS,
-  config: {
-    colorDataConfig,
-    syntaxConfig,
-  },
+  colorSchemes: DEMO_SCHEMES,
 };
 
-const { exportData } = useExportData(payload);
+const { imagesData, schemesData } = useExportData({ colorDataConfig, syntaxConfig }, currentTab, demoOrigin);
 
 const exampleVisible = ref(false);
 
@@ -47,7 +49,7 @@ const scrollbarThemeOverrides: ScrollbarThemeOverrides = {
 </script>
 
 <template>
-  <div class="flex flex-col gap-3">
+  <div class="flex flex-col space-y-3">
     <ExportDataFilters
       v-model:colorDataConfig="colorDataConfig"
       v-model:syntaxConfig="syntaxConfig"
@@ -76,10 +78,16 @@ const scrollbarThemeOverrides: ScrollbarThemeOverrides = {
         xScrollable
         :themeOverrides="scrollbarThemeOverrides"
       >
-        <HighlightComponent
-          class="rounded overflow-hidden text-xs"
-          :code="exportData"
-        />
+        <Transition
+          name="fade-slower"
+          mode="out-in"
+        >
+          <HighlightComponent
+            :key="currentTab"
+            class="rounded overflow-hidden text-xs"
+            :code="JSON.stringify(currentTab === 'colors' ? imagesData : schemesData, null, 2)"
+          />
+        </Transition>
       </NScrollbar>
     </NCollapseTransition>
   </div>

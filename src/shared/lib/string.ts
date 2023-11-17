@@ -48,7 +48,11 @@ export const kebabToCamel = (str: string) => str.replace(/(-\w)/g, group => (gro
  *
  * @param {string} str - string - The string to convert
  */
-export const snakeToCamel = (str: string) => str.replace(/(_\w)/g, group => (group[1] as string).toUpperCase());
+export const snakeToCamel = <T extends string>(str: T): SnakeToCamelCase<T> => str.replace(/(_\w)/g, group => (group[1] as string).toUpperCase()) as SnakeToCamelCase<T>;
+export type SnakeToCamelCase<S extends string> =
+  S extends `${infer T}_${infer U}` ?
+    `${T}${Capitalize<SnakeToCamelCase<U>>}` :
+    S;
 /**
  * Capitalize the first letter of a string.
  * @param {string} str - string - the string to capitalize

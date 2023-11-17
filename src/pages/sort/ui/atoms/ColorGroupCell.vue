@@ -33,9 +33,7 @@ const sortedColorsStore = useSortedColorsStore();
         draggable="true"
         :style="{ backgroundColor: imageColor.handpicked?.hex ?? imageColor.original.hex }"
         @dragstart="sortedColorsStore.dragStartHandler({ event: $event, pivotId: generatePivotId(imageId, colorIndex) })"
-      >
-        {{ imageColor.schemeId }}
-      </div>
+      />
     </Transition>
   </div>
 </template>
