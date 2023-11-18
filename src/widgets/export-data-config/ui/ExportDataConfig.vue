@@ -4,7 +4,7 @@ import type { ScrollbarProps } from 'naive-ui';
 import { NCollapseTransition, NScrollbar, NSwitch } from 'naive-ui';
 import type { Ref } from 'vue';
 import { ref, toRefs } from 'vue';
-import { DEMO_COLORS, DEMO_FILE_IMAGES, DEMO_LINK_IMAGES, DEMO_SCHEMES } from '../lib';
+import { DEMO_COLORS, DEMO_COLOR_GROUPS, DEMO_FILE_IMAGES, DEMO_LINK_IMAGES } from '../lib';
 import HighlightComponent from '@/entities/export-data/ui/HighlightComponent.vue';
 import type {
   ColorDataConfig,
@@ -34,10 +34,10 @@ const {
 const demoOrigin: ExportDataOrigin = {
   images: origin.value === 'images' ? DEMO_FILE_IMAGES : DEMO_LINK_IMAGES,
   colors: DEMO_COLORS,
-  colorSchemes: DEMO_SCHEMES,
+  colorGroups: DEMO_COLOR_GROUPS,
 };
 
-const { imagesData, schemesData } = useExportData({ colorDataConfig, syntaxConfig }, currentTab, demoOrigin);
+const { imagesData, colorGroupsData } = useExportData({ colorDataConfig, syntaxConfig }, currentTab, demoOrigin);
 
 const exampleVisible = ref(false);
 
@@ -85,7 +85,7 @@ const scrollbarThemeOverrides: ScrollbarThemeOverrides = {
           <HighlightComponent
             :key="currentTab"
             class="rounded overflow-hidden text-xs"
-            :code="JSON.stringify(currentTab === 'colors' ? imagesData : schemesData, null, 2)"
+            :code="JSON.stringify(currentTab === 'colors' ? imagesData : colorGroupsData, null, 2)"
           />
         </Transition>
       </NScrollbar>

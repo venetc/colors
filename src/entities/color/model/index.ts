@@ -1,12 +1,12 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import type { Color } from '../lib';
-import type { SchemeId } from '@/features/color/sort-colors';
+import type { ColorGroupId } from '@/features/color/sort-colors';
 import type { ImageId } from '@/entities/image';
 
 export interface ImageColor {
   imageId: ImageId;
-  schemeId: SchemeId | null;
+  colorGroupId: ColorGroupId | null;
   isSorted: boolean;
   original: Color;
   handpicked: Color | null;

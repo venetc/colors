@@ -86,12 +86,12 @@ export const useEditColors = defineStore('Features/Color/EditColors', () => {
 
     targetColor.handpicked = newColor;
     targetColor.isSorted = false;
-    targetColor.schemeId = null;
+    targetColor.colorGroupId = null;
   };
   const clearHandpickedColor = (imageColor: ImageColor) => {
     imageColor.handpicked = null;
     imageColor.isSorted = false;
-    imageColor.schemeId = null;
+    imageColor.colorGroupId = null;
 
     return imageColor;
   };
@@ -105,7 +105,7 @@ export const useEditColors = defineStore('Features/Color/EditColors', () => {
 
       color.handpicked = null;
       color.isSorted = false;
-      color.schemeId = null;
+      color.colorGroupId = null;
     });
   };
   const checkIfSomeColorsAreHandpicked = (imageId: ImageId) => {

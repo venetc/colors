@@ -9,7 +9,7 @@ import { beforeLeaveWorkaround } from '@/shared/lib/crutch';
 import { useSortedColorsStore } from '@/features/color/sort-colors';
 import type { ColorHex } from '@/entities/color';
 import { useColorsStore } from '@/entities/color';
-import type { SchemeId } from '@/features/color/sort-colors';
+import type { ColorGroupId } from '@/features/color/sort-colors';
 
 import {
   getLuminance,
@@ -22,17 +22,17 @@ import {
 const colorsStore = useColorsStore();
 const sortedColorsStore = useSortedColorsStore();
 
-const { colorSchemes } = storeToRefs(sortedColorsStore);
+const { colorGroups } = storeToRefs(sortedColorsStore);
 const { colors } = storeToRefs(colorsStore);
 
-const _newScheme = [{
+const _newColorGroup = [{
   title: 'Add new group',
-  handler: sortedColorsStore.addColorScheme,
+  handler: sortedColorsStore.addColorGroup,
 }];
 
-function leadColorChangeHandler(hex: ColorHex, id: SchemeId) {
-  const targetScheme = colorSchemes.value.get(id);
-  if (!targetScheme) return;
+function leadColorChangeHandler(hex: ColorHex, id: ColorGroupId) {
+  const targetColorGroup = colorGroups.value.get(id);
+  if (!targetColorGroup) return;
 
   const rgbArray = hexToRGB(hex);
   const rgb = rgbToCss(rgbArray);
@@ -40,7 +40,7 @@ function leadColorChangeHandler(hex: ColorHex, id: SchemeId) {
   const hsl = hslToCss(hslArray);
   const luminance = getLuminance(rgbArray);
 
-  targetScheme.leadColor = {
+  targetColorGroup.leadColor = {
     hex,
     luminance,
     hsl,
@@ -50,13 +50,13 @@ function leadColorChangeHandler(hex: ColorHex, id: SchemeId) {
   };
 }
 
-onMounted(sortedColorsStore.invalidateSchemes);
+onMounted(sortedColorsStore.invalidateColorGroups);
 
 onBeforeMount(() => {
-  if (colorSchemes.value.size > 0) return;
+  if (colorGroups.value.size > 0) return;
 
   for (let i = 0; i < 3; i++) {
-    sortedColorsStore.addColorScheme();
+    sortedColorsStore.addColorGroup();
   }
 });
 
@@ -107,19 +107,19 @@ function colorsViewToggleHandler() {
             @beforeLeave="beforeLeaveWorkaround"
           >
             <GroupCard
-              v-for="[id, scheme] in colorSchemes"
-              :id="id"
+              v-for="[id, group] in colorGroups"
               :key="id"
-              :scheme="scheme"
-              @onColorDrop="(event, targetSchemaId) => sortedColorsStore.dropHandler({ event, targetSchemaId })"
-              @onColorDragStart="(event, pivotId, originSchemaId) => sortedColorsStore.dragStartHandler({ originSchemaId, pivotId, event })"
-              @onDelete="sortedColorsStore.deleteColorSchemeById"
+              :colorGroupId="id"
+              :colorGroup="group"
+              @onColorDrop="(event, targetGroupId) => sortedColorsStore.dropHandler({ event, targetGroupId })"
+              @onColorDragStart="(event, pivotId, originGroupId) => sortedColorsStore.dragStartHandler({ originGroupId, pivotId, event })"
+              @onDelete="sortedColorsStore.deleteColorGroupById"
               @onLeadColorPick=" leadColorChangeHandler($event, id)"
-              @onClear="sortedColorsStore.clearColorSchemeById"
+              @onClear="sortedColorsStore.clearColorGroupById"
             />
 
             <div
-              v-for="cta in _newScheme"
+              v-for="cta in _newColorGroup"
               :key="cta.title"
               class="cursor-pointer p-2 auto-rows-[2.5rem] 2xl:auto-rows-[2.5rem] xl:auto-rows-[2rem] lg:auto-rows-[1.5rem] grid gap-1.5 justify-items-center items-center grid-cols-[repeat(26,_2.5rem)] 2xl:grid-cols-[repeat(26,_2.5rem)] xl:grid-cols-[repeat(26,_2rem)] lg:grid-cols-[repeat(26,_1.5rem)] border-2  border-dashed w-full transition-all rounded-md text-[rgba(32,_128,_240,_0.15)] hover:text-[rgba(32,_128,_240,_0.25)] active:text-[rgba(32,_128,_240,_0.5)] border-[rgba(32,_128,_240,_0.15)] hover:border-[rgba(32,_128,_240,_0.25)] active:border-[rgba(32,_128,_240,_0.5)]"
               @click="cta.handler"

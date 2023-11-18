@@ -8,7 +8,7 @@ import type { Color, ColorCollection, ImageColor } from '@/entities/color';
 import { useColorsStore } from '@/entities/color';
 import type { ImageId, Img } from '@/entities/image';
 import { useImagesStore } from '@/entities/image';
-import type { ColorScheme, SchemeId } from '@/features/color/sort-colors';
+import type { ColorGroup, ColorGroupId } from '@/features/color/sort-colors';
 import type { CamelToSnakeCase, SnakeToCamelCase } from '@/shared/lib/string';
 
 export type SyntaxConfigOptions = 'snakeCase';
@@ -40,7 +40,7 @@ export interface RawExportImageData {
   colors: Partial<CamelOrSnakeKeys<Color>>[];
 }
 
-export interface ExportSchemeData {
+export interface ExportColorGroupData {
   groupLeadColor: Partial<CamelOrSnakeKeys<Color>>;
   imagesInGroup: RawExportImageData[];
 }
@@ -48,7 +48,7 @@ export interface ExportSchemeData {
 export interface ExportDataOrigin {
   images: Ref<Map<ImageId, Img>>;
   colors: Ref<Map<ImageId, ColorCollection>>;
-  colorSchemes: Ref<Map<SchemeId, ColorScheme>>;
+  colorGroups: Ref<Map<ColorGroupId, ColorGroup>>;
 }
 
 export const TABS = [
@@ -121,14 +121,14 @@ export function useExportData(exportConfig: ExportConfig, currentViewTab: TabsCo
 
   const { images: storeImages } = storeToRefs(imagesStore);
   const { colors: storeColors } = storeToRefs(colorsStore);
-  const { colorSchemes: storeSchemes } = storeToRefs(sortedColorsStore);
+  const { colorGroups: colorGroupsFromStore } = storeToRefs(sortedColorsStore);
 
   const images = origin?.images ?? storeImages;
   const colors = origin?.colors ?? storeColors;
-  const colorSchemes = origin?.colorSchemes ?? storeSchemes;
+  const colorGroups = origin?.colorGroups ?? colorGroupsFromStore;
 
   const imagesData = ref<RawExportImageData[]>([]);
-  const schemesData = ref<CamelOrSnakeKeys<ExportSchemeData>[]>([]);
+  const colorGroupsData = ref<CamelOrSnakeKeys<ExportColorGroupData>[]>([]);
 
   const transformRecord = <T extends Record<string, unknown>, K extends keyof T & string>(key: K, value: T[K]) => {
     return { [syntaxConfig.snakeCase.isActive ? camelToSnake(key) : snakeToCamel(key)]: value };
@@ -179,15 +179,15 @@ export function useExportData(exportConfig: ExportConfig, currentViewTab: TabsCo
     return result;
   };
 
-  const generateSchemesData = () => {
-    const result: CamelOrSnakeKeys<ExportSchemeData>[] = [];
+  const generateColorGroupsData = () => {
+    const result: CamelOrSnakeKeys<ExportColorGroupData>[] = [];
 
-    colorSchemes.value.forEach((colorScheme) => {
-      const groupLeadColor = toRaw(transformColor(colorScheme.leadColor));
+    colorGroups.value.forEach((colorGroup) => {
+      const groupLeadColor = toRaw(transformColor(colorGroup.leadColor));
 
       const imagesInGroup: RawExportImageData[] = [];
 
-      colorScheme.colors.forEach((color) => {
+      colorGroup.colors.forEach((color) => {
         const imageId = color.imageId;
         const image = images.value.get(imageId);
         const colorCollection = colors.value.get(imageId);
@@ -208,17 +208,17 @@ export function useExportData(exportConfig: ExportConfig, currentViewTab: TabsCo
         imagesInGroup.push(imageData);
       });
 
-      const newScheme = {
+      const newColorGroup = {
         groupLeadColor,
         imagesInGroup,
       };
 
-      const transformedScheme = {
-        ...(transformRecord('groupLeadColor', newScheme.groupLeadColor)),
-        ...(transformRecord('imagesInGroup', newScheme.imagesInGroup)),
-      } as CamelOrSnakeKeys<ExportSchemeData>;
+      const transformedColorsGroup = {
+        ...(transformRecord('groupLeadColor', newColorGroup.groupLeadColor)),
+        ...(transformRecord('imagesInGroup', newColorGroup.imagesInGroup)),
+      } as CamelOrSnakeKeys<ExportColorGroupData>;
 
-      result.push(toRaw(transformedScheme));
+      result.push(toRaw(transformedColorsGroup));
     });
 
     return result;
@@ -228,7 +228,7 @@ export function useExportData(exportConfig: ExportConfig, currentViewTab: TabsCo
     ([, , activeTab]) => {
       imagesData.value = generateImagesData();
       if (activeTab === 'groups') {
-        schemesData.value = generateSchemesData();
+        colorGroupsData.value = generateColorGroupsData();
       }
     },
     {
@@ -238,6 +238,6 @@ export function useExportData(exportConfig: ExportConfig, currentViewTab: TabsCo
 
   return {
     imagesData,
-    schemesData,
+    colorGroupsData,
   };
 }

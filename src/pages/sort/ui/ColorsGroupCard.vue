@@ -6,28 +6,28 @@ import { computed, toRefs } from 'vue';
 import { Download, Palette, RotateCcw, Trash2 } from 'lucide-vue-next';
 import { beforeLeaveWorkaround } from '@/shared/lib/crutch';
 import type { ColorHex } from '@/entities/color';
-import type { ColorScheme, PivotId, SchemeId } from '@/features/color/sort-colors';
+import type { ColorGroup, ColorGroupId, PivotId } from '@/features/color/sort-colors';
 import { getContrastTextColor } from '@/shared/lib/color';
 
 const props = defineProps<{
-  id: SchemeId;
-  scheme: ColorScheme;
+  colorGroupId: ColorGroupId;
+  colorGroup: ColorGroup;
 }>();
 const emit = defineEmits<{
-  onDelete: [id: SchemeId];
-  onClear: [id: SchemeId];
+  onDelete: [id: ColorGroupId];
+  onClear: [id: ColorGroupId];
   onLeadColorPick: [hex: ColorHex];
-  onColorDrop: [event: DragEvent, id: SchemeId];
-  onColorDragStart: [event: DragEvent, pivotId: PivotId, id: SchemeId];
+  onColorDrop: [event: DragEvent, id: ColorGroupId];
+  onColorDragStart: [event: DragEvent, pivotId: PivotId, id: ColorGroupId];
 }>();
 
-const { id, scheme } = toRefs(props);
+const { colorGroupId, colorGroup } = toRefs(props);
 
 function positiveButtonPropsHandler(mode: 'delete' | 'clear'): ButtonProps {
   return {
     size: 'tiny',
     type: 'success',
-    onClick: () => mode === 'delete' ? emit('onDelete', id.value) : emit('onClear', id.value),
+    onClick: () => mode === 'delete' ? emit('onDelete', colorGroupId.value) : emit('onClear', colorGroupId.value),
   };
 }
 
@@ -45,15 +45,15 @@ const leadColorChangeHandler = useThrottleFn((e: Event) => {
 }, 50);
 
 function dropHandler(event: DragEvent) {
-  emit('onColorDrop', event, id.value);
+  emit('onColorDrop', event, colorGroupId.value);
 }
 
 function dragStartHandler(event: DragEvent, pivotId: PivotId) {
-  emit('onColorDragStart', event, pivotId, id.value);
+  emit('onColorDragStart', event, pivotId, colorGroupId.value);
 }
 
 const sortedColors = computed(() => {
-  return [...scheme.value.colors.entries()].sort((a, b) => {
+  return [...colorGroup.value.colors.entries()].sort((a, b) => {
     const [, imageColorA] = a;
     const [, imageColorB] = b;
 
@@ -78,9 +78,9 @@ const sortedColors = computed(() => {
         <div class="w-full h-full rounded-xl border relative p-2 grid place-items-center">
           <div
             class="relative z-10 text-xl select-none"
-            :style="{ color: getContrastTextColor(scheme.leadColor.rgbArray) }"
+            :style="{ color: getContrastTextColor(colorGroup.leadColor.rgbArray) }"
           >
-            {{ scheme.leadColor.hex }}
+            {{ colorGroup.leadColor.hex }}
           </div>
 
           <div
@@ -98,7 +98,7 @@ const sortedColors = computed(() => {
                 <NButton
                   type="error"
                   size="tiny"
-                  :disabled="scheme.colors.size < 1"
+                  :disabled="colorGroup.colors.size < 1"
                 >
                   <template #icon>
                     <RotateCcw :size="14" />
@@ -109,7 +109,7 @@ const sortedColors = computed(() => {
             </NPopconfirm>
             <div class="overflow-hidden relative flex items-center content-center">
               <input
-                :value="scheme.leadColor.hex"
+                :value="colorGroup.leadColor.hex"
                 type="color"
                 class="opacity-0 absolute w-full h-full cursor-pointer bottom-0 left-0 z-10"
                 @change="leadColorChangeHandler"
@@ -149,14 +149,14 @@ const sortedColors = computed(() => {
 
           <div
             class="w-full h-full absolute top-0 left-0 rounded-md transition-all ease-linear duration-100 z-0"
-            :style="{ backgroundColor: scheme.leadColor.hex }"
+            :style="{ backgroundColor: colorGroup.leadColor.hex }"
           />
         </div>
       </div>
     </div>
 
     <div
-      v-if="!scheme.colors.size"
+      v-if="!colorGroup.colors.size"
       class="flex flex-col items-center justify-center gap-1 text-xl text-slate-400 transition-all col-[1_/_span_20] row-span-3 w-full border-2 border-dashed rounded-md border-slate-300 opacity-0 hover:opacity-100"
     >
       <div class="select-none">

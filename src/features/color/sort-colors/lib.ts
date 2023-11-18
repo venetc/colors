@@ -1,10 +1,10 @@
-import type { ColorScheme, PivotId, SchemeId } from './model';
+import type { ColorGroup, ColorGroupId, PivotId } from './model';
 import type { Color, ColorHex, ImageColor } from '@/entities/color';
 import { generateId } from '@/shared/lib/nanoid.ts';
 import { generateRandomRgb, getLuminance, hslToCss, rgbToCss, rgbToHSL, rgbToHex } from '@/shared/lib/color';
 import type { ImageId } from '@/entities/image';
 
-export function createColorScheme() {
+export function createColorGroup() {
   const rgbArray = generateRandomRgb();
   const hex = rgbToHex(rgbArray) as ColorHex;
   const hsl = hslToCss(rgbArray);
@@ -21,9 +21,9 @@ export function createColorScheme() {
     luminance,
   };
 
-  const id = generateId() as SchemeId;
+  const id = generateId() as ColorGroupId;
 
-  const result: ColorScheme = {
+  const result: ColorGroup = {
     leadColor,
     id,
     colors: new Map<PivotId, ImageColor>(),

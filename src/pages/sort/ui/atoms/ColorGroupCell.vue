@@ -20,7 +20,7 @@ const sortedColorsModel = useSortedColorsStore();
       <div
         v-if="imageColor.isSorted"
         class="group/color hover:border-opacity-25 active:border-opacity-50 border-opacity-10 transition-all transform-gpu absolute text-red-500 top-0 left-0 w-full h-full rounded border-2 border-black border-dashed cursor-pointer flex items-center justify-center"
-        @click="sortedColorsModel.removeColorFromSchemes(imageId, colorIndex)"
+        @click="sortedColorsModel.removeColorFromGroups(imageId, colorIndex)"
       >
         <RotateCcw
           class="group-hover/color:opacity-75 group-active/color:opacity-100 opacity-0 transition-all transform-gpu"

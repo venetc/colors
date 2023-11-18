@@ -9,7 +9,7 @@ import ColorGroupCardWithImages from '@/pages/save/ui/ColorGroupCardWithImages.v
 import HighlightComponent from '@/entities/export-data/ui/HighlightComponent.vue';
 import type { ImageId, Img } from '@/entities/image';
 import { useImagesStore } from '@/entities/image';
-import type { ColorScheme, SchemeId } from '@/features/color/sort-colors';
+import type { ColorGroup, ColorGroupId } from '@/features/color/sort-colors';
 import { useSortedColorsStore } from '@/features/color/sort-colors';
 import { useExportData, useExportDataConfig, usePreviewTabs } from '@/features/export-data/generate-export-data';
 import DataPane from '@/pages/save/ui/DataPane.vue';
@@ -38,13 +38,13 @@ const {
   images,
 } = storeToRefs(imagesModel);
 // const { colors } = storeToRefs(colorsModel);
-const { colorSchemes } = storeToRefs(sortedColorsModel);
+const { colorGroups } = storeToRefs(sortedColorsModel);
 
 const exportDataStore = useExportData(config, previewTabs.activeTab);
 
 const {
   imagesData,
-  schemesData,
+  colorGroupsData,
 } = exportDataStore;
 
 /* function getImagesSrc(imageToken: string) {
@@ -72,12 +72,12 @@ function findDataToCopy(image: Img) {
   return imagesData.value.find(imageObject => imageObject.image === searchToken);
 }
 
-function getImagesFromScheme(scheme: ColorScheme) {
-  const imagesFromScheme: Img[] = [];
+function getImagesFromColorGroup(colorGroup: ColorGroup) {
+  const imagesFromColorGroup: Img[] = [];
 
   const imageIds = new Set<ImageId>();
 
-  scheme.colors.forEach((ImageColor) => {
+  colorGroup.colors.forEach((ImageColor) => {
     imageIds.add(ImageColor.imageId);
   });
 
@@ -85,10 +85,10 @@ function getImagesFromScheme(scheme: ColorScheme) {
     const img = images.value.get(imageId);
     if (!img) return;
 
-    imagesFromScheme.push(img);
+    imagesFromColorGroup.push(img);
   });
 
-  return imagesFromScheme;
+  return imagesFromColorGroup;
 }
 
 const imagesBlobLink = ref<{ link: string; filename: string }>({
@@ -129,7 +129,7 @@ watch(imagesData, (newData) => {
   deep: true,
 });
 
-const activeSchemeId = ref<SchemeId>();
+const activeColorGroupId = ref<ColorGroupId>();
 </script>
 
 <template>
@@ -208,14 +208,14 @@ const activeSchemeId = ref<SchemeId>();
                 class="p-3 space-y-3"
               >
                 <ColorGroupCardWithImages
-                  v-for="[schemeId, scheme] in colorSchemes"
-                  :key="schemeId"
-                  :scheme="scheme"
-                  :isOpened="activeSchemeId === schemeId"
-                  @onOpenClick="activeSchemeId === $event ? activeSchemeId = undefined : activeSchemeId = $event"
+                  v-for="[colorGroupId, colorGroup] in colorGroups"
+                  :key="colorGroupId"
+                  :colorsGroup="colorGroup"
+                  :isOpened="activeColorGroupId === colorGroupId"
+                  @onOpenClick="activeColorGroupId === $event ? activeColorGroupId = undefined : activeColorGroupId = $event"
                 >
                   <UseClipboard
-                    v-for="img in getImagesFromScheme(scheme)"
+                    v-for="img in getImagesFromColorGroup(colorGroup)"
                     v-slot="{ copy: copyImageData, copied: imageDataCopied, isSupported: isCopyingSupported }"
                     :key="img.id"
                   >
@@ -243,7 +243,7 @@ const activeSchemeId = ref<SchemeId>();
             >
               <HighlightComponent
                 :key="activeTab"
-                :code="JSON.stringify(activeTab === 'colors' ? imagesData : schemesData, null, 2)"
+                :code="JSON.stringify(activeTab === 'colors' ? imagesData : colorGroupsData, null, 2)"
                 class="rounded overflow-hidden text-xs"
                 raw
               />
