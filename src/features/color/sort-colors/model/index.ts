@@ -30,7 +30,6 @@ export const useSortedColorsStore = defineStore('SortedColorsStore', () => {
   const colorSchemes = ref<Map<SchemeId, ColorScheme>>(new Map());
 
   const colorsStore = useColorsStore();
-
   const { colors } = storeToRefs(colorsStore);
 
   const clearColorSchemeById = (id: SchemeId) => {
@@ -58,7 +57,6 @@ export const useSortedColorsStore = defineStore('SortedColorsStore', () => {
 
     targetScheme.colors.clear();
   };
-
   const addColorScheme = () => {
     const newScheme = createColorScheme();
 
@@ -71,7 +69,6 @@ export const useSortedColorsStore = defineStore('SortedColorsStore', () => {
       addColorScheme();
     }
   };
-
   const deleteColorSchemeById = (id: SchemeId) => {
     const targetScheme = colorSchemes.value.get(id);
 
@@ -81,7 +78,6 @@ export const useSortedColorsStore = defineStore('SortedColorsStore', () => {
 
     colorSchemes.value.delete(id);
   };
-
   const dragStartHandler = async (args: DragStartPayload) => {
     const {
       event,
@@ -103,7 +99,6 @@ export const useSortedColorsStore = defineStore('SortedColorsStore', () => {
 
     event.dataTransfer.setData('text/plain', JSON.stringify(payload));
   };
-
   const dropHandler = async (args: DropPayload) => {
     const {
       event,
@@ -175,7 +170,6 @@ export const useSortedColorsStore = defineStore('SortedColorsStore', () => {
       event.dataTransfer.clearData();
     }
   };
-
   const invalidateSchemes = () => {
     colorSchemes.value.forEach((scheme, schemeId) => {
       scheme.colors.forEach((colorFromScheme, pivotId) => {
@@ -216,7 +210,6 @@ export const useSortedColorsStore = defineStore('SortedColorsStore', () => {
       });
     });
   };
-
   const removeColorFromSchemes = (imageId: ImageId, colorIndex: number) => {
     const pivotId = generatePivotId(imageId, colorIndex);
 
@@ -231,7 +224,6 @@ export const useSortedColorsStore = defineStore('SortedColorsStore', () => {
       scheme.colors.delete(pivotId);
     });
   };
-
   const sortOutColorsByImageId = (imageId: ImageId) => {
     const colorsFromPool = colors.value.get(imageId);
 
@@ -243,7 +235,6 @@ export const useSortedColorsStore = defineStore('SortedColorsStore', () => {
       removeColorFromSchemes(imageId, +index);
     });
   };
-
   const resetSorting = () => {
     colorSchemes.value.forEach((scheme) => {
       scheme.colors.forEach((_, pivotId, colorScheme) => {
@@ -273,7 +264,6 @@ export const useSortedColorsStore = defineStore('SortedColorsStore', () => {
       });
     });
   };
-
   const autoSort = () => {
     if (colorSchemes.value.size < 1) return;
 

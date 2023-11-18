@@ -33,10 +33,17 @@ export const useColorsStore = defineStore('Entities/Color', () => {
 
     return targetColorsFromPool.get(colorIndex);
   };
+  const removeColor = (imageId: ImageId, indexKey: number) => {
+    const target = colors.value.get(imageId);
+    if (!target) return;
+
+    target.set(indexKey, null);
+  };
   return {
     colors,
     amountOfColors,
     resetColorsStore,
     getColorFromPool,
+    removeColor,
   };
 });

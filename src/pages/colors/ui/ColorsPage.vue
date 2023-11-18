@@ -4,8 +4,10 @@ import { NButton } from 'naive-ui';
 import { storeToRefs } from 'pinia';
 import { nextTick, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
+import ColorEditor from '@/features/color/edit-colors/ui/ColorEditor.vue';
+import ColorCell from '@/entities/color/ui/ColorCell.vue';
 import { useHeaderStore } from '@/widgets/header/model';
-import { ColorsEditor, useColorsStore } from '@/entities/color';
+import { ColorsList, useColorsStore } from '@/entities/color';
 import { ImageEditor, useImageEditorStore } from '@/widgets/image-editor';
 import type { ImageId, Img } from '@/entities/image';
 import { ImageCard, useImagesStore } from '@/entities/image';
@@ -79,12 +81,19 @@ router.beforeEach((to, _, next) => {
       >
         <div class="flex flex-nowrap justify-between py-2 px-2 before:w-[26px]">
           <div class="flex items-center gap-2 h-12 relative">
-            <ColorsEditor
-              :colors="editColorsModel.getColorsByImageId(image.id)"
-              @onDelete="editColorsModel.removeColor(image.id, $event)"
-              @onColorPick="(newColor, indexKey) => editColorsModel.handpickColor(newColor, indexKey, image.id)"
-              @onResetHandpicked="editColorsModel.clearHandpickedColor"
-            />
+            <ColorsList :colors="editColorsModel.getColorsByImageId(image.id)">
+              <template #color="{ imageColor, indexKey }">
+                <ColorEditor
+                  :colorIndex="indexKey"
+                  :imageColor="imageColor"
+                  @onDelete="colorsModel.removeColor(image.id, indexKey)"
+                  @onColorPick="(newColor) => editColorsModel.handpickColor(newColor, indexKey, image.id)"
+                  @onResetHandpicked="editColorsModel.clearHandpickedColor"
+                >
+                  <ColorCell :color="imageColor" />
+                </ColorEditor>
+              </template>
+            </ColorsList>
           </div>
 
           <div

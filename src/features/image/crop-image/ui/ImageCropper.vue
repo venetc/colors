@@ -16,14 +16,6 @@ const props = defineProps<Props>();
 const emit = defineEmits<{
   onCrop: [croppedSrc: string];
   onResize: [];
-  onInit: [{
-    minWidth: number;
-    minHeight: number;
-    scaledWidth: number;
-    scaledHeight: number;
-    parentWidth: number;
-    parentHeight: number;
-  }];
 }>();
 
 const {

@@ -6,9 +6,11 @@ import { Crop, Lasso, Redo2, RotateCcw, Scaling, Undo2, X } from 'lucide-vue-nex
 
 import { useImageEditorStore } from '../model';
 import RatioSliders from './RatioSliders.vue';
+import ColorEditor from '@/features/color/edit-colors/ui/ColorEditor.vue';
+import ColorCell from '@/entities/color/ui/ColorCell.vue';
 import { useEditColors } from '@/features/color/edit-colors';
 import type { Color } from '@/entities/color';
-import { ColorsEditor, useColorsStore } from '@/entities/color';
+import { ColorsList, useColorsStore } from '@/entities/color';
 import type { ExposedCropperData } from '@/features/image/crop-image';
 import {
   ImageCropper,
@@ -23,6 +25,7 @@ const emit = defineEmits<{
 
 const imageEditorStore = useImageEditorStore();
 const editColorsModel = useEditColors();
+const colorsModel = useColorsStore();
 
 const {
   isEditorActive,
@@ -34,9 +37,6 @@ const {
   setActiveImage,
   setImageCroppedSrc,
 } = imageEditorStore;
-
-const colorsStore = useColorsStore();
-const { amountOfColors } = colorsStore;
 
 const cropper = ref<InstanceType<typeof ImageCropper> & ExposedCropperData>();
 
@@ -53,7 +53,7 @@ const hasSomeColors = computed(() => {
 
   if (!image) return false;
 
-  return amountOfColors(image.id) > 0;
+  return colorsModel.amountOfColors(image.id) > 0;
 });
 
 function colorPickHandler(newColor: Color, indexKey: number) {
@@ -78,17 +78,6 @@ const cantResetEditor = computed(() => {
 
 const widthPercent = ref(100);
 const heightPercent = ref(100);
-
-function setInitialDimension(dims: {
-  minWidth: number;
-  minHeight: number;
-  scaledWidth: number;
-  scaledHeight: number;
-  parentWidth: number;
-  parentHeight: number;
-}) {
-  console.log(dims);
-}
 </script>
 
 <template>
@@ -111,7 +100,6 @@ function setInitialDimension(dims: {
           :size="{ width: widthPercent, height: heightPercent }"
           @onCrop="setImageCroppedSrc"
           @onResize="setImageCroppedSrc(null)"
-          @onInit="setInitialDimension"
         />
       </div>
       <div
@@ -188,13 +176,23 @@ function setInitialDimension(dims: {
           v-if="hasSomeColors"
           class="bg-gradient-to-br from-slate-100/25 to-slate-400/25 rounded-lg shadow-lg px-2 py-2 flex flex-col gap-2 w-full transition-all"
         >
-          <ColorsEditor
-            compact
+          <ColorsList
             :colors="editColorsModel.getColorsByImageId(activeImage.id)"
-            @onDelete="editColorsModel.removeColor(activeImage.id, $event)"
-            @onColorPick="colorPickHandler"
-            @onResetHandpicked="editColorsModel.clearHandpickedColor"
-          />
+            compact
+          >
+            <template #color="{ imageColor, indexKey }">
+              <ColorEditor
+                :colorIndex="indexKey"
+                :imageColor="imageColor"
+                compact
+                @onDelete="colorsModel.removeColor(activeImage.id, indexKey)"
+                @onColorPick="(newColor) => colorPickHandler(newColor, indexKey)"
+                @onResetHandpicked="editColorsModel.clearHandpickedColor"
+              >
+                <ColorCell :color="imageColor" />
+              </ColorEditor>
+            </template>
+          </ColorsList>
         </div>
 
         <div
@@ -229,15 +227,6 @@ function setInitialDimension(dims: {
                 v-model:width="widthPercent"
                 v-model:height="heightPercent"
               />
-              <!--              <div
-                v-for="variant in ratios"
-                :key="variant.label"
-                class="text-white text-sm cursor-pointer flex flex-nowrap justify-between items-center gap-1 transition-all"
-                :class="[selectedRatio.value === variant.value ? 'opacity-100 translate-x-1' : 'opacity-50']"
-                @click="ratioSelectHandler(variant)"
-              >
-                {{ variant.label }}
-              </div> -->
             </div>
           </NPopover>
           <NButton

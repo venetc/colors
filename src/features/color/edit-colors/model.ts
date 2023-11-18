@@ -115,12 +115,6 @@ export const useEditColors = defineStore('Features/Color/EditColors', () => {
 
     return [...target.values()].some(color => color && color.handpicked);
   };
-  const removeColor = (imageId: ImageId, indexKey: number) => {
-    const target = colors.value.get(imageId);
-    if (!target) return;
-
-    target.set(indexKey, null);
-  };
   const getColorsByImageId = (id: ImageId) => (colors.value.get(id));
   const cantResetColor = (id: ImageId) => {
     const someAreHandpicked = checkIfSomeColorsAreHandpicked(id);
@@ -140,7 +134,6 @@ export const useEditColors = defineStore('Features/Color/EditColors', () => {
     clearHandpickedColor,
     clearAllHandpickedColors,
     checkIfSomeColorsAreHandpicked,
-    removeColor,
     getColorsByImageId,
     cantResetColor,
     setColorReadModalIsActive,

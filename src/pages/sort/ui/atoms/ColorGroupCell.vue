@@ -8,7 +8,7 @@ import { generatePivotId, useSortedColorsStore } from '@/features/color/sort-col
 const props = defineProps<{ imageColor: ImageColor; imageId: ImageId; colorIndex: number }>();
 const { imageColor, imageId, colorIndex } = toRefs(props);
 
-const sortedColorsStore = useSortedColorsStore();
+const sortedColorsModel = useSortedColorsStore();
 </script>
 
 <template>
@@ -20,7 +20,7 @@ const sortedColorsStore = useSortedColorsStore();
       <div
         v-if="imageColor.isSorted"
         class="group/color hover:border-opacity-25 active:border-opacity-50 border-opacity-10 transition-all transform-gpu absolute text-red-500 top-0 left-0 w-full h-full rounded border-2 border-black border-dashed cursor-pointer flex items-center justify-center"
-        @click="sortedColorsStore.removeColorFromSchemes(imageId, colorIndex)"
+        @click="sortedColorsModel.removeColorFromSchemes(imageId, colorIndex)"
       >
         <RotateCcw
           class="group-hover/color:opacity-75 group-active/color:opacity-100 opacity-0 transition-all transform-gpu"
@@ -32,7 +32,7 @@ const sortedColorsStore = useSortedColorsStore();
         class="absolute top-0 left-0 w-full h-full rounded border-2 2xl:border-2 xl:border-2 lg:border border-black text-xs"
         draggable="true"
         :style="{ backgroundColor: imageColor.handpicked?.hex ?? imageColor.original.hex }"
-        @dragstart="sortedColorsStore.dragStartHandler({ event: $event, pivotId: generatePivotId(imageId, colorIndex) })"
+        @dragstart="sortedColorsModel.dragStartHandler({ event: $event, pivotId: generatePivotId(imageId, colorIndex) })"
       />
     </Transition>
   </div>
