@@ -3,23 +3,21 @@ import { UseClipboard } from '@vueuse/components';
 import { NTab, NTabs } from 'naive-ui';
 import { storeToRefs } from 'pinia';
 import { ref, watch } from 'vue';
+import { useColorGroups } from '@/entities/colors-group';
 import ColorGroupCardWithImages from '@/pages/save/ui/ColorGroupCardWithImages.vue';
-
-// import { useColorsStore } from '@/entities/color';
 import HighlightComponent from '@/entities/export-data/ui/HighlightComponent.vue';
 import type { ImageId, Img } from '@/entities/image';
-import { useImagesStore } from '@/entities/image';
-import type { ColorGroup, ColorGroupId } from '@/features/color/sort-colors';
-import { useSortedColorsStore } from '@/features/color/sort-colors';
+import { useImages } from '@/entities/image';
+import type { ColorGroup, ColorGroupId } from '@/entities/colors-group';
 import { useExportData, useExportDataConfig, usePreviewTabs } from '@/features/export-data/generate-export-data';
 import DataPane from '@/pages/save/ui/DataPane.vue';
 import ExportImageCard from '@/pages/save/ui/ExportImageCard.vue';
 import { ImageCardHOC } from '@/pages/save/ui/ImageCardHOC.ts';
 import { ExportDataConfig } from '@/widgets/export-data-config';
 
-const imagesModel = useImagesStore();
-// const colorsModel = useColorsStore();
-const sortedColorsModel = useSortedColorsStore();
+const imagesModel = useImages();
+// const colorsModel = useColors();
+const colorGroupsModel = useColorGroups();
 const config = useExportDataConfig();
 const previewTabs = usePreviewTabs();
 
@@ -38,14 +36,14 @@ const {
   images,
 } = storeToRefs(imagesModel);
 // const { colors } = storeToRefs(colorsModel);
-const { colorGroups } = storeToRefs(sortedColorsModel);
+const { colorGroups } = storeToRefs(colorGroupsModel);
 
-const exportDataStore = useExportData(config, previewTabs.activeTab);
+const exportDataModel = useExportData(config, previewTabs.activeTab);
 
 const {
   imagesData,
   colorGroupsData,
-} = exportDataStore;
+} = exportDataModel;
 
 /* function getImagesSrc(imageToken: string) {
   const image = [...images.value.values()].find((img) => {

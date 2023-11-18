@@ -1,7 +1,7 @@
 import type { Ref } from 'vue';
 import { ref } from 'vue';
-import type { ColorGroup, ColorGroupId, PivotId } from '@/features/color/sort-colors';
-import { createColorGroup } from '@/features/color/sort-colors';
+import type { ColorGroup, ColorGroupId, PivotId } from '@/entities/colors-group';
+import { createColorGroup } from '@/entities/colors-group';
 import { generateColorData } from '@/entities/color';
 import { generateRandomRgb } from '@/shared/lib/color';
 import { createImageFromFile } from '@/features/image/get-from-image-file';

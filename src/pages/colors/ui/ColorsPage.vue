@@ -6,18 +6,18 @@ import { nextTick, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import ColorEditor from '@/features/color/edit-colors/ui/ColorEditor.vue';
 import ColorCell from '@/entities/color/ui/ColorCell.vue';
-import { useHeaderStore } from '@/widgets/header/model';
-import { ColorsList, useColorsStore } from '@/entities/color';
-import { ImageEditor, useImageEditorStore } from '@/widgets/image-editor';
+import { useHeader } from '@/widgets/header/model';
+import { ColorsList, useColors } from '@/entities/color';
+import { ImageEditor, useImageEditor } from '@/widgets/image-editor';
 import type { ImageId, Img } from '@/entities/image';
-import { ImageCard, useImagesStore } from '@/entities/image';
+import { ImageCard, useImages } from '@/entities/image';
 import { ReadColorsModal, useEditColors } from '@/features/color/edit-colors';
 
-const colorsModel = useColorsStore();
-const imagesModel = useImagesStore();
-const imageEditorModel = useImageEditorStore();
+const colorsModel = useColors();
+const imagesModel = useImages();
+const imageEditorModel = useImageEditor();
 const editColorsModel = useEditColors();
-const appHeaderModel = useHeaderStore();
+const appHeaderModel = useHeader();
 
 const { images } = storeToRefs(imagesModel);
 const { colors } = storeToRefs(colorsModel);

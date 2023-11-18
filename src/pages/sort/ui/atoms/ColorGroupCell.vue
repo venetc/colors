@@ -3,12 +3,13 @@ import { RotateCcw } from 'lucide-vue-next';
 import { toRefs } from 'vue';
 import type { ImageColor } from '@/entities/color';
 import type { ImageId } from '@/entities/image';
-import { generatePivotId, useSortedColorsStore } from '@/features/color/sort-colors';
+import { useSortedColors } from '@/features/color/sort-colors';
+import { generatePivotId } from '@/entities/colors-group';
 
 const props = defineProps<{ imageColor: ImageColor; imageId: ImageId; colorIndex: number }>();
 const { imageColor, imageId, colorIndex } = toRefs(props);
 
-const sortedColorsModel = useSortedColorsStore();
+const sortedColorsModel = useSortedColors();
 </script>
 
 <template>

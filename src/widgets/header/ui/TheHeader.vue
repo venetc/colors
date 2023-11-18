@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
 import type { Component } from 'vue';
-import { useHeaderStore } from '@/widgets/header/model';
+import { useHeader } from '@/widgets/header/model';
 
 const props = defineProps<{ content: Component }>();
 
-const appHeaderStore = useHeaderStore();
-const { isHeaderActive } = storeToRefs(appHeaderStore);
+const appHeaderModel = useHeader();
+const { isHeaderActive } = storeToRefs(appHeaderModel);
 </script>
 
 <template>

@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
-import { useImagesStore } from '@/entities/image';
+import { useImages } from '@/entities/image';
 import { useGetImageFromFile } from '@/features/image/get-from-image-file';
 import { DataLoader } from '@/widgets/data-loader';
 import { ImagesGrid } from '@/widgets/images-grid';
 
-const imagesStore = useImagesStore();
+const imagesModel = useImages();
 const getImageFromFileModel = useGetImageFromFile();
 
-const { images } = storeToRefs(imagesStore);
+const { images } = storeToRefs(imagesModel);
 </script>
 
 <template>
@@ -16,7 +16,7 @@ const { images } = storeToRefs(imagesStore);
     <ImagesGrid
       class="row-start-1 col-start-7 col-span-6 xl:col-start-7 xl:col-span-6 2xl:col-start-5 2xl:col-span-8"
       :images="images"
-      @onRemove="imagesStore.removeImageFromList($event); getImageFromFileModel.removeFileFromList($event)"
+      @onRemove="imagesModel.removeImageFromList($event); getImageFromFileModel.removeFileFromList($event)"
     />
 
     <DataLoader

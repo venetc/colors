@@ -2,13 +2,13 @@ import { Group, Image } from 'lucide-vue-next';
 import { storeToRefs } from 'pinia';
 import type { MaybeRef, Ref } from 'vue';
 import { markRaw, ref, toRaw, toValue, watch } from 'vue';
+import { useColorGroups } from '@/entities/colors-group';
 import { camelToSnake, snakeToCamel } from '@/shared/lib/string';
-import { useSortedColorsStore } from '@/features/color/sort-colors';
 import type { Color, ColorCollection, ImageColor } from '@/entities/color';
-import { useColorsStore } from '@/entities/color';
+import { useColors } from '@/entities/color';
 import type { ImageId, Img } from '@/entities/image';
-import { useImagesStore } from '@/entities/image';
-import type { ColorGroup, ColorGroupId } from '@/features/color/sort-colors';
+import { useImages } from '@/entities/image';
+import type { ColorGroup, ColorGroupId } from '@/entities/colors-group';
 import type { CamelToSnakeCase, SnakeToCamelCase } from '@/shared/lib/string';
 
 export type SyntaxConfigOptions = 'snakeCase';
@@ -115,13 +115,13 @@ export function useExportData(exportConfig: ExportConfig, currentViewTab: TabsCo
   const colorDataConfig = toValue(exportConfig.colorDataConfig);
   const syntaxConfig = toValue(exportConfig.syntaxConfig);
 
-  const imagesStore = useImagesStore();
-  const colorsStore = useColorsStore();
-  const sortedColorsStore = useSortedColorsStore();
+  const imagesModel = useImages();
+  const colorsModel = useColors();
+  const colorGroupsModel = useColorGroups();
 
-  const { images: storeImages } = storeToRefs(imagesStore);
-  const { colors: storeColors } = storeToRefs(colorsStore);
-  const { colorGroups: colorGroupsFromStore } = storeToRefs(sortedColorsStore);
+  const { images: storeImages } = storeToRefs(imagesModel);
+  const { colors: storeColors } = storeToRefs(colorsModel);
+  const { colorGroups: colorGroupsFromStore } = storeToRefs(colorGroupsModel);
 
   const images = origin?.images ?? storeImages;
   const colors = origin?.colors ?? storeColors;

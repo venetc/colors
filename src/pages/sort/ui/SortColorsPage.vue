@@ -5,11 +5,12 @@ import { computed, onBeforeMount, onMounted, ref } from 'vue';
 import { NButton } from 'naive-ui';
 import GroupCard from './ColorsGroupCard.vue';
 import { ColorGroupsList, ColorsList } from './organisms';
+import { useColorGroups } from '@/entities/colors-group';
 import { beforeLeaveWorkaround } from '@/shared/lib/crutch';
-import { useSortedColorsStore } from '@/features/color/sort-colors';
+import { useSortedColors } from '@/features/color/sort-colors';
 import type { ColorHex } from '@/entities/color';
-import { useColorsStore } from '@/entities/color';
-import type { ColorGroupId } from '@/features/color/sort-colors';
+import { useColors } from '@/entities/color';
+import type { ColorGroupId } from '@/entities/colors-group';
 
 import {
   getLuminance,
@@ -19,15 +20,16 @@ import {
   rgbToHSL,
 } from '@/shared/lib/color';
 
-const colorsStore = useColorsStore();
-const sortedColorsStore = useSortedColorsStore();
+const colorsModel = useColors();
+const sortedColorsModel = useSortedColors();
+const colorGroupsModel = useColorGroups();
 
-const { colorGroups } = storeToRefs(sortedColorsStore);
-const { colors } = storeToRefs(colorsStore);
+const { colorGroups } = storeToRefs(colorGroupsModel);
+const { colors } = storeToRefs(colorsModel);
 
 const _newColorGroup = [{
   title: 'Add new group',
-  handler: sortedColorsStore.addColorGroup,
+  handler: colorGroupsModel.addColorGroup,
 }];
 
 function leadColorChangeHandler(hex: ColorHex, id: ColorGroupId) {
@@ -50,13 +52,13 @@ function leadColorChangeHandler(hex: ColorHex, id: ColorGroupId) {
   };
 }
 
-onMounted(sortedColorsStore.invalidateColorGroups);
+onMounted(sortedColorsModel.invalidateColorGroups);
 
 onBeforeMount(() => {
   if (colorGroups.value.size > 0) return;
 
   for (let i = 0; i < 3; i++) {
-    sortedColorsStore.addColorGroup();
+    colorGroupsModel.addColorGroup();
   }
 });
 
@@ -75,13 +77,13 @@ function colorsViewToggleHandler() {
     <div
       class="flex flex-row justify-between font-mono text-xs h-full max-h-[calc(100vh-40px)]"
       @dragover="(e:Event) => e.preventDefault()"
-      @drop.self="sortedColorsStore.dropHandler({ event: $event })"
+      @drop.self="sortedColorsModel.dropHandler({ event: $event })"
     >
       <div
         class="custom-scroll will-change-transform pt-5 w-fit overflow-auto rounded-xl border-cyan scroll-space"
         dir="rtl"
         @dragover="(e:Event) => e.preventDefault()"
-        @drop="sortedColorsStore.dropHandler({ event: $event })"
+        @drop="sortedColorsModel.dropHandler({ event: $event })"
       >
         <Transition
           name="fade"
@@ -111,11 +113,11 @@ function colorsViewToggleHandler() {
               :key="id"
               :colorGroupId="id"
               :colorGroup="group"
-              @onColorDrop="(event, targetGroupId) => sortedColorsStore.dropHandler({ event, targetGroupId })"
-              @onColorDragStart="(event, pivotId, originGroupId) => sortedColorsStore.dragStartHandler({ originGroupId, pivotId, event })"
-              @onDelete="sortedColorsStore.deleteColorGroupById"
+              @onColorDrop="(event, targetGroupId) => sortedColorsModel.dropHandler({ event, targetGroupId })"
+              @onColorDragStart="(event, pivotId, originGroupId) => sortedColorsModel.dragStartHandler({ originGroupId, pivotId, event })"
+              @onDelete="colorGroupsModel.deleteColorGroupById"
               @onLeadColorPick=" leadColorChangeHandler($event, id)"
-              @onClear="sortedColorsStore.clearColorGroupById"
+              @onClear="colorGroupsModel.clearColorGroupById"
             />
 
             <div
@@ -164,7 +166,7 @@ function colorsViewToggleHandler() {
         size="small"
         type="error"
         class="!font-mono"
-        @click="sortedColorsStore.resetSorting"
+        @click="sortedColorsModel.resetSorting"
       >
         <template #icon>
           <RotateCcw />
@@ -177,7 +179,7 @@ function colorsViewToggleHandler() {
         size="small"
         type="success"
         class="!font-mono"
-        @click="sortedColorsStore.autoSort"
+        @click="sortedColorsModel.autoSort"
       >
         <template #icon>
           <Sparkles />

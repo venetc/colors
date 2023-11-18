@@ -2,15 +2,15 @@
 import { ChevronUp, Image, RotateCcw } from 'lucide-vue-next';
 import { NPopover } from 'naive-ui';
 import { toRefs } from 'vue';
-import { useImagesStore } from '@/entities/image';
+import { useImages } from '@/entities/image';
 import type { ImageId } from '@/entities/image';
-import { useSortedColorsStore } from '@/features/color/sort-colors';
+import { useSortedColors } from '@/features/color/sort-colors';
 
 const props = defineProps<{ imageId: ImageId }>();
 const { imageId } = toRefs(props);
 
-const imagesStore = useImagesStore();
-const sortedColorsStore = useSortedColorsStore();
+const imagesModel = useImages();
+const sortedColorsModel = useSortedColors();
 </script>
 
 <template>
@@ -31,12 +31,12 @@ const sortedColorsStore = useSortedColorsStore();
         </template>
 
         <div
-          v-if="imagesStore.getImageById(imageId)"
+          v-if="imagesModel.getImageById(imageId)"
           class=" rounded-sm overflow-hidden"
         >
           <img
-            :src="imagesStore.getImageById(imageId)?.croppedSrc ?? imagesStore.getImageById(imageId)?.blobSrc"
-            :alt="imagesStore.getImageById(imageId)?.id"
+            :src="imagesModel.getImageById(imageId)?.croppedSrc ?? imagesModel.getImageById(imageId)?.blobSrc"
+            :alt="imagesModel.getImageById(imageId)?.id"
             crossorigin="anonymous"
             class="object-contain max-w-[200px] max-h-[200px]"
           >
@@ -45,7 +45,7 @@ const sortedColorsStore = useSortedColorsStore();
 
       <button
         class="bg-red-500 text-white h-full basis-1/2 rounded-tr-md border border-red-600 flex items-center justify-center cursor-pointer"
-        @click="sortedColorsStore.sortOutColorsByImageId(imageId)"
+        @click="sortedColorsModel.sortOutColorsByImageId(imageId)"
       >
         <RotateCcw :size="12" />
       </button>

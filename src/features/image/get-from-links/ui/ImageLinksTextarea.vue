@@ -2,12 +2,12 @@
 import { storeToRefs } from 'pinia';
 import { NInput } from 'naive-ui';
 import { useGetImageFromLinks } from '../model';
-import { useImagesStore } from '@/entities/image';
+import { useImages } from '@/entities/image';
 
 const getImageFromLinksModel = useGetImageFromLinks();
-const imagesStore = useImagesStore();
+const imagesModel = useImages();
 
-const { images } = storeToRefs(imagesStore);
+const { images } = storeToRefs(imagesModel);
 const { textareaData } = storeToRefs(getImageFromLinksModel);
 </script>
 

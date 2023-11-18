@@ -4,8 +4,8 @@ import { storeToRefs } from 'pinia';
 import { ColorsPageHeader } from './colors';
 import { SortPageHeader } from './sort';
 import { SavePageHeader } from './save';
-import { useColorsStore } from '@/entities/color';
-import { useImagesStore } from '@/entities/image';
+import { useColors } from '@/entities/color';
+import { useImages } from '@/entities/image';
 
 export const routes: Array<RouteRecordRaw> = [
   {
@@ -26,8 +26,8 @@ export const routes: Array<RouteRecordRaw> = [
       header: { content: ColorsPageHeader },
     },
     beforeEnter: () => {
-      const imagesStore = useImagesStore();
-      const { images } = storeToRefs(imagesStore);
+      const imagesModel = useImages();
+      const { images } = storeToRefs(imagesModel);
 
       if (images.value.size < 1) return { path: '/' };
     },
@@ -40,8 +40,8 @@ export const routes: Array<RouteRecordRaw> = [
       header: () => import(/* webpackChunkName: "SortPageHeader" */'../widgets/header'),
     },
     beforeEnter: () => {
-      const colorsStore = useColorsStore();
-      const { colors } = storeToRefs(colorsStore);
+      const colorsModel = useColors();
+      const { colors } = storeToRefs(colorsModel);
 
       if (colors.value.size < 1) return { path: '/' };
     },
@@ -57,8 +57,8 @@ export const routes: Array<RouteRecordRaw> = [
       header: () => import(/* webpackChunkName: "SavePageHeader" */'../widgets/header'),
     },
     beforeEnter: () => {
-      const colorsStore = useColorsStore();
-      const { colors } = storeToRefs(colorsStore);
+      const colorsModel = useColors();
+      const { colors } = storeToRefs(colorsModel);
 
       if (colors.value.size < 1) return { path: '/' };
     },

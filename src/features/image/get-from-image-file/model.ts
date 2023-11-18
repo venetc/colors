@@ -3,7 +3,7 @@ import type { NUpload, UploadFileInfo } from 'naive-ui';
 import type { Ref } from 'vue';
 import { ref } from 'vue';
 import { createImageFromFile } from './lib.ts';
-import { useImagesStore } from '@/entities/image';
+import { useImages } from '@/entities/image';
 
 export type FileList = Map<string, UploadFileInfo>;
 
@@ -12,8 +12,8 @@ export const useGetImageFromFile = defineStore('Features/Image/GetFromImageFile'
   const filesList = ref<FileList>(new Map());
 
   const updateImagesFileList = ({ fileList: inputFiles }: { fileList: UploadFileInfo[] }) => {
-    const imagesStore = useImagesStore();
-    const { images } = storeToRefs(imagesStore);
+    const imagesModel = useImages();
+    const { images } = storeToRefs(imagesModel);
 
     const imagesInStore = new Set([...images.value.values()].map(image => image.origin === 'file' ? image.fileName : image.originalSrc));
 
@@ -30,15 +30,15 @@ export const useGetImageFromFile = defineStore('Features/Image/GetFromImageFile'
     inputFiles.forEach(upsertFileInMap);
 
     filesList.value.forEach(({ file }) => {
-      imagesStore.addBlobToCache(file);
+      imagesModel.addBlobToCache(file);
     });
   };
   const clearFileList = () => {
     filesList.value.clear();
   };
   const updateImagesListFromFiles = () => {
-    const imagesStore = useImagesStore();
-    const { cache } = storeToRefs(imagesStore);
+    const imagesModel = useImages();
+    const { cache } = storeToRefs(imagesModel);
 
     filesList.value.forEach((file) => {
       const blobSrc = cache.value.get(file.name);
@@ -50,7 +50,7 @@ export const useGetImageFromFile = defineStore('Features/Image/GetFromImageFile'
         blobSrc,
       });
 
-      imagesStore.addImageToList(image.id, image);
+      imagesModel.addImageToList(image.id, image);
     });
   };
 

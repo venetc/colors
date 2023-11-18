@@ -11,17 +11,17 @@ import {
   ImagesDownloaderByTxtFiles,
   useGetImageFromLinks,
 } from '@/features/image/get-from-links';
-import { useImagesStore } from '@/entities/image';
+import { useImages } from '@/entities/image';
 
 const getImageFromFileModel = useGetImageFromFile();
 const getImageFromLinksModel = useGetImageFromLinks();
-const imagesStore = useImagesStore();
+const imagesModel = useImages();
 
 const {
   images,
   cache,
   downloadOrigin,
-} = storeToRefs(imagesStore);
+} = storeToRefs(imagesModel);
 const { textareaData } = storeToRefs(getImageFromLinksModel);
 
 const { push } = useRouter();
@@ -37,7 +37,7 @@ function clearImages() {
 }
 
 function resetAll() {
-  imagesStore.clearCache();
+  imagesModel.clearCache();
   clearImages();
   getImageFromLinksModel.resetInput();
 }

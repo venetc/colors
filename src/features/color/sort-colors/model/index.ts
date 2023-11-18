@@ -1,19 +1,10 @@
 import { defineStore, storeToRefs } from 'pinia';
-import { nextTick, ref } from 'vue';
-import { createColorGroup, generatePivotId, readPivotId } from '../lib';
-import { useColorsStore } from '@/entities/color';
+import { nextTick } from 'vue';
+import { generatePivotId, readPivotId, useColorGroups } from '@/entities/colors-group';
+import type { ColorGroupId, PivotId } from '@/entities/colors-group';
+import { useColors } from '@/entities/color';
 import type { ImageId } from '@/entities/image';
 import { getDeltaE00, rgbToXyz, xyzToLab } from '@/shared/lib/color';
-import type { Color, ImageColor } from '@/entities/color';
-
-export type ColorGroupId = Brand<Id, 'ColorGroupId'>;
-export type PivotId = `${ImageId}__${number}`;
-
-export interface ColorGroup {
-  id: ColorGroupId;
-  leadColor: Color;
-  colors: Map<PivotId, ImageColor>;
-}
 
 interface DragStartPayload {
   event: DragEvent;
@@ -26,45 +17,12 @@ interface DropPayload {
   targetGroupId?: ColorGroupId;
 }
 
-export const useSortedColorsStore = defineStore('SortedColorsStore', () => {
-  const colorGroups = ref<Map<ColorGroupId, ColorGroup>>(new Map());
+export const useSortedColors = defineStore('Features/Color/SortColors', () => {
+  const colorsModel = useColors();
+  const colorGroupsModel = useColorGroups();
 
-  const colorsStore = useColorsStore();
-  const { colors } = storeToRefs(colorsStore);
-
-  const addColorGroup = () => {
-    const newGroup = createColorGroup();
-
-    const values = [...colorGroups.value.values()];
-    const alreadyInMap = values.some(color => color.leadColor.hex === newGroup.leadColor.hex);
-
-    if (!alreadyInMap) {
-      colorGroups.value.set(newGroup.id, newGroup);
-    } else {
-      addColorGroup();
-    }
-  };
-  const clearColorGroupById = (id: ColorGroupId) => {
-    const targetGroup = colorGroups.value.get(id);
-
-    if (!targetGroup) return;
-
-    targetGroup.colors.forEach((imageColor) => {
-      imageColor.isSorted = false;
-      imageColor.colorGroupId = null;
-    });
-
-    targetGroup.colors.clear();
-  };
-  const deleteColorGroupById = (id: ColorGroupId) => {
-    const targetGroup = colorGroups.value.get(id);
-
-    if (!targetGroup) return;
-
-    clearColorGroupById(id);
-
-    colorGroups.value.delete(id);
-  };
+  const { colors } = storeToRefs(colorsModel);
+  const { colorGroups } = storeToRefs(colorGroupsModel);
 
   const dragStartHandler = async (args: DragStartPayload) => {
     const {
@@ -179,7 +137,7 @@ export const useSortedColorsStore = defineStore('SortedColorsStore', () => {
           return;
         }
 
-        const colorFromPool = colorsStore.getColorFromPool(imageId, indexOfColor);
+        const colorFromPool = colorsModel.getColorFromPool(imageId, indexOfColor);
 
         if (!colorFromPool) {
           colorGroup.colors.delete(pivotId);
@@ -201,7 +159,7 @@ export const useSortedColorsStore = defineStore('SortedColorsStore', () => {
   const removeColorFromGroups = (imageId: ImageId, colorIndex: number) => {
     const pivotId = generatePivotId(imageId, colorIndex);
 
-    const colorFromPool = colorsStore.getColorFromPool(imageId, colorIndex);
+    const colorFromPool = colorsModel.getColorFromPool(imageId, colorIndex);
 
     if (colorFromPool) {
       colorFromPool.isSorted = false;
@@ -298,10 +256,6 @@ export const useSortedColorsStore = defineStore('SortedColorsStore', () => {
   };
 
   return {
-    colorGroups,
-    addColorGroup,
-    deleteColorGroupById,
-    clearColorGroupById,
     dragStartHandler,
     dropHandler,
     invalidateColorGroups,

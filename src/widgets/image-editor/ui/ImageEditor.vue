@@ -4,13 +4,13 @@ import { computed, provide, ref } from 'vue';
 import { NButton, NPopover, NSwitch } from 'naive-ui';
 import { Crop, Lasso, Redo2, RotateCcw, Scaling, Undo2, X } from 'lucide-vue-next';
 
-import { useImageEditorStore } from '../model';
+import { useImageEditor } from '../model';
 import RatioSliders from './RatioSliders.vue';
 import ColorEditor from '@/features/color/edit-colors/ui/ColorEditor.vue';
 import ColorCell from '@/entities/color/ui/ColorCell.vue';
 import { useEditColors } from '@/features/color/edit-colors';
 import type { Color } from '@/entities/color';
-import { ColorsList, useColorsStore } from '@/entities/color';
+import { ColorsList, useColors } from '@/entities/color';
 import type { ExposedCropperData } from '@/features/image/crop-image';
 import {
   ImageCropper,
@@ -23,20 +23,20 @@ const emit = defineEmits<{
   onReset: [];
 }>();
 
-const imageEditorStore = useImageEditorStore();
+const imageEditorModel = useImageEditor();
 const editColorsModel = useEditColors();
-const colorsModel = useColorsStore();
+const colorsModel = useColors();
 
 const {
   isEditorActive,
   activeImage,
-} = storeToRefs(imageEditorStore);
+} = storeToRefs(imageEditorModel);
 
 const {
   setEditorState,
   setActiveImage,
   setImageCroppedSrc,
-} = imageEditorStore;
+} = imageEditorModel;
 
 const cropper = ref<InstanceType<typeof ImageCropper> & ExposedCropperData>();
 

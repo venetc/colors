@@ -5,7 +5,7 @@ import type { Ref } from 'vue';
 import { computed, ref } from 'vue';
 import { createImageFromLink } from './lib';
 import { NoValidLinksError, useNotificationManager } from '@/shared/ui/notification';
-import { useImagesStore } from '@/entities/image';
+import { useImages } from '@/entities/image';
 import { formatStringToLinks } from '@/shared/lib/string';
 
 export type FileList = Map<string, UploadFileInfo>;
@@ -41,8 +41,8 @@ export const useGetImageFromLinks = defineStore('Features/Image/GetFromLinks', (
 
     const loadImages = async () => {
       isLoading.value = true;
-      const imagesStore = useImagesStore();
-      const { cache } = storeToRefs(imagesStore);
+      const imagesModel = useImages();
+      const { cache } = storeToRefs(imagesModel);
 
       for await (const link of linksList.value) {
         currentLink.value = link;
@@ -58,7 +58,7 @@ export const useGetImageFromLinks = defineStore('Features/Image/GetFromLinks', (
           if (data.value && !imagesFailedToFetch.value.has(link)) {
             const blobFromLink = URL.createObjectURL(data.value);
 
-            imagesStore.addBlobToCache({
+            imagesModel.addBlobToCache({
               originSrc: link,
               blobSrc: blobFromLink,
             });
@@ -85,8 +85,8 @@ export const useGetImageFromLinks = defineStore('Features/Image/GetFromLinks', (
     linksList.value.clear();
   };
   const updateImagesListFromLinks = () => {
-    const imagesStore = useImagesStore();
-    const { cache } = storeToRefs(imagesStore);
+    const imagesModel = useImages();
+    const { cache } = storeToRefs(imagesModel);
 
     linksList.value.forEach((originalSrc) => {
       const blobSrc = cache.value.get(originalSrc);
@@ -98,7 +98,7 @@ export const useGetImageFromLinks = defineStore('Features/Image/GetFromLinks', (
         blobSrc,
       });
 
-      imagesStore.addImageToList(image.id, image);
+      imagesModel.addImageToList(image.id, image);
     });
   };
   const updateLinksList = (links: string[]) => {

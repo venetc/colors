@@ -2,7 +2,7 @@ import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import type { ImageId, Img } from '@/entities/image';
 
-export const useImageEditorStore = defineStore('Widgets/ImageEditor', () => {
+export const useImageEditor = defineStore('Widgets/ImageEditor', () => {
   const activeImage = ref<Img | null>(null);
   const activeImageId = ref<ImageId | null>(null);
   const isEditorActive = ref(false);

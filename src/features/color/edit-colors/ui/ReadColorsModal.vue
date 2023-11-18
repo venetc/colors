@@ -4,12 +4,12 @@ import { storeToRefs } from 'pinia';
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useEditColors } from '@/features/color/edit-colors';
-import { useColorsStore } from '@/entities/color';
-import { useImagesStore } from '@/entities/image';
+import { useColors } from '@/entities/color';
+import { useImages } from '@/entities/image';
 import { valueToPercent } from '@/shared/lib/number';
 
-const colorsModel = useColorsStore();
-const imagesModel = useImagesStore();
+const colorsModel = useColors();
+const imagesModel = useImages();
 const editColorsModel = useEditColors();
 
 const { colors } = storeToRefs(colorsModel);

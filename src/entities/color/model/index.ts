@@ -14,7 +14,7 @@ export interface ImageColor {
 
 export type ColorCollection = Map<number, ImageColor | null>;
 
-export const useColorsStore = defineStore('Entities/Color', () => {
+export const useColors = defineStore('Entities/Color', () => {
   const colors = ref(new Map<ImageId, ColorCollection>());
 
   const amountOfColors = (imageId: ImageId) => {

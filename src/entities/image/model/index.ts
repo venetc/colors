@@ -25,7 +25,7 @@ export type BlobCacheItem = File | {
   originSrc: string;
 };
 
-export const useImagesStore = defineStore('Entities/Image', () => {
+export const useImages = defineStore('Entities/Image', () => {
   const downloadOrigin = ref<'images' | 'txt' | 'links' | undefined>();
   const images = ref<Map<ImageId, Img>>(new Map());
   const cache = ref<BlobCache>(new Map());

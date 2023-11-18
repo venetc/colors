@@ -4,7 +4,7 @@ import type { UploadFileInfo } from 'naive-ui';
 import { storeToRefs } from 'pinia';
 import { useGetImageFromLinks } from '../model';
 import { NoValidLinksError, useNotificationManager } from '@/shared/ui/notification';
-import { useImagesStore } from '@/entities/image';
+import { useImages } from '@/entities/image';
 import { DropUploader } from '@/shared/ui/drop-uploader';
 
 defineOptions({
@@ -12,9 +12,9 @@ defineOptions({
 });
 
 const getImageFromLinksModel = useGetImageFromLinks();
-const imagesStore = useImagesStore();
+const imagesModel = useImages();
 
-const { images } = storeToRefs(imagesStore);
+const { images } = storeToRefs(imagesModel);
 
 const { callNotification: popInvalidLinksNotification } = useNotificationManager({
   type: 'error',

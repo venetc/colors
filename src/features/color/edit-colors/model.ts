@@ -2,19 +2,19 @@ import { defineStore, storeToRefs } from 'pinia';
 import { ref } from 'vue';
 import { _appendBlankHandpickedColor, _filterOriginalColors } from './lib';
 import type { Color, ColorCollection, ImageColor } from '@/entities/color';
-import { generateColorData, getPalette, useColorsStore } from '@/entities/color';
+import { generateColorData, getPalette, useColors } from '@/entities/color';
 import type { ImageId } from '@/entities/image';
-import { useImagesStore } from '@/entities/image';
+import { useImages } from '@/entities/image';
 
 export const useEditColors = defineStore('Features/Color/EditColors', () => {
   const MIN_COLORS = 6;
   const colorReadModalIsActive = ref(false);
 
-  const colorsModel = useColorsStore();
+  const colorsModel = useColors();
   const { colors } = storeToRefs(colorsModel);
 
-  const imagesStore = useImagesStore();
-  const { images } = storeToRefs(imagesStore);
+  const imagesModel = useImages();
+  const { images } = storeToRefs(imagesModel);
 
   const generateColors = (imageId: ImageId, imageElement: HTMLImageElement) => {
     const paletteGeneratorPayload = {
