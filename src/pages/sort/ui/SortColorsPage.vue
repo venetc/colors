@@ -1,17 +1,18 @@
 <script setup lang="ts">
+import { ColorGroupsList, ColorsList } from './organisms';
+
 import { Group, Plus, RotateCcw, Sparkles, Ungroup } from 'lucide-vue-next';
 import { storeToRefs } from 'pinia';
-import { computed, onBeforeMount, onMounted, ref } from 'vue';
+import { computed, markRaw, onBeforeMount, onMounted, ref } from 'vue';
 import { NButton } from 'naive-ui';
-import GroupCard from './ColorsGroupCard.vue';
-import { ColorGroupsList, ColorsList } from './organisms';
-import { useColorGroups } from '@/entities/colors-group';
-import { beforeLeaveWorkaround } from '@/shared/lib/crutch';
-import { useSortedColors } from '@/features/color/sort-colors';
+
 import type { ColorHex } from '@/entities/color';
-import { useColors } from '@/entities/color';
 import type { ColorGroupId } from '@/entities/colors-group';
 
+import { beforeLeaveWorkaround } from '@/shared/lib/crutch';
+import { useColorsSort } from '@/features/color/sort-colors';
+import { ColorsGroupCard, useColorGroups } from '@/entities/colors-group';
+import { useColors } from '@/entities/color';
 import {
   getLuminance,
   hexToRGB,
@@ -21,7 +22,7 @@ import {
 } from '@/shared/lib/color';
 
 const colorsModel = useColors();
-const sortedColorsModel = useSortedColors();
+const sortedColorsModel = useColorsSort();
 const colorGroupsModel = useColorGroups();
 
 const { colorGroups } = storeToRefs(colorGroupsModel);
@@ -63,9 +64,7 @@ onBeforeMount(() => {
 });
 
 const showGroups = ref(true);
-const showGroupsIcon = computed(() => {
-  return showGroups.value ? Ungroup : Group;
-});
+const showGroupsIcon = computed(() => showGroups.value ? markRaw(Ungroup) : markRaw(Group));
 
 function colorsViewToggleHandler() {
   showGroups.value = !showGroups.value;
@@ -108,7 +107,7 @@ function colorsViewToggleHandler() {
             name="cards-list"
             @beforeLeave="beforeLeaveWorkaround"
           >
-            <GroupCard
+            <ColorsGroupCard
               v-for="[id, group] in colorGroups"
               :key="id"
               :colorGroupId="id"
@@ -123,7 +122,7 @@ function colorsViewToggleHandler() {
             <div
               v-for="cta in _newColorGroup"
               :key="cta.title"
-              class="cursor-pointer p-2 auto-rows-[2.5rem] 2xl:auto-rows-[2.5rem] xl:auto-rows-[2rem] lg:auto-rows-[1.5rem] grid gap-1.5 justify-items-center items-center grid-cols-[repeat(26,_2.5rem)] 2xl:grid-cols-[repeat(26,_2.5rem)] xl:grid-cols-[repeat(26,_2rem)] lg:grid-cols-[repeat(26,_1.5rem)] border-2  border-dashed w-full transition-all rounded-md text-[rgba(32,_128,_240,_0.15)] hover:text-[rgba(32,_128,_240,_0.25)] active:text-[rgba(32,_128,_240,_0.5)] border-[rgba(32,_128,_240,_0.15)] hover:border-[rgba(32,_128,_240,_0.25)] active:border-[rgba(32,_128,_240,_0.5)]"
+              class="cursor-pointer p-2 auto-rows-[2.5rem] 2xl:auto-rows-[2.5rem] xl:auto-rows-[2rem] lg:auto-rows-[1.5rem] grid gap-1.5 justify-items-center items-center grid-cols-[repeat(26,_2.5rem)] 2xl:grid-cols-[repeat(26,_2.5rem)] xl:grid-cols-[repeat(26,_2rem)] lg:grid-cols-[repeat(26,_1.5rem)] border-2  border-dashed w-full transition-all rounded-md text-navy-500/25 hover:text-navy-500/50 active:text-navy-500/75 border-navy-500/25 hover:border-navy-500/50 active:border-navy-500/75"
               @click="cta.handler"
             >
               <Plus

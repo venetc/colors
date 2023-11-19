@@ -1,8 +1,11 @@
 <script setup lang="ts">
-import { FileText } from 'lucide-vue-next';
-import type { UploadFileInfo } from 'naive-ui';
-import { storeToRefs } from 'pinia';
 import { useGetImageFromLinks } from '../model';
+
+import { FileText } from 'lucide-vue-next';
+import { storeToRefs } from 'pinia';
+
+import type { UploadFileInfo } from 'naive-ui';
+
 import { NoValidLinksError, useNotificationManager } from '@/shared/ui/notification';
 import { useImages } from '@/entities/image';
 import { DropUploader } from '@/shared/ui/drop-uploader';

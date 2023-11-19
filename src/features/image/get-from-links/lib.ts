@@ -1,5 +1,6 @@
-import { generateId } from '@/shared/lib/nanoid';
 import type { ImageFromLink, ImageId } from '@/entities/image';
+
+import { generateId } from '@/shared/lib/nanoid';
 
 type CreateImageFromLinkArgs = Pick<ImageFromLink, 'originalSrc' | 'blobSrc'>;
 

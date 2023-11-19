@@ -1,15 +1,17 @@
 import { Group, Image } from 'lucide-vue-next';
 import { storeToRefs } from 'pinia';
-import type { MaybeRef, Ref } from 'vue';
 import { markRaw, ref, toRaw, toValue, watch } from 'vue';
-import { useColorGroups } from '@/entities/colors-group';
-import { camelToSnake, snakeToCamel } from '@/shared/lib/string';
+
+import type { MaybeRef, Ref } from 'vue';
 import type { Color, ColorCollection, ImageColor } from '@/entities/color';
-import { useColors } from '@/entities/color';
 import type { ImageId, Img } from '@/entities/image';
-import { useImages } from '@/entities/image';
 import type { ColorGroup, ColorGroupId } from '@/entities/colors-group';
 import type { CamelToSnakeCase, SnakeToCamelCase } from '@/shared/lib/string';
+
+import { useColorGroups } from '@/entities/colors-group';
+import { camelToSnake, snakeToCamel } from '@/shared/lib/string';
+import { useColors } from '@/entities/color';
+import { useImages } from '@/entities/image';
 
 export type SyntaxConfigOptions = 'snakeCase';
 export type ColorDataConfig = Record<Exclude<keyof Color, 'hex'>, {
@@ -224,17 +226,15 @@ export function useExportData(exportConfig: ExportConfig, currentViewTab: TabsCo
     return result;
   };
 
-  watch([syntaxConfig, colorDataConfig, currentViewTab],
-    ([, , activeTab]) => {
-      imagesData.value = generateImagesData();
-      if (activeTab === 'groups') {
-        colorGroupsData.value = generateColorGroupsData();
-      }
-    },
-    {
-      immediate: true,
-      deep: true,
-    });
+  watch([syntaxConfig, colorDataConfig, currentViewTab], ([, , activeTab]) => {
+    imagesData.value = generateImagesData();
+    if (activeTab === 'groups') {
+      colorGroupsData.value = generateColorGroupsData();
+    }
+  }, {
+    immediate: true,
+    deep: true,
+  });
 
   return {
     imagesData,

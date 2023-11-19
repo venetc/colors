@@ -1,7 +1,8 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
+
 import type { Color } from '../lib';
-import type { ColorGroupId } from '@/features/color/sort-colors';
+import type { ColorGroupId } from '@/entities/colors-group';
 import type { ImageId } from '@/entities/image';
 
 export interface ImageColor {

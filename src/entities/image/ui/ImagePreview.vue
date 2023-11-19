@@ -2,6 +2,7 @@
 import { computed, nextTick, onMounted, ref, toRefs, watch } from 'vue';
 import { useElementVisibility } from '@vueuse/core';
 import { NImage, NSkeleton } from 'naive-ui';
+
 import type { ImageId, Img } from '../model';
 
 const props = defineProps<{ image: Img }>();

@@ -1,7 +1,9 @@
 <script setup lang="ts">
+import ImagePreview from '../ui/ImagePreview.vue';
+
 import { toRefs } from 'vue';
 import { NCard } from 'naive-ui';
-import ImagePreview from '../ui/ImagePreview.vue';
+
 import type { ImageId, Img } from '../model';
 
 const props = defineProps<{ image: Img }>();

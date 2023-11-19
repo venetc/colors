@@ -3,8 +3,10 @@ import { refThrottled } from '@vueuse/core';
 import { NButton } from 'naive-ui';
 import { ref, toRefs, watch } from 'vue';
 import { Palette } from 'lucide-vue-next';
-import { generateColorData } from '../../../../entities/color/lib';
-import type { Color } from '../../../../entities/color/lib';
+
+import type { Color } from '@/entities/color';
+
+import { generateColorData } from '@/entities/color';
 import { hexToRGB } from '@/shared/lib/color.ts';
 
 const props = defineProps<{ defaultColor: string }>();

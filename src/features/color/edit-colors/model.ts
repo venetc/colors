@@ -1,9 +1,12 @@
+import { _appendBlankHandpickedColor, _filterOriginalColors } from './lib';
+
 import { defineStore, storeToRefs } from 'pinia';
 import { ref } from 'vue';
-import { _appendBlankHandpickedColor, _filterOriginalColors } from './lib';
+
 import type { Color, ColorCollection, ImageColor } from '@/entities/color';
-import { generateColorData, getPalette, useColors } from '@/entities/color';
 import type { ImageId } from '@/entities/image';
+
+import { generateColorData, getPalette, useColors } from '@/entities/color';
 import { useImages } from '@/entities/image';
 
 export const useEditColors = defineStore('Features/Color/EditColors', () => {

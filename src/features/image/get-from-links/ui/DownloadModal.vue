@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useGetImageFromLinks } from '../model';
+
 import { storeToRefs } from 'pinia';
 import { computed, ref } from 'vue';
 import {
@@ -14,7 +16,7 @@ import {
   useThemeVars,
 } from 'naive-ui';
 import { ExternalLink, Sparkles, Trash2 } from 'lucide-vue-next';
-import { useGetImageFromLinks } from '../model';
+
 import { valueToPercent } from '@/shared/lib/number';
 import { ellipsisString } from '@/shared/lib/string';
 

@@ -32,6 +32,7 @@ export const not = (a: unknown) => !a;
  * Returns `true` if at least one of the arguments is `true`, false otherwise.
  */
 export const or = (a: unknown, b: unknown) => a || b;
+
 /**
  * Returns new array by removing elements for which the given function returns false.
  */
@@ -43,6 +44,7 @@ export function remove<T>(arr: T[], func: (value: T, index: number, array: T[]) 
     }, [] as T[])
     : [];
 }
+
 /**
  * Gets the size of an array, object or string.
  */
@@ -71,6 +73,7 @@ export const compareBool: Comparator<boolean> = (left, right) => {
 export const compareNumber: Comparator<number> = (left, right) => left - right;
 export const compareReverse = <T>(compare: Comparator<T>) => (left: T, right: T) => compare(right, left);
 export const compareField = <T, K extends keyof T>(field: K, compare: Comparator<T[K]>) => (left: T, right: T) => compare(left[field], right[field]);
+
 /**
  * Combine multiple comparators.
  *
@@ -94,6 +97,7 @@ export function compareCombine<T>(...comparators: Comparator<T>[]) {
     return 0;
   };
 }
+
 /**
  * Returns `true` if the provided predicate function returns `true` for all elements in a collection, `false` otherwise.
  */
@@ -104,6 +108,7 @@ export function match<C, T>(...cases: [C, T][]) {
 
   return occasion[1];
 }
+
 /**
  * Pipe function
  *
@@ -116,8 +121,7 @@ export function match<C, T>(...cases: [C, T][]) {
  *
  * pipedFunction(5) // (((5 * 2) + 2) - 1)
  */
-export function pipe<T extends unknown[], U>(fn1: (...args: T) => U,
-  ...fns: Array<(a: U) => U>) {
+export function pipe<T extends unknown[], U>(fn1: (...args: T) => U, ...fns: Array<(a: U) => U>) {
   const piped = fns.reduce((prevFn, nextFn) => (value: U) => nextFn(prevFn(value)), value => value);
   return (...args: T) => piped(fn1(...args));
 }

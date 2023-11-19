@@ -31,7 +31,7 @@ const { width: containerWidth } = useElementSize(imagesContainer);
         <div
           v-for="[id, image] in images"
           :key="id"
-          class="image aspect-square mb-2 mr-2 inline-block relative group rounded-md bg-slate-500 bg-opacity-10"
+          class="image aspect-square mb-2 mr-2 inline-block relative group rounded bg-slate-500 bg-opacity-10 shadow-md"
         >
           <NImage
             :src="image.blobSrc"
@@ -41,10 +41,10 @@ const { width: containerWidth } = useElementSize(imagesContainer);
                 marginInline: 'auto', position: 'absolute', width: '100%', height: '100%',
               },
             }"
-            class="aspect-square select-none"
+            class="aspect-square select-none rounded"
           />
           <i
-            class="absolute cursor-pointer right-0 top-0 p-0.5 bg-opacity-25 bg-neutral-950 text-white rounded-bl-md border-white border-l border-b opacity-0 group-hover:opacity-100 transition-opacity"
+            class="absolute cursor-pointer right-0 top-0 p-0.5 bg-opacity-25 bg-neutral-950 text-white rounded-bl rounded-tr border-white border-l border-b opacity-0 group-hover:opacity-100 transition-opacity"
             @click="emit('onRemove', id)"
           >
             <X

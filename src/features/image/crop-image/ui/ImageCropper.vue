@@ -1,11 +1,14 @@
 <script setup lang="ts">
+import { useImageCropper } from '../model';
+
 import { useDebounceFn } from '@vueuse/core';
 import { computed, inject, onMounted, ref, toRefs } from 'vue';
+
 import type { ExposedCropperData } from '../model';
-import { useImageCropper } from '../model';
-import { cropperInfrastructureData } from '@/features/image/crop-image';
 import type { Coordinates } from '@/features/image/crop-image';
 import type { Img } from '@/entities/image';
+
+import { cropperInfrastructureData } from '@/features/image/crop-image';
 
 interface Props {
   image: Img;

@@ -1,8 +1,11 @@
+import { createImageFromFile } from './lib.ts';
+
 import { defineStore, storeToRefs } from 'pinia';
+import { ref } from 'vue';
+
 import type { NUpload, UploadFileInfo } from 'naive-ui';
 import type { Ref } from 'vue';
-import { ref } from 'vue';
-import { createImageFromFile } from './lib.ts';
+
 import { useImages } from '@/entities/image';
 
 export type FileList = Map<string, UploadFileInfo>;

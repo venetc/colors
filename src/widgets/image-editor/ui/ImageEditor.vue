@@ -1,17 +1,20 @@
 <script setup lang="ts">
+import RatioSliders from './RatioSliders.vue';
+
+import { useImageEditor } from '../model';
+
 import { storeToRefs } from 'pinia';
 import { computed, provide, ref } from 'vue';
 import { NButton, NPopover, NSwitch } from 'naive-ui';
 import { Crop, Lasso, Redo2, RotateCcw, Scaling, Undo2, X } from 'lucide-vue-next';
 
-import { useImageEditor } from '../model';
-import RatioSliders from './RatioSliders.vue';
+import type { Color } from '@/entities/color';
+import type { ExposedCropperData } from '@/features/image/crop-image';
+
 import ColorEditor from '@/features/color/edit-colors/ui/ColorEditor.vue';
 import ColorCell from '@/entities/color/ui/ColorCell.vue';
 import { useEditColors } from '@/features/color/edit-colors';
-import type { Color } from '@/entities/color';
 import { ColorsList, useColors } from '@/entities/color';
-import type { ExposedCropperData } from '@/features/image/crop-image';
 import {
   ImageCropper,
   cropperInfrastructureData,

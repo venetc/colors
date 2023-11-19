@@ -1,12 +1,19 @@
 import { NAlert, useMessage } from 'naive-ui';
+import { h } from 'vue';
+
 import type { MessageRenderMessage } from 'naive-ui';
 import type { Component } from 'vue';
-import { h } from 'vue';
 
 type NotificationType = 'info' | 'error' | 'warning' | 'success';
 
-export function useNotificationManager({ type, title, content }: { type: NotificationType; title: string; content: Component }) {
+export function useNotificationManager(args: { type: NotificationType; title: string; content: Component }) {
   const message = useMessage();
+
+  const {
+    type,
+    title,
+    content,
+  } = args;
 
   const target = (() => {
     switch (type) {
@@ -21,7 +28,12 @@ export function useNotificationManager({ type, title, content }: { type: Notific
     }
   })();
 
-  const renderMessage: MessageRenderMessage = ({ type, closable, onClose }) => {
+  const renderMessage: MessageRenderMessage = (args) => {
+    const {
+      type,
+      closable,
+      onClose,
+    } = args;
     const props = {
       type: type === 'loading' ? 'default' : type,
       style: {
@@ -34,8 +46,7 @@ export function useNotificationManager({ type, title, content }: { type: Notific
       title,
     };
 
-    return h(NAlert, props, { default: () => h(content) },
-    );
+    return h(NAlert, props, { default: () => h(content) });
   };
 
   const callNotification = () => target('', {

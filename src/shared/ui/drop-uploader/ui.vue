@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { useDebounceFn } from '@vueuse/core';
-import type { UploadFileInfo } from 'naive-ui';
 import { NUpload, NUploadDragger } from 'naive-ui';
-import type { Ref } from 'vue';
 import { onMounted, ref, toRefs } from 'vue';
+
+import type { UploadFileInfo } from 'naive-ui';
+import type { Ref } from 'vue';
 
 interface Props {
   multiple: boolean;

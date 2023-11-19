@@ -1,9 +1,12 @@
+import { createImageFromLink } from './lib';
+
 import { useFetch } from '@vueuse/core';
 import { defineStore, storeToRefs } from 'pinia';
+import { computed, ref } from 'vue';
+
 import type { NUpload, UploadFileInfo } from 'naive-ui';
 import type { Ref } from 'vue';
-import { computed, ref } from 'vue';
-import { createImageFromLink } from './lib';
+
 import { NoValidLinksError, useNotificationManager } from '@/shared/ui/notification';
 import { useImages } from '@/entities/image';
 import { formatStringToLinks } from '@/shared/lib/string';

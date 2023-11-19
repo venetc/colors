@@ -1,7 +1,9 @@
 <script setup lang="ts">
+import { useGetImageFromLinks } from '../model';
+
 import { storeToRefs } from 'pinia';
 import { NInput } from 'naive-ui';
-import { useGetImageFromLinks } from '../model';
+
 import { useImages } from '@/entities/image';
 
 const getImageFromLinksModel = useGetImageFromLinks();

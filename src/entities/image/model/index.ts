@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
 import { ref, unref } from 'vue';
+
 import type { MaybeRef } from 'vue';
 
 export type ImageId = Brand<Id, 'ImageId'>;

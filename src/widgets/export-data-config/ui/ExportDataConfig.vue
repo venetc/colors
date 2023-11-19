@@ -1,18 +1,22 @@
 <script setup lang="ts">
-import { useVModels } from '@vueuse/core';
-import type { ScrollbarProps } from 'naive-ui';
-import { NCollapseTransition, NScrollbar, NSwitch } from 'naive-ui';
-import type { Ref } from 'vue';
-import { ref, toRefs } from 'vue';
 import { DEMO_COLORS, DEMO_COLOR_GROUPS, DEMO_FILE_IMAGES, DEMO_LINK_IMAGES } from '../lib';
-import HighlightComponent from '@/entities/export-data/ui/HighlightComponent.vue';
+
+import { useVModels } from '@vueuse/core';
+import { NCollapseTransition, NScrollbar, NSwitch } from 'naive-ui';
+import { ref, toRefs } from 'vue';
+
+import type { ScrollbarProps } from 'naive-ui';
+import type { Ref } from 'vue';
 import type {
   ColorDataConfig,
   ExportDataOrigin,
   SyntaxConfig,
 } from '@/features/export-data/generate-export-data';
+
+import HighlightComponent from '@/entities/export-data/ui/HighlightComponent.vue';
 import {
-  ExportDataFilters, useExportData,
+  ExportDataFilters,
+  useExportData,
 } from '@/features/export-data/generate-export-data';
 
 const props = defineProps<{
@@ -24,7 +28,10 @@ const props = defineProps<{
 
 const emit = defineEmits(['update:colorDataConfig', 'update:syntaxConfig']);
 
-const { origin, currentTab } = toRefs(props);
+const {
+  origin,
+  currentTab,
+} = toRefs(props);
 
 const {
   colorDataConfig,
@@ -37,7 +44,13 @@ const demoOrigin: ExportDataOrigin = {
   colorGroups: DEMO_COLOR_GROUPS,
 };
 
-const { imagesData, colorGroupsData } = useExportData({ colorDataConfig, syntaxConfig }, currentTab, demoOrigin);
+const {
+  imagesData,
+  colorGroupsData,
+} = useExportData({
+  colorDataConfig,
+  syntaxConfig,
+}, currentTab, demoOrigin);
 
 const exampleVisible = ref(false);
 

@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { RotateCcw, X } from 'lucide-vue-next';
-import type { ButtonProps } from 'naive-ui';
 import { NButton, NPopconfirm, NPopover } from 'naive-ui';
 import { toRefs } from 'vue';
+
+import type { ButtonProps } from 'naive-ui';
+import type { Color, ImageColor } from '@/entities/color';
+
 import EyeDropper from '@/features/color/edit-colors/ui/EyeDropper.vue';
 import ColorInput from '@/features/color/edit-colors/ui/ColorInput.vue';
-import type { Color, ImageColor } from '@/entities/color';
 
 const props = defineProps<{
   imageColor: ImageColor;

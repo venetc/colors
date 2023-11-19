@@ -4,12 +4,14 @@ import { NButton } from 'naive-ui';
 import { storeToRefs } from 'pinia';
 import { nextTick, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
+
+import type { ImageId, Img } from '@/entities/image';
+
 import ColorEditor from '@/features/color/edit-colors/ui/ColorEditor.vue';
 import ColorCell from '@/entities/color/ui/ColorCell.vue';
 import { useHeader } from '@/widgets/header/model';
 import { ColorsList, useColors } from '@/entities/color';
 import { ImageEditor, useImageEditor } from '@/widgets/image-editor';
-import type { ImageId, Img } from '@/entities/image';
 import { ImageCard, useImages } from '@/entities/image';
 import { ReadColorsModal, useEditColors } from '@/features/color/edit-colors';
 

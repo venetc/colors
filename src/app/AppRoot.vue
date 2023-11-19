@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { NConfigProvider, NGlobalStyle, NMessageProvider } from 'naive-ui';
+
 import { AppRouting } from '@/pages';
 
 const themeOverrides = {

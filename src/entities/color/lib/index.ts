@@ -1,6 +1,8 @@
 import ColorThief from 'colorthief';
-import { getLuminance, hslToCss, rgbToHSL, rgbToHex } from '@/shared/lib/color';
+
 import type { HSL, RGB } from '@/shared/lib/color';
+
+import { getLuminance, hslToCss, rgbToHSL, rgbToHex } from '@/shared/lib/color';
 
 const colorScrapper = new ColorThief();
 

@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { computed, toRefs } from 'vue';
-import { beforeLeaveWorkaround } from '@/shared/lib/crutch';
+
 import type { ColorCollection, ImageColor } from '@/entities/color';
+
+import { beforeLeaveWorkaround } from '@/shared/lib/crutch';
 
 const props = defineProps<{ colors?: ColorCollection; compact?: boolean }>();
 

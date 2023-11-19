@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
+
 import type { ImageId, Img } from '@/entities/image';
 
 export const useImageEditor = defineStore('Widgets/ImageEditor', () => {

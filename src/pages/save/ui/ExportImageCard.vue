@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { useIntersectionObserver } from '@vueuse/core';
-
 import { NCard, NImage, NSkeleton } from 'naive-ui';
 import { Check, ClipboardCopy, Maximize } from 'lucide-vue-next';
 import { computed, nextTick, onMounted, ref, toRefs, watch } from 'vue';
-import ExportColorCell from '@/pages/save/ui/ExportColorCell.vue';
+
 import type { Color } from '@/entities/color';
 import type { Img } from '@/entities/image';
+
+import ExportColorCell from '@/pages/save/ui/ExportColorCell.vue';
 
 interface Props {
   image: Img;

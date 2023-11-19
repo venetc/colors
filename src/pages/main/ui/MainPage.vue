@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
+
 import { useImages } from '@/entities/image';
 import { useGetImageFromFile } from '@/features/image/get-from-image-file';
 import { DataLoader } from '@/widgets/data-loader';

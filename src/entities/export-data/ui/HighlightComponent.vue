@@ -11,8 +11,8 @@ const { component: HighlightComponent } = hljsVuePlugin;
 <template>
   <pre
     v-if="raw"
-    :style="{ backgroundColor: '#1a1b26', color: '#9ece6a' }"
-    class="text-xs p-3"
+    :style="{ backgroundColor: '#1a1b26' }"
+    class="text-xs p-3 text-navy-300"
   >{{ code }}</pre>
 
   <HighlightComponent

@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { toRefs } from 'vue';
 import { NCollapseTransition } from 'naive-ui';
+
+import type { ColorGroup, ColorGroupId } from '@/entities/colors-group';
+
 import { shadeHexColor } from '@/shared/lib/color.ts';
-import type { ColorGroup, ColorGroupId } from '@/features/color/sort-colors';
 
 interface Props {
   colorsGroup: ColorGroup;

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useVModels } from '@vueuse/core';
 import { NCheckbox } from 'naive-ui';
+
 import type { ColorDataConfig, SyntaxConfig } from '../model';
 
 const props = defineProps<{

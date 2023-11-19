@@ -140,7 +140,7 @@ export function hslToRGB(hsl: HSL): RGB {
  * {@link https://en.wikipedia.org/wiki/SRGB }
  *
  * {@link https://www.w3.org/TR/WCAG21/relative-luminance.html }
- *  */
+ */
 
 export function rgbChannelToSRGB(channelValue: number) {
   const RATIO = channelValue / 255;
@@ -167,7 +167,7 @@ export function srgbChannelToRGB(channelValue: number) {
  * @description Y = 0.2126R + 0.7152G + 0.0722B.
  *
  * {@link https://en.wikipedia.org/wiki/Relative_luminance }
- *  */
+ */
 export function getLuminance(rgb: RGB): number {
   const sRGB = [
     rgbChannelToSRGB(rgb[0]),
@@ -183,7 +183,7 @@ export function getLuminance(rgb: RGB): number {
  * @description Y = (299 * R + 587 * G + 114 * B) / 1000
  *
  * {@link https://www.w3.org/WAI/ER/WD-AERT/#color-contrast}
- *  */
+ */
 export function getBrightness(rgb: RGB): number {
   return (299 * rgb[0] + 587 * rgb[1] + 114 * rgb[2]) / 1000 / 255;
 }
@@ -205,7 +205,7 @@ export function shadeHexColor(color: string, decimal: number): string {
  * {@link https://www.w3.org/WAI/ER/WD-AERT/#color-contrast }
  *
  * @description Значение 0.5 соответствует середине диапазона яркости от 0 до 1, где 0 - это абсолютный черный цвет, а 1 - абсолютный белый цвет. Таким образом, если яркость заданного цвета больше 0.49019607843, то он более светлый, и для контраста с ним следует использовать черный цвет текста.
- * */
+ */
 export function getContrastTextColor(bgColor: RGB) {
   const brightness = getLuminance(bgColor);
 
@@ -233,7 +233,7 @@ export function xyzToD50(xyz: XYZ): XYZ {
  * {@description} матрицы тут
  *
  * {@link http://www.brucelindbloom.com/index.html?Eqn_RGB_XYZ_Matrix.html}
- * */
+ */
 export function rgbToXyz(rgb: RGB): XYZ {
   const sRed = rgbChannelToSRGB(rgb[0]);
   const sGreen = rgbChannelToSRGB(rgb[1]);
@@ -250,7 +250,7 @@ export function rgbToXyz(rgb: RGB): XYZ {
  * {@link http://www.brucelindbloom.com/index.html?Eqn_XYZ_to_Lab.html}
  *
  * {@link http://www.brucelindbloom.com/index.html?Eqn_ChromAdapt.html}
- *  */
+ */
 export function xyzToLab(xyz: XYZ): LAB {
   const [_x, _y, _z] = xyz;
 
@@ -277,7 +277,7 @@ export function xyzToLab(xyz: XYZ): LAB {
  * {@link https://zschuessler.github.io/DeltaE/learn/#toc-delta-e-2000}
  *
  * {@link https://en.wikipedia.org/wiki/Color_difference#CIEDE2000}
- *  */
+ */
 
 export function getDeltaE00(color1: LAB, color2: LAB) {
   const [l1, a1, b1] = color1;
@@ -346,9 +346,9 @@ export function getDeltaE00(color1: LAB, color2: LAB) {
 
   return (
     ((dL / sL) ** 2
-      + (dC / sC) ** 2
-      + (dH / sH) ** 2
-      + (Rt * dC * dH) / (sC * sH))
+    + (dC / sC) ** 2
+    + (dH / sH) ** 2
+    + (Rt * dC * dH) / (sC * sH))
     ** 0.5
   );
 }

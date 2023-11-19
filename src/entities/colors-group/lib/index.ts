@@ -1,6 +1,7 @@
 import type { ColorGroup, ColorGroupId, PivotId } from '../model';
 import type { ImageId } from '@/entities/image';
 import type { Color, ColorHex, ImageColor } from '@/entities/color';
+
 import { generateRandomRgb, getLuminance, hslToCss, rgbToCss, rgbToHSL, rgbToHex } from '@/shared/lib/color';
 import { generateId } from '@/shared/lib/nanoid';
 

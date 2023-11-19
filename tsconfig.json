@@ -1,44 +1,46 @@
 {
   "compilerOptions": {
-    "allowImportingTsExtensions": true,
-    "baseUrl": ".",
-    "isolatedModules": false,
+    "target": "ES2020",
     "jsx": "preserve",
     "lib": [
       "ES2020",
       "DOM",
       "DOM.Iterable"
     ],
+    "useDefineForClassFields": true,
+    "baseUrl": ".",
     "module": "ESNext",
     "moduleResolution": "Node",
-    /* Bundler mode */
-    "noEmit": true,
-    "noFallthroughCasesInSwitch": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
     "paths": {
       "@/*": [
         "./src/*"
       ]
     },
     "resolveJsonModule": true,
-    /* Linting */
-    "skipLibCheck": true,
+    "types": [
+      "naive-ui/volar"
+    ],
+    "allowImportingTsExtensions": true,
     "strict": true,
-    "target": "ES2020",
-    "useDefineForClassFields": true,
-    "types": ["naive-ui/volar"]
+    "noFallthroughCasesInSwitch": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    /* Bundler mode */
+    "noEmit": true,
+    "isolatedModules": false,
+    /* Linting */
+    "skipLibCheck": true
   },
+  "references": [
+    {
+      "path": "./tsconfig.node.json"
+    }
+  ],
   "include": [
     "src/**/*.ts",
     "src/**/*.d.ts",
     "src/**/*.tsx",
     "src/**/*.vue",
     "types/**/*.d.ts"
-  ],
-  "references": [
-    {
-      "path": "./tsconfig.node.json"
-    }
   ]
 }

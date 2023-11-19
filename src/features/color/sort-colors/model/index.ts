@@ -1,9 +1,11 @@
 import { defineStore, storeToRefs } from 'pinia';
 import { nextTick } from 'vue';
-import { generatePivotId, readPivotId, useColorGroups } from '@/entities/colors-group';
+
 import type { ColorGroupId, PivotId } from '@/entities/colors-group';
-import { useColors } from '@/entities/color';
 import type { ImageId } from '@/entities/image';
+
+import { generatePivotId, readPivotId, useColorGroups } from '@/entities/colors-group';
+import { useColors } from '@/entities/color';
 import { getDeltaE00, rgbToXyz, xyzToLab } from '@/shared/lib/color';
 
 interface DragStartPayload {
@@ -17,7 +19,7 @@ interface DropPayload {
   targetGroupId?: ColorGroupId;
 }
 
-export const useSortedColors = defineStore('Features/Color/SortColors', () => {
+export const useColorsSort = defineStore('Features/Color/SortColors', () => {
   const colorsModel = useColors();
   const colorGroupsModel = useColorGroups();
 
@@ -170,7 +172,7 @@ export const useSortedColors = defineStore('Features/Color/SortColors', () => {
       colorGroup.colors.delete(pivotId);
     });
   };
-  const sortOutColorsByImageId = (imageId: ImageId) => {
+  const unsortColorsByImageId = (imageId: ImageId) => {
     const colorsFromPool = colors.value.get(imageId);
 
     if (!colorsFromPool) return;
@@ -260,7 +262,7 @@ export const useSortedColors = defineStore('Features/Color/SortColors', () => {
     dropHandler,
     invalidateColorGroups,
     removeColorFromGroups,
-    sortOutColorsByImageId,
+    unsortColorsByImageId,
     resetSorting,
     autoSort,
   };

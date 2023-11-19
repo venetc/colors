@@ -10,6 +10,7 @@ export function chunkArray<T>(array: T[], size: number): T[][] {
 
   return [head, ...chunkArray(tail, size)];
 }
+
 /**
  * Shuffles array in place using Fisher–Yates shuffle algorithm.
  */
@@ -24,6 +25,7 @@ export function shuffle<T>(array: T[]): T[] {
   }
   return array;
 }
+
 /**
  * Groups the elements of an array based on the given function.
  */
@@ -31,7 +33,6 @@ export function groupBy<T extends Record<string, unknown> = Record<string, unkno
   return array.reduce(
     (objectsByKeyValue, obj) => ({
       ...objectsByKeyValue,
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-expect-error
 
       [obj[key]]: (objectsByKeyValue[obj[key]] || []).concat(obj),
@@ -39,6 +40,7 @@ export function groupBy<T extends Record<string, unknown> = Record<string, unkno
     {} as Record<keyof T, T[]>,
   );
 }
+
 /**
  * Generate an array of numbers, for iteration
  *

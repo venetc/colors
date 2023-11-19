@@ -3,6 +3,7 @@ import { useClipboard } from '@vueuse/core';
 import { Check, ClipboardCopy } from 'lucide-vue-next';
 import { NPopover } from 'naive-ui';
 import { toRefs } from 'vue';
+
 import type { PartialMaybeSnakeCase } from '@/features/export-data/generate-export-data';
 import type { Color } from '@/entities/color';
 

@@ -1,8 +1,11 @@
-import { useElementBounding } from '@vueuse/core';
-import { computed, inject, nextTick, ref } from 'vue';
-import type { Ref } from 'vue';
 import { cropperInfrastructureData } from '../lib';
+
+import { useElementBounding } from '@vueuse/core';
+import { inject, nextTick, ref } from 'vue';
+
+import type { Ref } from 'vue';
 import type { Img } from '@/entities/image';
+
 import { cover } from '@/shared/lib/canvas';
 
 export interface Coordinates {
@@ -22,54 +25,6 @@ export interface CropperParams {
   parentElement: Ref<HTMLElement | undefined>;
   cropCallback?: (croppedImage: string) => void;
 }
-
-export const ratios = [
-  {
-    label: '16:9',
-    value: '16:9',
-  },
-  {
-    label: '9:16',
-    value: '9:16',
-  },
-  {
-    label: '21:9',
-    value: '21:9',
-  },
-  {
-    label: '9:21',
-    value: '9:21',
-  },
-  {
-    label: '1:1',
-    value: '1:1',
-  },
-];
-
-export const selectedRatio = ref<typeof ratios[number]>(ratios[0]);
-
-export function ratioSelectHandler(variant: typeof ratios[number]) {
-  selectedRatio.value = variant;
-}
-
-export function ratioClassHandler() {
-  switch (selectedRatio.value.value) {
-    case '16:9':
-      return 'w-full h-full';
-    case '9:16':
-      return 'w-[39%] h-full';
-    case '1:1':
-      return 'w-[62.5%] h-full';
-    case '21:9':
-      return 'w-full h-[68.5%]';
-    case '9:21':
-      return 'w-[26.7%] h-full';
-    default:
-      return 'w-full h-full';
-  }
-}
-
-export const ratioClass = computed(ratioClassHandler);
 
 export function useImageCropper(params: CropperParams) {
   const {

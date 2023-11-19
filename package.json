@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "vue-tsc && vite build",
     "preview": "vite preview",
-    "lint:script": "eslint --ext .ts,vue --ignore-path .gitignore ."
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
   },
   "dependencies": {
     "@highlightjs/vue-plugin": "^2.1.0",
@@ -23,7 +24,6 @@
   "devDependencies": {
     "@antfu/eslint-config": "^1.2.1",
     "@faker-js/faker": "^8.0.2",
-    "@nabla/vite-plugin-eslint": "^1.5.0",
     "@types/node": "^20.2.5",
     "@vitejs/plugin-vue": "^4.1.0",
     "autoprefixer": "^10.4.14",

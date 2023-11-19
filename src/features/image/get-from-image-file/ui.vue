@@ -1,7 +1,10 @@
 <script setup lang="ts">
-import { FileImage } from 'lucide-vue-next';
-import type { UploadFileInfo } from 'naive-ui';
 import { useGetImageFromFile } from './model';
+
+import { FileImage } from 'lucide-vue-next';
+
+import type { UploadFileInfo } from 'naive-ui';
+
 import { DropUploader } from '@/shared/ui/drop-uploader';
 
 defineOptions({

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { toRefs } from 'vue';
+
 import type { ImageColor } from '../model';
 
 const props = defineProps<{ color: ImageColor }>();

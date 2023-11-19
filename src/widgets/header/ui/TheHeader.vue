@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
+
 import type { Component } from 'vue';
+
 import { useHeader } from '@/widgets/header/model';
 
 const props = defineProps<{ content: Component }>();

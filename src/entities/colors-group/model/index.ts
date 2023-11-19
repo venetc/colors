@@ -1,6 +1,8 @@
+import { createColorGroup } from '../lib';
+
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
-import { createColorGroup } from '../lib';
+
 import type { ImageId } from '@/entities/image';
 import type { Color, ImageColor } from '@/entities/color';
 

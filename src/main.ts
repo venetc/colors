@@ -1,6 +1,8 @@
 import { createApp, markRaw } from 'vue';
+
 import type { Router } from 'vue-router';
 import type { PiniaPluginContext } from 'pinia';
+
 import { AppRoot } from '@/app';
 import { highlight, pinia, router } from '@/app/providers';
 import '@/style.css';

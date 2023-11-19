@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { RouterView } from 'vue-router';
-import type { MemoryInfo } from '@vueuse/core';
 import { useMediaQuery, useMemory } from '@vueuse/core';
+
+import type { MemoryInfo } from '@vueuse/core';
 
 function size(v: number) {
   const kb = v / 1024 / 1024;

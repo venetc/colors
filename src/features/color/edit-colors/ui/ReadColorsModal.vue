@@ -3,6 +3,7 @@ import { NCard, NModal, NProgress, useThemeVars } from 'naive-ui';
 import { storeToRefs } from 'pinia';
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
+
 import { useEditColors } from '@/features/color/edit-colors';
 import { useColors } from '@/entities/color';
 import { useImages } from '@/entities/image';

@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import { toRefs } from 'vue';
 import { ColorGroup } from '../molecules';
+
+import { toRefs } from 'vue';
+
 import type { ColorCollection } from '@/entities/color';
 import type { ImageId } from '@/entities/image';
 

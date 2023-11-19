@@ -1,10 +1,13 @@
 <script setup lang="ts">
+import { generateColorData } from '../../../../entities/color/lib';
+
 import { useEyeDropper } from '@vueuse/core';
 import { Pipette } from 'lucide-vue-next';
 import { NButton } from 'naive-ui';
 import { watch } from 'vue';
-import { generateColorData } from '../../../../entities/color/lib';
+
 import type { Color } from '../../../../entities/color/lib';
+
 import { hexToRGB } from '@/shared/lib/color.ts';
 
 const emit = defineEmits<{

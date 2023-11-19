@@ -1,9 +1,12 @@
-import type { RouteRecordRaw } from 'vue-router';
-import { defineAsyncComponent } from 'vue';
-import { storeToRefs } from 'pinia';
 import { ColorsPageHeader } from './colors';
 import { SortPageHeader } from './sort';
 import { SavePageHeader } from './save';
+
+import { storeToRefs } from 'pinia';
+import { defineAsyncComponent } from 'vue';
+
+import type { RouteRecordRaw } from 'vue-router';
+
 import { useColors } from '@/entities/color';
 import { useImages } from '@/entities/image';
 

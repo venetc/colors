@@ -1,8 +1,10 @@
 import { storeToRefs } from 'pinia';
 import { defineComponent, ref } from 'vue';
+
 import type { ImageId } from '@/entities/image';
-import { useColors } from '@/entities/color';
 import type { Color, ImageColor } from '@/entities/color';
+
+import { useColors } from '@/entities/color';
 
 export const ImageCardHOC = defineComponent({
   name: 'ImageCardHOC',

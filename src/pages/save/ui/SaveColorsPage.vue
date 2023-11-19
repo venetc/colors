@@ -3,12 +3,14 @@ import { UseClipboard } from '@vueuse/components';
 import { NTab, NTabs } from 'naive-ui';
 import { storeToRefs } from 'pinia';
 import { ref, watch } from 'vue';
+
+import type { ImageId, Img } from '@/entities/image';
+import type { ColorGroup, ColorGroupId } from '@/entities/colors-group';
+
 import { useColorGroups } from '@/entities/colors-group';
 import ColorGroupCardWithImages from '@/pages/save/ui/ColorGroupCardWithImages.vue';
 import HighlightComponent from '@/entities/export-data/ui/HighlightComponent.vue';
-import type { ImageId, Img } from '@/entities/image';
 import { useImages } from '@/entities/image';
-import type { ColorGroup, ColorGroupId } from '@/entities/colors-group';
 import { useExportData, useExportDataConfig, usePreviewTabs } from '@/features/export-data/generate-export-data';
 import DataPane from '@/pages/save/ui/DataPane.vue';
 import ExportImageCard from '@/pages/save/ui/ExportImageCard.vue';
