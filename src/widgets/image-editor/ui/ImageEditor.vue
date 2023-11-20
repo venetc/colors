@@ -9,17 +9,11 @@ import { NButton, NPopover, NSwitch } from 'naive-ui';
 import { Crop, Lasso, Redo2, RotateCcw, Scaling, Undo2, X } from 'lucide-vue-next';
 
 import type { Color } from '@/entities/color';
-import type { ExposedCropperData } from '@/features/image/crop-image';
+import type { ExposedCropperData } from '@/features/crop-image';
 
-import ColorEditor from '@/features/color/edit-colors/ui/ColorEditor.vue';
-import ColorCell from '@/entities/color/ui/ColorCell.vue';
-import { useEditColors } from '@/features/color/edit-colors';
-import { ColorsList, useColors } from '@/entities/color';
-import {
-  ImageCropper,
-  cropperInfrastructureData,
-  useCropperInfraData,
-} from '@/features/image/crop-image';
+import { ColorEditor, useEditColors } from '@/features/edit-colors';
+import { ImageCropper, cropperInfrastructureData, useCropperInfraData } from '@/features/crop-image';
+import { ColorCell, ColorsList, useColors } from '@/entities/color';
 
 const emit = defineEmits<{
   onClose: [];

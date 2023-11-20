@@ -7,17 +7,9 @@ import { ref, toRefs } from 'vue';
 
 import type { ScrollbarProps } from 'naive-ui';
 import type { Ref } from 'vue';
-import type {
-  ColorDataConfig,
-  ExportDataOrigin,
-  SyntaxConfig,
-} from '@/features/export-data/generate-export-data';
+import type { ColorDataConfig, ExportDataOrigin, SyntaxConfig } from '@/features/export-data';
 
-import HighlightComponent from '@/entities/export-data/ui/HighlightComponent.vue';
-import {
-  ExportDataFilters,
-  useExportData,
-} from '@/features/export-data/generate-export-data';
+import { ExportDataFilters, ExportDataPreview, useExportData } from '@/features/export-data';
 
 const props = defineProps<{
   colorDataConfig: ColorDataConfig;
@@ -95,7 +87,7 @@ const scrollbarThemeOverrides: ScrollbarThemeOverrides = {
           name="fade-slower"
           mode="out-in"
         >
-          <HighlightComponent
+          <ExportDataPreview
             :key="currentTab"
             class="rounded overflow-hidden text-xs"
             :code="JSON.stringify(currentTab === 'colors' ? imagesData : colorGroupsData, null, 2)"

@@ -2,7 +2,7 @@
 import { storeToRefs } from 'pinia';
 
 import { useImages } from '@/entities/image';
-import { useGetImageFromFile } from '@/features/image/get-from-image-file';
+import { useGetImageFromFile } from '@/features/get-image-from-file';
 import { DataLoader } from '@/widgets/data-loader';
 import { ImagesGrid } from '@/widgets/images-grid';
 

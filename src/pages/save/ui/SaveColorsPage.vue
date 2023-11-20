@@ -1,20 +1,20 @@
 <script setup lang="ts">
 import { UseClipboard } from '@vueuse/components';
+import { Check, ClipboardCopy } from 'lucide-vue-next';
 import { NTab, NTabs } from 'naive-ui';
 import { storeToRefs } from 'pinia';
 import { ref, watch } from 'vue';
 
-import type { ImageId, Img } from '@/entities/image';
 import type { ColorGroup, ColorGroupId } from '@/entities/colors-group';
+import type { ImageId, Img } from '@/entities/image';
 
 import { useColorGroups } from '@/entities/colors-group';
-import ColorGroupCardWithImages from '@/pages/save/ui/ColorGroupCardWithImages.vue';
-import HighlightComponent from '@/entities/export-data/ui/HighlightComponent.vue';
 import { useImages } from '@/entities/image';
-import { useExportData, useExportDataConfig, usePreviewTabs } from '@/features/export-data/generate-export-data';
+import { ExportDataPreview, useExportData, useExportDataConfig, usePreviewTabs } from '@/features/export-data';
+import ColorGroupCardWithImages from '@/pages/save/ui/ColorGroupCardWithImages.vue';
 import DataPane from '@/pages/save/ui/DataPane.vue';
 import ExportImageCard from '@/pages/save/ui/ExportImageCard.vue';
-import { ImageCardHOC } from '@/pages/save/ui/ImageCardHOC.ts';
+import { WithImageColors } from '@/pages/save/ui/withImageColors';
 import { ExportDataConfig } from '@/widgets/export-data-config';
 
 const imagesModel = useImages();
@@ -47,29 +47,22 @@ const {
   colorGroupsData,
 } = exportDataModel;
 
-/* function getImagesSrc(imageToken: string) {
-  const image = [...images.value.values()].find((img) => {
-    const searchToken = img.origin === 'file' ? img.fileName : img.originalSrc;
-
-    return searchToken === imageToken;
-  });
-
-  return image?.croppedSrc ?? image?.blobSrc ?? '';
-} */
-
-/* function getColors(imageId: ImageId) {
-  const imageColors = colors.value.get(imageId);
-  if (!imageColors) return [];
-
-  return [...imageColors.values()]
-    .filter((color): color is ImageColor => !!color)
-    .map(color => color.handpicked ?? color.original);
-} */
-
-function findDataToCopy(image: Img) {
+function findImageToCopy(image: Img) {
   const searchToken = image.origin === 'file' ? image.fileName : image.originalSrc;
 
-  return imagesData.value.find(imageObject => imageObject.image === searchToken);
+  const result = imagesData.value.find(imageObject => imageObject.image === searchToken);
+
+  return JSON.stringify(result, null, 2);
+}
+
+function findGroupToCopy(colorGroup: ColorGroup) {
+  const result = colorGroupsData.value.find((group) => {
+    if ('groupId' in group) return group.groupId === colorGroup.id;
+
+    return undefined;
+  });
+
+  return JSON.stringify(result, null, 2);
 }
 
 function getImagesFromColorGroup(colorGroup: ColorGroup) {
@@ -91,7 +84,10 @@ function getImagesFromColorGroup(colorGroup: ColorGroup) {
   return imagesFromColorGroup;
 }
 
-const imagesBlobLink = ref<{ link: string; filename: string }>({
+const imagesBlobLink = ref<{
+  link: string;
+  filename: string;
+}>({
   link: '',
   filename: '',
 });
@@ -116,9 +112,8 @@ watch(imagesData, (newData) => {
   const seconds = date.getSeconds().toString().padStart(2, '0');
 
   const dateString = `${day}-${month}-${year}`;
-  const location = window.location.hostname;
 
-  const filename = `image-colors-${location}_${dateString}_${hours}-${minutes}-${seconds}`;
+  const filename = `image-colors_${dateString}_${hours}-${minutes}-${seconds}`;
 
   imagesBlobLink.value = {
     link: URL.createObjectURL(blob),
@@ -130,6 +125,20 @@ watch(imagesData, (newData) => {
 });
 
 const activeColorGroupId = ref<ColorGroupId>();
+
+function updateFileName(token: string) {
+  const date = new Date();
+  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  const day = date.getDate().toString().padStart(2, '0');
+  const year = date.getFullYear();
+  const hours = date.getHours().toString().padStart(2, '0');
+  const minutes = date.getMinutes().toString().padStart(2, '0');
+  const seconds = date.getSeconds().toString().padStart(2, '0');
+
+  const dateString = `${day}-${month}-${year}`;
+
+  imagesBlobLink.value.filename = `${token}_${dateString}_${hours}-${minutes}-${seconds}`;
+}
 </script>
 
 <template>
@@ -139,7 +148,7 @@ const activeColorGroupId = ref<ColorGroupId>();
         class="border inline-block rounded font-mono px-2 shadow py-0.5 my-2 cursor-pointer"
         :href="imagesBlobLink.link"
         :download="imagesBlobLink.filename"
-        @load="console.log"
+        @click="updateFileName('image-colors')"
       >
         Download
       </a>
@@ -187,66 +196,94 @@ const activeColorGroupId = ref<ColorGroupId>();
                 class="grid grid-cols-2 gap-3 p-3"
               >
                 <UseClipboard
-                  v-for="[imageId, img] in images"
-                  v-slot="{ copy, copied, isSupported }"
-                  :key="imageId"
+                  v-for="[, img] in images"
+                  :key="img.id"
+                  v-slot="{ copy: copyImageData, copied: imageDataCopied, isSupported: isCopyingSupported }"
                 >
-                  <ImageCardHOC v-slot="{ imageColors, getColors }">
+                  <WithImageColors v-slot="{ imageColors, getColorsByImageId }">
                     <ExportImageCard
                       :image="img"
-                      :colors="imageColors"
-                      :isCopied="copied"
-                      :isCopyingSupported="isSupported"
-                      @onCopy="copy(JSON.stringify(findDataToCopy($event), null, 2))"
-                      @onLoad="getColors($event.id)"
+                      :imageColors="imageColors"
+                      :isCopied="imageDataCopied"
+                      :isCopyingSupported="isCopyingSupported"
+                      @onCopy="copyImageData(findImageToCopy($event))"
+                      @onLoad="getColorsByImageId($event.id)"
                     />
-                  </ImageCardHOC>
+                  </WithImageColors>
                 </UseClipboard>
               </div>
               <div
                 v-else
                 class="p-3 space-y-3"
               >
-                <ColorGroupCardWithImages
-                  v-for="[colorGroupId, colorGroup] in colorGroups"
-                  :key="colorGroupId"
-                  :colorsGroup="colorGroup"
-                  :isOpened="activeColorGroupId === colorGroupId"
-                  @onOpenClick="activeColorGroupId === $event ? activeColorGroupId = undefined : activeColorGroupId = $event"
+                <UseClipboard
+                  v-for="[, colorGroup] in colorGroups"
+                  :key="colorGroup.id"
+                  v-slot="{ copy: copyGroupData, copied: groupDataCopied, isSupported: isCopyingSupported }"
                 >
-                  <UseClipboard
-                    v-for="img in getImagesFromColorGroup(colorGroup)"
-                    v-slot="{ copy: copyImageData, copied: imageDataCopied, isSupported: isCopyingSupported }"
-                    :key="img.id"
+                  <ColorGroupCardWithImages
+                    :colorsGroup="colorGroup"
+                    :isOpened="activeColorGroupId === colorGroup.id"
+                    :isCopyingSupported="isCopyingSupported"
+                    :isCopied="groupDataCopied"
+                    @onOpenClick="activeColorGroupId === $event ? activeColorGroupId = undefined : activeColorGroupId = $event"
+                    @onCopy="copyGroupData(findGroupToCopy($event))"
                   >
-                    <ImageCardHOC v-slot="{ imageColors, getColors }">
-                      <ExportImageCard
-                        :image="img"
-                        :colors="imageColors"
-                        :isCopied="imageDataCopied"
-                        :isCopyingSupported="isCopyingSupported"
-                        @onCopy="copyImageData(JSON.stringify(findDataToCopy($event), null, 2))"
-                        @onLoad="getColors($event.id)"
-                      />
-                    </ImageCardHOC>
-                  </UseClipboard>
-                </ColorGroupCardWithImages>
+                    <UseClipboard
+                      v-for="img in getImagesFromColorGroup(colorGroup)"
+                      :key="img.id"
+                      v-slot="{ copy: copyImageData, copied: imageDataCopied }"
+                    >
+                      <WithImageColors v-slot="{ imageColors, getColorsByImageId }">
+                        <ExportImageCard
+                          :image="img"
+                          :imageColors="imageColors"
+                          :isCopied="imageDataCopied"
+                          :isCopyingSupported="isCopyingSupported"
+                          @onCopy="copyImageData(findImageToCopy($event))"
+                          @onLoad="getColorsByImageId($event.id)"
+                        />
+                      </WithImageColors>
+                    </UseClipboard>
+                  </ColorGroupCardWithImages>
+                </UseClipboard>
               </div>
             </Transition>
           </div>
         </template>
         <template #right>
-          <div class="border rounded-md shadow-inner p-3">
+          <div class="border rounded-md shadow-inner p-3 relative">
             <Transition
               name="fade-slower"
               mode="out-in"
             >
-              <HighlightComponent
+              <div
                 :key="activeTab"
-                :code="JSON.stringify(activeTab === 'colors' ? imagesData : colorGroupsData, null, 2)"
-                class="rounded overflow-hidden text-xs"
-                raw
-              />
+                class="group/preview"
+              >
+                <UseClipboard v-slot="{ copy, copied, isSupported }">
+                  <ExportDataPreview
+                    :code="JSON.stringify(activeTab === 'colors' ? imagesData : colorGroupsData, null, 2)"
+                    class="rounded overflow-hidden text-xs"
+                    raw
+                  />
+                  <div
+                    v-if="isSupported"
+                    class="absolute top-6 right-6 border border-white/25 p-1 rounded shadow bg-black/25 text-white cursor-pointer pointer-events-auto opacity-0 transition duration-300 group-hover/preview:opacity-100"
+                    @click="copy(JSON.stringify(activeTab === 'colors' ? imagesData : colorGroupsData, null, 2))"
+                  >
+                    <Transition
+                      name="fade"
+                      mode="out-in"
+                    >
+                      <Component
+                        :is="copied ? Check : ClipboardCopy"
+                        :size="16"
+                      />
+                    </Transition>
+                  </div>
+                </UseClipboard>
+              </div>
             </Transition>
           </div>
         </template>

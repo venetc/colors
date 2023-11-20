@@ -1,10 +1,4 @@
-export class Comparator<T> {
-  compare: (a: T, b: T) => number;
-
-  constructor(compare: (a: T, b: T) => number) {
-    this.compare = compare;
-  }
-}
+type Comparator<T> = (a: T, b: T) => number;
 
 export class QuickSortInPlace {
   static sort<T>(array: T[], comparator: Comparator<T>): void {
@@ -29,7 +23,7 @@ export class QuickSortInPlace {
       currentIndex <= lastIndex;
       currentIndex++
     ) {
-      if (comparator.compare(array[currentIndex], itemToCompare) <= 0) {
+      if (comparator(array[currentIndex], itemToCompare) <= 0) {
         pointerIndex++;
         QuickSortInPlace.swapByIndex(array, currentIndex, pointerIndex);
       }

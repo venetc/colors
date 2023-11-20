@@ -40,11 +40,17 @@ export const useColors = defineStore('Entities/Color', () => {
 
     target.set(indexKey, null);
   };
+  const colorCollectionToArray = (colorCollection: ColorCollection) => ([...colorCollection.entries()]);
+  const nonEmptyColorCollection = (colorCollection: ColorCollection) => {
+    return colorCollectionToArray(colorCollection).filter((collection): collection is [number, ImageColor] => (collection[1] !== null));
+  };
+
   return {
     colors,
     amountOfColors,
     resetColorsStore,
     getColorFromPool,
     removeColor,
+    nonEmptyColorCollection,
   };
 });

@@ -1,25 +1,15 @@
 <script setup lang="ts">
-import { ColorGroupsList, ColorsList } from './organisms';
-
 import { Group, Plus, RotateCcw, Sparkles, Ungroup } from 'lucide-vue-next';
 import { storeToRefs } from 'pinia';
 import { computed, markRaw, onBeforeMount, onMounted, ref } from 'vue';
 import { NButton } from 'naive-ui';
 
-import type { ColorHex } from '@/entities/color';
-import type { ColorGroupId } from '@/entities/colors-group';
-
 import { beforeLeaveWorkaround } from '@/shared/lib/crutch';
-import { useColorsSort } from '@/features/color/sort-colors';
-import { ColorsGroupCard, useColorGroups } from '@/entities/colors-group';
 import { useColors } from '@/entities/color';
-import {
-  getLuminance,
-  hexToRGB,
-  hslToCss,
-  rgbToCss,
-  rgbToHSL,
-} from '@/shared/lib/color';
+import { ColorsGroupCard, useColorGroups } from '@/entities/colors-group';
+import { useColorsSort } from '@/features/sort-colors';
+import { SortableColorsChunks } from '@/widgets/sortable-colors-chunks';
+import { SortableColorsList } from '@/widgets/sortable-colors-list';
 
 const colorsModel = useColors();
 const sortedColorsModel = useColorsSort();
@@ -33,24 +23,11 @@ const _newColorGroup = [{
   handler: colorGroupsModel.addColorGroup,
 }];
 
-function leadColorChangeHandler(hex: ColorHex, id: ColorGroupId) {
-  const targetColorGroup = colorGroups.value.get(id);
-  if (!targetColorGroup) return;
+const showGroups = ref(true);
+const showGroupsIcon = computed(() => showGroups.value ? markRaw(Ungroup) : markRaw(Group));
 
-  const rgbArray = hexToRGB(hex);
-  const rgb = rgbToCss(rgbArray);
-  const hslArray = rgbToHSL(rgbArray);
-  const hsl = hslToCss(hslArray);
-  const luminance = getLuminance(rgbArray);
-
-  targetColorGroup.leadColor = {
-    hex,
-    luminance,
-    hsl,
-    rgb,
-    rgbArray,
-    hslArray,
-  };
+function colorsViewToggleHandler() {
+  showGroups.value = !showGroups.value;
 }
 
 onMounted(sortedColorsModel.invalidateColorGroups);
@@ -62,13 +39,6 @@ onBeforeMount(() => {
     colorGroupsModel.addColorGroup();
   }
 });
-
-const showGroups = ref(true);
-const showGroupsIcon = computed(() => showGroups.value ? markRaw(Ungroup) : markRaw(Group));
-
-function colorsViewToggleHandler() {
-  showGroups.value = !showGroups.value;
-}
 </script>
 
 <template>
@@ -88,13 +58,17 @@ function colorsViewToggleHandler() {
           name="fade"
           mode="out-in"
         >
-          <ColorGroupsList
+          <SortableColorsChunks
             v-if="showGroups"
             :colors="colors"
+            dir="ltr"
+            class="pb-16 pl-7 pr-3.5 grid gap-5"
           />
-          <ColorsList
+          <SortableColorsList
             v-else
             :colors="colors"
+            dir="ltr"
+            class="pb-3.5 pl-9 pt-4 pr-3.5 grid gap-1.5 place-items-start grid-cols-[repeat(2,_2.5rem)] 2xl:grid-cols-[repeat(2,_2.5rem)] xl:grid-cols-[repeat(2,_2rem)] lg:grid-cols-[repeat(2,_1.5rem)]"
           />
         </Transition>
       </div>
@@ -115,7 +89,7 @@ function colorsViewToggleHandler() {
               @onColorDrop="(event, targetGroupId) => sortedColorsModel.dropHandler({ event, targetGroupId })"
               @onColorDragStart="(event, pivotId, originGroupId) => sortedColorsModel.dragStartHandler({ originGroupId, pivotId, event })"
               @onDelete="colorGroupsModel.deleteColorGroupById"
-              @onLeadColorPick=" leadColorChangeHandler($event, id)"
+              @onLeadColorPick="colorGroupsModel.changeLeadColor($event, id)"
               @onClear="colorGroupsModel.clearColorGroupById"
             />
 

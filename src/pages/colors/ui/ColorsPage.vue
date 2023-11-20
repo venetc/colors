@@ -7,13 +7,11 @@ import { useRouter } from 'vue-router';
 
 import type { ImageId, Img } from '@/entities/image';
 
-import ColorEditor from '@/features/color/edit-colors/ui/ColorEditor.vue';
-import ColorCell from '@/entities/color/ui/ColorCell.vue';
+import { ColorEditor, ReadColorsModal, useEditColors } from '@/features/edit-colors';
+import { ColorCell, ColorsList, useColors } from '@/entities/color';
 import { useHeader } from '@/widgets/header/model';
-import { ColorsList, useColors } from '@/entities/color';
 import { ImageEditor, useImageEditor } from '@/widgets/image-editor';
 import { ImageCard, useImages } from '@/entities/image';
-import { ReadColorsModal, useEditColors } from '@/features/color/edit-colors';
 
 const colorsModel = useColors();
 const imagesModel = useImages();

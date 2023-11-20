@@ -5,13 +5,12 @@ import { computed, toRefs } from 'vue';
 import { Download, Palette, RotateCcw, Trash2 } from 'lucide-vue-next';
 
 import type { ButtonProps } from 'naive-ui';
-import type { ImageId } from '@/entities/image';
 import type { ColorGroup, ColorGroupId, PivotId } from '@/entities/colors-group';
-import type { ColorHex, ImageColor } from '@/entities/color';
+import type { ColorHex } from '@/entities/color';
 
-import { beforeLeaveWorkaround } from '@/shared/lib/crutch.ts';
-import { Comparator, QuickSortInPlace } from '@/shared/lib/sort.ts';
-import { getContrastTextColor } from '@/shared/lib/color.ts';
+import { beforeLeaveWorkaround } from '@/shared/lib/crutch';
+import { QuickSortInPlace } from '@/shared/lib/sort';
+import { getContrastTextColor } from '@/shared/lib/color';
 
 const props = defineProps<{
   colorGroupId: ColorGroupId;
@@ -56,14 +55,13 @@ function dragStartHandler(event: DragEvent, pivotId: PivotId) {
   emit('onColorDragStart', event, pivotId, colorGroupId.value);
 }
 
-const comparator = new Comparator<[`${ImageId}__${number}`, ImageColor]>((a, b) => {
-  return (b[1].handpicked?.luminance ?? b[1].original.luminance) - (a[1].handpicked?.luminance ?? a[1].original.luminance);
-});
-
 const sortedColors = computed(() => {
   const colorEntries = [...colorGroup.value.colors.entries()];
 
-  QuickSortInPlace.sort(colorEntries, comparator);
+  QuickSortInPlace.sort(
+    colorEntries,
+    (a, b) => (b[1].handpicked?.luminance ?? b[1].original.luminance) - (a[1].handpicked?.luminance ?? a[1].original.luminance),
+  );
 
   return colorEntries;
 });

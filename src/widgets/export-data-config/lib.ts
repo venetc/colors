@@ -5,11 +5,11 @@ import type { ColorGroup, ColorGroupId, PivotId } from '@/entities/colors-group'
 import type { ColorCollection, ImageColor } from '@/entities/color';
 import type { ImageId, Img } from '@/entities/image';
 
+import { createImageFromLink } from '@/features/get-image-from-links';
+import { createImageFromFile } from '@/features/get-image-from-file';
 import { createColorGroup } from '@/entities/colors-group';
 import { generateColorData } from '@/entities/color';
 import { generateRandomRgb } from '@/shared/lib/color';
-import { createImageFromFile } from '@/features/image/get-from-image-file';
-import { createImageFromLink } from '@/features/image/get-from-links';
 
 const DEMO_IMAGE_1: Img = createImageFromFile({
   fileName: 'my_image.jpg',

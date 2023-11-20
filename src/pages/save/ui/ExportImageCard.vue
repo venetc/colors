@@ -1,17 +1,17 @@
 <script setup lang="ts">
+import ExportColorCell from './ExportColorCell.vue';
+
 import { useIntersectionObserver } from '@vueuse/core';
 import { NCard, NImage, NSkeleton } from 'naive-ui';
 import { Check, ClipboardCopy, Maximize } from 'lucide-vue-next';
 import { computed, nextTick, onMounted, ref, toRefs, watch } from 'vue';
 
-import type { Color } from '@/entities/color';
+import type { ImageColor } from '@/entities/color';
 import type { Img } from '@/entities/image';
-
-import ExportColorCell from '@/pages/save/ui/ExportColorCell.vue';
 
 interface Props {
   image: Img;
-  colors: Color[];
+  imageColors: ImageColor[];
   isCopied: boolean;
   isCopyingSupported: boolean;
 }
@@ -24,7 +24,7 @@ const emit = defineEmits<{
 
 const {
   image,
-  colors,
+  imageColors,
   isCopyingSupported,
   isCopied,
 } = toRefs(props);
@@ -32,7 +32,6 @@ const {
 const imagePreview = ref<HTMLElement>();
 const imageRef = ref<HTMLImageElement>();
 
-// const targetIsVisible = useElementVisibility(imagePreview);
 const targetIsVisible = ref(false);
 
 const { stop } = useIntersectionObserver(
@@ -74,14 +73,6 @@ const unwatchInitialVisibility = watch(targetIsVisible, (isVisible) => {
 onMounted(() => {
   watch(targetSrc, () => nextTick(loadImage));
 });
-
-function copyHandler() {
-  emit('onCopy', image.value);
-}
-
-function loadHandler() {
-  emit('onLoad', image.value);
-}
 </script>
 
 <template>
@@ -105,13 +96,13 @@ function loadHandler() {
           :src="image.croppedSrc ?? image.blobSrc"
           objectFit="cover"
           :imgProps="{ crossorigin: 'anonymous', style: { width: '100%', height: '100%' } }"
-          @load="loadHandler"
+          @load="emit('onLoad', image)"
         />
         <div class="absolute bottom-1.5 right-1.5 flex flex-nowrap space-x-1.5 pointer-events-none">
           <div
             v-if="isCopyingSupported"
             class="border border-black/10 p-1 rounded shadow bg-black/25 text-white cursor-pointer pointer-events-auto  opacity-0 transition duration-300 group-hover/preview:opacity-100"
-            @click="copyHandler"
+            @click="emit('onCopy', image)"
           >
             <Transition
               name="fade"
@@ -132,13 +123,13 @@ function loadHandler() {
       </div>
     </template>
     <div
-      v-if="colors.length > 0"
+      v-if="imageColors.length > 0"
       class="flex"
     >
       <ExportColorCell
-        v-for="color in colors"
-        :key="color.hex"
-        :color="color"
+        v-for="imageColor in imageColors"
+        :key="imageColor.handpicked?.hex ?? imageColor.original.hex"
+        :imageColor="imageColor"
       />
     </div>
     <div

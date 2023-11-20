@@ -2,19 +2,24 @@
 import { useClipboard } from '@vueuse/core';
 import { Check, ClipboardCopy } from 'lucide-vue-next';
 import { NPopover } from 'naive-ui';
-import { toRefs } from 'vue';
+import { computed, toRefs } from 'vue';
 
-import type { PartialMaybeSnakeCase } from '@/features/export-data/generate-export-data';
-import type { Color } from '@/entities/color';
+import type { ImageColor } from '@/entities/color';
 
 interface Props {
-  color: PartialMaybeSnakeCase<Color>;
+  imageColor: ImageColor;
 }
 
 const props = defineProps<Props>();
-const { color } = toRefs(props);
+const { imageColor } = toRefs(props);
 
-const { copy, copied, isSupported } = useClipboard({ source: color.value.hex });
+const hex = computed(() => imageColor.value.handpicked?.hex ?? imageColor.value.original.hex);
+
+const {
+  copy,
+  copied,
+  isSupported,
+} = useClipboard({ source: hex.value });
 </script>
 
 <template>
@@ -26,7 +31,7 @@ const { copy, copied, isSupported } = useClipboard({ source: color.value.hex });
   >
     <template #trigger>
       <div
-        :style="{ backgroundColor: color.hex }"
+        :style="{ backgroundColor: hex }"
         class="text-xs font-mono w-full grid place-items-center group/color h-10"
         :class="{ 'cursor-pointer': isSupported }"
         @click="copy()"
@@ -49,10 +54,10 @@ const { copy, copied, isSupported } = useClipboard({ source: color.value.hex });
     </template>
     <div class="bg-white flex text-xs gap-1.5 py-1 px-1.5 rounded items-center justify-center">
       <div
-        :style="{ backgroundColor: color.hex }"
+        :style="{ backgroundColor: hex }"
         class="w-3 h-3"
       />
-      <span>{{ color.hex }}</span>
+      <span>{{ hex }}</span>
     </div>
   </NPopover>
 </template>

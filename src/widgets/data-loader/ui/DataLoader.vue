@@ -5,13 +5,13 @@ import { markRaw, nextTick, onMounted, ref } from 'vue';
 import { ClipboardList, FileImage, FileText, Search, Sparkles, XOctagon } from 'lucide-vue-next';
 import { useRouter } from 'vue-router';
 
-import { ImagesDownloaderByImageFiles, useGetImageFromFile } from '@/features/image/get-from-image-file';
+import { ImagesDownloaderByImageFiles, useGetImageFromFile } from '@/features/get-image-from-file';
 import {
   ImageLinksTextarea,
   ImagesDownloadModal,
   ImagesDownloaderByTxtFiles,
   useGetImageFromLinks,
-} from '@/features/image/get-from-links';
+} from '@/features/get-image-from-links';
 import { useImages } from '@/entities/image';
 
 const getImageFromFileModel = useGetImageFromFile();
