@@ -1,4 +1,5 @@
-import { createImageFromLink } from './lib.ts';
+import { createImageFromLink } from './lib';
+import { NoValidLinksError } from './ui';
 
 import { useFetch } from '@vueuse/core';
 import { defineStore, storeToRefs } from 'pinia';
@@ -7,9 +8,9 @@ import { computed, ref } from 'vue';
 import type { NUpload, UploadFileInfo } from 'naive-ui';
 import type { Ref } from 'vue';
 
-import { NoValidLinksError, useNotificationManager } from '@/shared/ui/notification';
+import { useNotificationManager } from '@/shared/ui/notification';
 import { useImages } from '@/entities/image';
-import { formatStringToLinks } from '@/shared/lib/string.ts';
+import { formatStringToLinks } from '@/shared/lib/string';
 
 export type FileList = Map<string, UploadFileInfo>;
 export type LinksSet = Set<string>;

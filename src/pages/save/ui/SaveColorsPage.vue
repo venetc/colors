@@ -1,17 +1,22 @@
 <script setup lang="ts">
 import { UseClipboard } from '@vueuse/components';
-import { Check, ClipboardCopy } from 'lucide-vue-next';
-import { NTab, NTabs } from 'naive-ui';
+import { Check, ClipboardCopy, Group, Image } from 'lucide-vue-next';
+import { NButton, NTab, NTabs } from 'naive-ui';
 import { storeToRefs } from 'pinia';
-import { ref, watch } from 'vue';
+import { computed, ref } from 'vue';
 
 import type { ColorGroup, ColorGroupId } from '@/entities/colors-group';
 import type { ImageId, Img } from '@/entities/image';
 
-import { useColorGroups } from '@/entities/colors-group';
+import { ColorsGroupDropdown, useColorGroups } from '@/entities/colors-group';
 import { useImages } from '@/entities/image';
-import { ExportDataPreview, useExportData, useExportDataConfig, usePreviewTabs } from '@/features/export-data';
-import ColorGroupCardWithImages from '@/pages/save/ui/ColorGroupCardWithImages.vue';
+import {
+  ExportDataPreview,
+  useExportData,
+  useExportDataConfig,
+  useFileDownload,
+  usePreviewTabs,
+} from '@/features/export-data';
 import DataPane from '@/pages/save/ui/DataPane.vue';
 import ExportImageCard from '@/pages/save/ui/ExportImageCard.vue';
 import { WithImageColors } from '@/pages/save/ui/withImageColors';
@@ -38,7 +43,7 @@ const {
   images,
 } = storeToRefs(imagesModel);
 // const { colors } = storeToRefs(colorsModel);
-const { colorGroups } = storeToRefs(colorGroupsModel);
+const { nonEmptyColorGroups } = storeToRefs(colorGroupsModel);
 
 const exportDataModel = useExportData(config, previewTabs.activeTab);
 
@@ -56,11 +61,7 @@ function findImageToCopy(image: Img) {
 }
 
 function findGroupToCopy(colorGroup: ColorGroup) {
-  const result = colorGroupsData.value.find((group) => {
-    if ('groupId' in group) return group.groupId === colorGroup.id;
-
-    return undefined;
-  });
+  const result = colorGroupsData.value.find(group => 'groupId' in group ? group.groupId === colorGroup.id : undefined);
 
   return JSON.stringify(result, null, 2);
 }
@@ -84,80 +85,82 @@ function getImagesFromColorGroup(colorGroup: ColorGroup) {
   return imagesFromColorGroup;
 }
 
-const imagesBlobLink = ref<{
-  link: string;
-  filename: string;
-}>({
-  link: '',
-  filename: '',
-});
-
-watch(imagesData, (newData) => {
-  if (imagesBlobLink.value) {
-    URL.revokeObjectURL(imagesBlobLink.value.link);
-    imagesBlobLink.value = {
-      link: '',
-      filename: '',
-    };
-  }
-
-  const blob = new Blob([JSON.stringify(newData)], { type: 'application/json' });
-
-  const date = new Date();
-  const month = (date.getMonth() + 1).toString().padStart(2, '0');
-  const day = date.getDate().toString().padStart(2, '0');
-  const year = date.getFullYear();
-  const hours = date.getHours().toString().padStart(2, '0');
-  const minutes = date.getMinutes().toString().padStart(2, '0');
-  const seconds = date.getSeconds().toString().padStart(2, '0');
-
-  const dateString = `${day}-${month}-${year}`;
-
-  const filename = `image-colors_${dateString}_${hours}-${minutes}-${seconds}`;
-
-  imagesBlobLink.value = {
-    link: URL.createObjectURL(blob),
-    filename,
-  };
-}, {
-  immediate: true,
-  deep: true,
-});
+const someColorGroupsNotEmpty = computed(() => nonEmptyColorGroups.value.length > 0);
 
 const activeColorGroupId = ref<ColorGroupId>();
 
-function updateFileName(token: string) {
-  const date = new Date();
-  const month = (date.getMonth() + 1).toString().padStart(2, '0');
-  const day = date.getDate().toString().padStart(2, '0');
-  const year = date.getFullYear();
-  const hours = date.getHours().toString().padStart(2, '0');
-  const minutes = date.getMinutes().toString().padStart(2, '0');
-  const seconds = date.getSeconds().toString().padStart(2, '0');
+const {
+  link: imagesLink,
+  filename: imagesFilename,
+  updateFileName: imagesUpdateFileName,
+} = useFileDownload(imagesData, 'image-colors');
+const {
+  link: groupsLink,
+  filename: groupsFilename,
+  updateFileName: groupsUpdateFileName,
+} = useFileDownload(colorGroupsData, 'color-groups');
 
-  const dateString = `${day}-${month}-${year}`;
+const isColorTabOrSomeGroupsNotEmpty = computed(() => {
+  const colorTabActive = activeTab.value === 'colors';
+  const groupsTabActive = activeTab.value === 'groups';
+  const someGroupsNotEmpty = someColorGroupsNotEmpty.value;
 
-  imagesBlobLink.value.filename = `${token}_${dateString}_${hours}-${minutes}-${seconds}`;
-}
+  return colorTabActive || (groupsTabActive && someGroupsNotEmpty);
+});
 </script>
 
 <template>
   <section class="py-6 flex flex-nowrap justify-between items-start space-x-5">
     <div class="bg-white/75 rounded-md shadow-md p-3 min-w-[24rem] w-96 sticky top-16">
-      <a
-        class="border inline-block rounded font-mono px-2 shadow py-0.5 my-2 cursor-pointer"
-        :href="imagesBlobLink.link"
-        :download="imagesBlobLink.filename"
-        @click="updateFileName('image-colors')"
-      >
-        Download
-      </a>
       <ExportDataConfig
         v-model:colorDataConfig="colorDataConfig"
         v-model:syntaxConfig="syntaxConfig"
         :origin="downloadOrigin"
         :currentTab="previewTabs.activeTab"
-      />
+      >
+        <div class="font-mono flex items-center gap-1.5">
+          <span class="text-sm">Download JSON:</span>
+          <NButton
+            type="primary"
+            size="tiny"
+            tag="a"
+            class="!font-thin"
+            :href="imagesLink"
+            :download="imagesFilename"
+            @click="imagesUpdateFileName"
+          >
+            <template #icon>
+              <Image
+                :size="18"
+                :stroke-width="1.75"
+              />
+            </template>
+            <template #default>
+              Images
+            </template>
+          </NButton>
+          <NButton
+            v-if="someColorGroupsNotEmpty"
+            type="primary"
+            size="tiny"
+            tag="a"
+            class="!font-thin"
+            :href="groupsLink"
+            :download="groupsFilename"
+            @click="groupsUpdateFileName"
+          >
+            <template #icon>
+              <Group
+                :size="18"
+                :stroke-width="1.75"
+              />
+            </template>
+            <template #default>
+              Groups
+            </template>
+          </NButton>
+        </div>
+      </ExportDataConfig>
     </div>
     <div class="bg-white/75 rounded-md shadow-md py-3 w-2/3">
       <div class="max-w-[75%] w-full mx-auto">
@@ -184,7 +187,7 @@ function updateFileName(token: string) {
           </NTab>
         </NTabs>
       </div>
-      <DataPane>
+      <DataPane :isSwitcherVisible="isColorTabOrSomeGroupsNotEmpty">
         <template #left>
           <div class="border rounded-md shadow-inner">
             <Transition
@@ -212,42 +215,54 @@ function updateFileName(token: string) {
                   </WithImageColors>
                 </UseClipboard>
               </div>
-              <div
-                v-else
-                class="p-3 space-y-3"
-              >
-                <UseClipboard
-                  v-for="[, colorGroup] in colorGroups"
-                  :key="colorGroup.id"
-                  v-slot="{ copy: copyGroupData, copied: groupDataCopied, isSupported: isCopyingSupported }"
+              <template v-else>
+                <div
+                  v-if="someColorGroupsNotEmpty"
+                  class="p-3 space-y-3"
                 >
-                  <ColorGroupCardWithImages
-                    :colorsGroup="colorGroup"
-                    :isOpened="activeColorGroupId === colorGroup.id"
-                    :isCopyingSupported="isCopyingSupported"
-                    :isCopied="groupDataCopied"
-                    @onOpenClick="activeColorGroupId === $event ? activeColorGroupId = undefined : activeColorGroupId = $event"
-                    @onCopy="copyGroupData(findGroupToCopy($event))"
+                  <UseClipboard
+                    v-for="colorGroup in nonEmptyColorGroups"
+                    :key="colorGroup.id"
+                    v-slot="{ copy: copyGroupData, copied: groupDataCopied, isSupported: isCopyingSupported }"
                   >
-                    <UseClipboard
-                      v-for="img in getImagesFromColorGroup(colorGroup)"
-                      :key="img.id"
-                      v-slot="{ copy: copyImageData, copied: imageDataCopied }"
+                    <ColorsGroupDropdown
+                      :colorsGroup="colorGroup"
+                      :isOpened="activeColorGroupId === colorGroup.id"
+                      :isCopyingSupported="isCopyingSupported"
+                      :isCopied="groupDataCopied"
+                      @onOpenClick="activeColorGroupId === $event ? activeColorGroupId = undefined : activeColorGroupId = $event"
+                      @onCopy="copyGroupData(findGroupToCopy($event))"
                     >
-                      <WithImageColors v-slot="{ imageColors, getColorsByImageId }">
-                        <ExportImageCard
-                          :image="img"
-                          :imageColors="imageColors"
-                          :isCopied="imageDataCopied"
-                          :isCopyingSupported="isCopyingSupported"
-                          @onCopy="copyImageData(findImageToCopy($event))"
-                          @onLoad="getColorsByImageId($event.id)"
-                        />
-                      </WithImageColors>
-                    </UseClipboard>
-                  </ColorGroupCardWithImages>
-                </UseClipboard>
-              </div>
+                      <div class="grid grid-cols-2 gap-3">
+                        <UseClipboard
+                          v-for="img in getImagesFromColorGroup(colorGroup)"
+                          :key="img.id"
+                          v-slot="{ copy: copyImageData, copied: imageDataCopied }"
+                        >
+                          <WithImageColors v-slot="{ imageColors, getColorsByImageId }">
+                            <ExportImageCard
+                              :image="img"
+                              :imageColors="imageColors"
+                              :isCopied="imageDataCopied"
+                              :isCopyingSupported="isCopyingSupported"
+                              @onCopy="copyImageData(findImageToCopy($event))"
+                              @onLoad="getColorsByImageId($event.id)"
+                            />
+                          </WithImageColors>
+                        </UseClipboard>
+                      </div>
+                    </ColorsGroupDropdown>
+                  </UseClipboard>
+                </div>
+                <div
+                  v-else
+                  class="flex flex-col items-center justify-center font-mono h-[354px]"
+                >
+                  <span class="text-lg">No image groups,</span>
+                  <span class="text-lg">or all of them are empty</span>
+                  <span class="text-2xl mt-2">😢</span>
+                </div>
+              </template>
             </Transition>
           </div>
         </template>
@@ -257,32 +272,42 @@ function updateFileName(token: string) {
               name="fade-slower"
               mode="out-in"
             >
-              <div
-                :key="activeTab"
-                class="group/preview"
-              >
-                <UseClipboard v-slot="{ copy, copied, isSupported }">
-                  <ExportDataPreview
-                    :code="JSON.stringify(activeTab === 'colors' ? imagesData : colorGroupsData, null, 2)"
-                    class="rounded overflow-hidden text-xs"
-                    raw
-                  />
-                  <div
-                    v-if="isSupported"
-                    class="absolute top-6 right-6 border border-white/25 p-1 rounded shadow bg-black/25 text-white cursor-pointer pointer-events-auto opacity-0 transition duration-300 group-hover/preview:opacity-100"
-                    @click="copy(JSON.stringify(activeTab === 'colors' ? imagesData : colorGroupsData, null, 2))"
-                  >
-                    <Transition
-                      name="fade"
-                      mode="out-in"
+              <template v-if="isColorTabOrSomeGroupsNotEmpty">
+                <div
+                  :key="activeTab"
+                  class="group/preview"
+                >
+                  <UseClipboard v-slot="{ copy, copied, isSupported }">
+                    <ExportDataPreview
+                      :code="JSON.stringify(activeTab === 'colors' ? imagesData : colorGroupsData, null, 2)"
+                      class="rounded overflow-hidden text-xs"
+                      raw
+                    />
+                    <div
+                      v-if="isSupported"
+                      class="absolute top-6 right-6 border border-white/25 p-1 rounded shadow bg-black/25 text-white cursor-pointer pointer-events-auto opacity-0 transition duration-300 group-hover/preview:opacity-100"
+                      @click="copy(JSON.stringify(activeTab === 'colors' ? imagesData : colorGroupsData, null, 2))"
                     >
-                      <Component
-                        :is="copied ? Check : ClipboardCopy"
-                        :size="16"
-                      />
-                    </Transition>
-                  </div>
-                </UseClipboard>
+                      <Transition
+                        name="fade"
+                        mode="out-in"
+                      >
+                        <Component
+                          :is="copied ? Check : ClipboardCopy"
+                          :size="16"
+                        />
+                      </Transition>
+                    </div>
+                  </UseClipboard>
+                </div>
+              </template>
+              <div
+                v-else
+                class="flex flex-col items-center justify-center font-mono h-[354px]"
+              >
+                <span class="text-lg">No image groups,</span>
+                <span class="text-lg">or all of them are empty</span>
+                <span class="text-2xl mt-2">😢</span>
               </div>
             </Transition>
           </div>

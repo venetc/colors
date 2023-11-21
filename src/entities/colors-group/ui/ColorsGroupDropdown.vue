@@ -10,8 +10,8 @@ import { getContrastTextColor, shadeHexColor } from '@/shared/lib/color';
 interface Props {
   colorsGroup: ColorGroup;
   isOpened: boolean;
-  isCopied: boolean;
-  isCopyingSupported: boolean;
+  isCopied?: boolean;
+  isCopyingSupported?: boolean;
 }
 
 const props = defineProps<Props>();
@@ -69,8 +69,8 @@ const {
     </div>
     <NCollapseTransition :show="isOpened">
       <div
-        class="grid grid-cols-2 gap-3 p-3 border-l border-r border-b rounded-b-md"
         :style="{ borderColor: shadeHexColor(colorsGroup.leadColor.hex, 1.1) }"
+        class="p-3 border-l border-r border-b rounded-b-md"
       >
         <slot />
       </div>

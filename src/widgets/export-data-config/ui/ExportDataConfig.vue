@@ -60,22 +60,22 @@ const scrollbarThemeOverrides: ScrollbarThemeOverrides = {
       v-model:syntaxConfig="syntaxConfig"
     />
 
-    <div>
-      <div class="font-mono flex flex-nowrap items-center gap-1.5">
-        <span class="text-sm">Example:</span>
-        <NSwitch
-          v-model:value="exampleVisible"
-          size="small"
-          :round="false"
-        >
-          <template #checked>
-            Show
-          </template>
-          <template #unchecked>
-            Hide
-          </template>
-        </NSwitch>
-      </div>
+    <slot />
+
+    <div class="font-mono flex flex-nowrap items-center gap-1.5">
+      <span class="text-sm">Example:</span>
+      <NSwitch
+        v-model:value="exampleVisible"
+        size="small"
+        :round="false"
+      >
+        <template #checked>
+          Show
+        </template>
+        <template #unchecked>
+          Hide
+        </template>
+      </NSwitch>
     </div>
 
     <NCollapseTransition :show="exampleVisible">

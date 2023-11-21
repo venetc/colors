@@ -1,7 +1,14 @@
 <script setup lang="ts">
 import { ChevronLeft, ChevronRight } from 'lucide-vue-next';
 import { useThemeVars } from 'naive-ui';
-import { ref } from 'vue';
+import { ref, toRefs } from 'vue';
+
+interface Props {
+  isSwitcherVisible: boolean;
+}
+
+const props = defineProps<Props>();
+const { isSwitcherVisible } = toRefs(props);
 
 const activePane = ref<'left' | 'right'>('left');
 
@@ -19,6 +26,7 @@ const themeVars = useThemeVars();
       :class="{ '-translate-x-1/2': activePane === 'right' }"
     >
       <button
+        v-if="isSwitcherVisible"
         class="absolute border rounded h-6 top-5 px-0.5 right-1/2 text-white text-xs flex items-center justify-center gap-1 transition-transform ease-in-out duration-500"
         :class="[activePane === 'right' ? 'translate-x-[110%]' : '-translate-x-[10%]']"
         :style="{ backgroundColor: themeVars.infoColor, borderColor: themeVars.infoColor }"

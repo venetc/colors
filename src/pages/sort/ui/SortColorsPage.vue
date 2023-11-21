@@ -60,7 +60,7 @@ onBeforeMount(() => {
         >
           <SortableColorsChunks
             v-if="showGroups"
-            :colors="colors"
+            :colors="colorsModel.getNonEmptyColors()"
             dir="ltr"
             class="pb-16 pl-7 pr-3.5 grid gap-5"
           />
@@ -82,14 +82,14 @@ onBeforeMount(() => {
             @beforeLeave="beforeLeaveWorkaround"
           >
             <ColorsGroupCard
-              v-for="[id, group] in colorGroups"
-              :key="id"
-              :colorGroupId="id"
+              v-for="[, group] in colorGroups"
+              :key="group.id"
+              :colorGroupId="group.id"
               :colorGroup="group"
               @onColorDrop="(event, targetGroupId) => sortedColorsModel.dropHandler({ event, targetGroupId })"
               @onColorDragStart="(event, pivotId, originGroupId) => sortedColorsModel.dragStartHandler({ originGroupId, pivotId, event })"
               @onDelete="colorGroupsModel.deleteColorGroupById"
-              @onLeadColorPick="colorGroupsModel.changeLeadColor($event, id)"
+              @onLeadColorPick="colorGroupsModel.changeLeadColor($event, group.id)"
               @onClear="colorGroupsModel.clearColorGroupById"
             />
 

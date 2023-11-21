@@ -57,10 +57,10 @@ const isSmallScreen = useMediaQuery('(max-width: 1023px)');
 
     <div
       v-if="isSupported && memory"
-      class="fixed z-30 bottom-2 left-2 py-2 px-3 bg-white shadow-md rounded-md text-xs select-none"
+      class="fixed z-30 bottom-2 right-2 py-1 px-2 bg-white shadow-md rounded-md text-xs select-none"
     >
       <div
-        class="inline-grid grid-cols-2 gap-x-1 gap-y-1 font-mono"
+        class="inline-grid grid-cols-2 gap-x-1 gap-y-0.5 font-mono"
       >
         <template v-if="memory">
           <div class="opacity-70">

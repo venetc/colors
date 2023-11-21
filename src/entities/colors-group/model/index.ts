@@ -1,7 +1,7 @@
 import { createColorGroup } from '../lib';
 
 import { defineStore } from 'pinia';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 
 import type { ImageId } from '@/entities/image';
 import type { Color, ColorHex, ImageColor } from '@/entities/color';
@@ -21,6 +21,9 @@ export const useColorGroups = defineStore('Entities/ColorsGroup', () => {
   const colorGroups = ref<Map<ColorGroupId, ColorGroup>>(new Map());
   const leadColors = ref(new Set<string>());
 
+  const nonEmptyColorGroups = computed(() => {
+    return [...colorGroups.value.values()].filter(colorGroup => colorGroup.colors.size > 0);
+  });
   const addColorGroup = () => {
     const newGroup = createColorGroup();
 
@@ -82,5 +85,5 @@ export const useColorGroups = defineStore('Entities/ColorsGroup', () => {
     leadColors.value.add(hex.toUpperCase());
   };
 
-  return { colorGroups, addColorGroup, clearColorGroupById, deleteColorGroupById, changeLeadColor };
+  return { colorGroups, nonEmptyColorGroups, addColorGroup, clearColorGroupById, deleteColorGroupById, changeLeadColor };
 });

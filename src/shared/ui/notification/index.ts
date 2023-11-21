@@ -49,12 +49,19 @@ export function useNotificationManager(args: { type: NotificationType; title: st
     return h(NAlert, props, { default: () => h(content) });
   };
 
-  const callNotification = () => target('', {
-    render: renderMessage,
-    closable: true,
-  });
+  const callNotification = () => {
+    target('', {
+      render: renderMessage,
+      closable: true,
+    });
+  };
 
-  return { callNotification };
+  const deleteNotifications = () => {
+    message.destroyAll();
+  };
+
+  return {
+    callNotification,
+    deleteNotifications,
+  };
 }
-
-export { default as NoValidLinksError } from './NoValidLinksError.vue';

@@ -69,7 +69,7 @@ export const TABS = [
 
 export function usePreviewTabs() {
   const tabs = TABS;
-  const activeTab = ref(TABS[0].name);
+  const activeTab = ref<typeof TABS[number]['name']>(TABS[0].name);
 
   return {
     tabs,

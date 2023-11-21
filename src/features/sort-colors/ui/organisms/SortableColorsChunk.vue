@@ -22,7 +22,7 @@ const colorsModel = useColors();
 </script>
 
 <template>
-  <div class="relative">
+  <div class="relative shadow-md hover:shadow-xl transition-shadow rounded-md">
     <SortableColorsChunkActions
       class="absolute bottom-full left-0 w-full z-20 translate-y-1/2"
       :image="imagesModel.getImageById(imageId)"
